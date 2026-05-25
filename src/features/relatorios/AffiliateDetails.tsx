@@ -1,5 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import {
+  FiCopy,
+  FiCreditCard,
+  FiGrid,
+  FiList,
+  FiTrash2,
+} from "react-icons/fi";
 import { apagarLink, getApiErrorMessage } from "@/lib/api";
+import { formatDisplayLink } from "@/lib/links";
 import { AffiliateDetail } from "./useRelatorios";
 import styles from "./relatorios.module.css";
 
@@ -9,6 +17,39 @@ interface AffiliateDetailsProps {
   refreshing: boolean;
 }
 
+const affiliateViewOptions = [
+  {
+    value: "compact",
+    label: "Visualizacao compacta",
+    icon: FiList,
+  },
+  {
+    value: "medium",
+    label: "Visualizacao media",
+    icon: FiCreditCard,
+  },
+  {
+    value: "detailed",
+    label: "Visualizacao detalhada",
+    icon: FiGrid,
+  },
+] as const;
+
+type AffiliateViewMode =
+  (typeof affiliateViewOptions)[number]["value"];
+
+type AffiliateLink = AffiliateDetail["links"][number];
+
+type AffiliateCardProps = {
+  block: AffiliateDetail;
+  deletingLinkId: number | null;
+  onCopyLink: (link: string) => Promise<void>;
+  onDeleteLink: (
+    id: number,
+    name?: string | null
+  ) => Promise<void>;
+};
+
 export default function AffiliateDetails({
   details,
   refresh,
@@ -16,6 +57,8 @@ export default function AffiliateDetails({
 }: AffiliateDetailsProps) {
   const [deletingLinkId, setDeletingLinkId] =
     useState<number | null>(null);
+  const [viewMode, setViewMode] =
+    useState<AffiliateViewMode>("detailed");
 
   const conversionRanking = details
     .filter((affiliate) => (affiliate.totalConversions ?? 0) > 0)
@@ -29,6 +72,21 @@ export default function AffiliateDetails({
       sum + (affiliate.totalConversions ?? 0),
     0
   );
+
+  const affiliateListClass = [
+    styles.affiliateList,
+    viewMode === "compact"
+      ? styles.affiliateListCompact
+      : "",
+    viewMode === "medium"
+      ? styles.affiliateListMedium
+      : "",
+    viewMode === "detailed"
+      ? styles.affiliateListDetailed
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const handleCopyLink = async (link: string) => {
     try {
@@ -72,14 +130,43 @@ export default function AffiliateDetails({
       <div className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>Detalhe por afiliado</h2>
 
-        <button
-          type="button"
-          className={styles.refreshButton}
-          onClick={refresh}
-          disabled={refreshing}
-        >
-          {refreshing ? "Atualizando..." : "Atualizar relatorio"}
-        </button>
+        <div className={styles.headerActions}>
+          <div
+            className={styles.viewSwitcher}
+            aria-label="Visualizacao dos afiliados"
+            role="group"
+          >
+            {affiliateViewOptions.map((option) => {
+              const Icon = option.icon;
+              const isActive = viewMode === option.value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`${styles.viewButton} ${
+                    isActive ? styles.viewButtonActive : ""
+                  }`}
+                  onClick={() => setViewMode(option.value)}
+                  aria-label={option.label}
+                  aria-pressed={isActive}
+                  title={option.label}
+                >
+                  <Icon aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            className={styles.refreshButton}
+            onClick={refresh}
+            disabled={refreshing}
+          >
+            {refreshing ? "Atualizando..." : "Atualizar relatorio"}
+          </button>
+        </div>
       </div>
 
       <div className={styles.conversionSummary}>
@@ -125,145 +212,414 @@ export default function AffiliateDetails({
         </div>
       </div>
 
-      {details.map((block) => (
-        <div key={block.affiliateId} className={styles.affiliateCard}>
-          <div className={styles.affiliateHeader}>
-            <div>
-              <h3 className={styles.affiliateName}>{block.affiliate}</h3>
+      {details.length === 0 ? (
+        <p className={styles.emptyText}>
+          Nenhum afiliado encontrado no relatorio.
+        </p>
+      ) : (
+        <div className={affiliateListClass}>
+          {details.map((block) => {
+            if (viewMode === "compact") {
+              return (
+                <AffiliateCompactCard
+                  key={block.affiliateId}
+                  block={block}
+                  deletingLinkId={deletingLinkId}
+                  onCopyLink={handleCopyLink}
+                  onDeleteLink={handleDeleteLink}
+                />
+              );
+            }
 
-              <span className={styles.affiliateId}>
-                ID #{block.affiliateId}
-              </span>
-            </div>
-          </div>
+            if (viewMode === "medium") {
+              return (
+                <AffiliateMediumCard
+                  key={block.affiliateId}
+                  block={block}
+                  deletingLinkId={deletingLinkId}
+                  onCopyLink={handleCopyLink}
+                  onDeleteLink={handleDeleteLink}
+                />
+              );
+            }
 
-          <div className={styles.statsGrid}>
-            <div className={styles.statBox}>
-              <span>Links</span>
-              <strong>{block.totalLinks}</strong>
-            </div>
-
-            <div className={styles.statBox}>
-              <span>Cliques</span>
-              <strong>{block.totalClicks}</strong>
-            </div>
-
-            <div className={styles.statBox}>
-              <span>Conversoes</span>
-              <strong>{block.totalConversions ?? 0}</strong>
-            </div>
-          </div>
-
-          <div className={styles.linksSection}>
-            <h4>Links Divulgação</h4>
-
-            {/* <AffiliatePromoLinks
-              links={block.links.map(
-                ({ id, promoLink, originalUrl }) => ({
-                  id,
-                  promoLink,
-                  originalUrl,
-                })
-              )}
-            /> */}
-          </div>
-
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr className={styles.tableHead}>
-                  <th className={styles.smallCell}>Nome do link</th>
-                  <th className={styles.smallCell}>Links dos afiliados</th>
-                  <th className={styles.smallCell}>Cliques</th>
-                  <th className={styles.smallCell}>Conversoes</th>
-                  <th className={styles.smallCell}>Copiar Link</th>
-                  <th className={styles.smallCell}>Apagar</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {block.links.map((l) => (
-                  <tr key={l.id} className={styles.tableRow}>
-                    <td className={styles.smallCell}>
-                      <strong>
-                        {l.name || "Sem nome"}
-                      </strong>
-                    </td>
-
-                    <td className={styles.smallCell}>
-                      <div className={styles.linkInfo}>
-                        <div className={styles.linkGroup}>
-                          <span className={styles.linkLabel}>
-                            Destino:
-                          </span>
-
-                          <span className={styles.breakWord}>
-                            {l.originalUrl}
-                          </span>
-                        </div>
-
-                        <div className={styles.linkGroup}>
-                          <span className={styles.linkLabel}>
-                            Afiliado:
-                          </span>
-
-                          <a
-                            href={l.promoLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`${styles.link} ${styles.breakWord}`}
-                          >
-                            {l.promoLink}
-                          </a>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className={styles.smallCell}>
-                      <span className={styles.clickBadge}>
-                        {l.clicks}
-                      </span>
-                    </td>
-
-                    <td className={styles.smallCell}>
-                      <span
-                        className={
-                          (l.conversions ?? 0) > 0
-                            ? styles.conversionBadge
-                            : styles.zeroBadge
-                        }
-                      >
-                        {l.conversions ?? 0}
-                      </span>
-                    </td>
-
-                    <td className={styles.smallCell}>
-                      <button
-                        type="button"
-                        className={styles.copyButton}
-                        onClick={() => handleCopyLink(l.promoLink)}
-                      >
-                        Copiar link
-                      </button>
-                    </td>
-
-                    <td className={styles.smallCell}>
-                      <button
-                        type="button"
-                        className={styles.deleteButton}
-                        onClick={() => handleDeleteLink(l.id, l.name)}
-                        disabled={deletingLinkId === l.id}
-                      >
-                        {deletingLinkId === l.id ? "Apagando..." : "Apagar"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            return (
+              <AffiliateDetailedCard
+                key={block.affiliateId}
+                block={block}
+                deletingLinkId={deletingLinkId}
+                onCopyLink={handleCopyLink}
+                onDeleteLink={handleDeleteLink}
+              />
+            );
+          })}
         </div>
-      ))}
+      )}
     </>
   );
+}
+
+function AffiliateCompactCard({
+  block,
+  deletingLinkId,
+  onCopyLink,
+  onDeleteLink,
+}: AffiliateCardProps) {
+  const primaryLink = block.links[0];
+
+  return (
+    <article
+      className={`${styles.affiliateCard} ${styles.affiliateCardCompact}`}
+    >
+      <div className={styles.compactHeader}>
+        <span className={styles.initialBadge}>
+          {getAffiliateInitials(block.affiliate)}
+        </span>
+
+        <div className={styles.compactIdentity}>
+          <h3 className={styles.affiliateName}>{block.affiliate}</h3>
+          <span className={styles.affiliateId}>
+            ID #{block.affiliateId}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.compactStats}>
+        <MiniStat label="Links" value={block.totalLinks} />
+        <MiniStat label="Cliques" value={block.totalClicks} />
+        <MiniStat
+          label="Conversoes"
+          value={block.totalConversions ?? 0}
+        />
+      </div>
+
+      {primaryLink ? (
+        <div className={styles.compactLink}>
+          <div className={styles.linkPreviewText}>
+            <strong>{primaryLink.name || "Link sem nome"}</strong>
+            <a
+              href={primaryLink.promoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={primaryLink.promoLink}
+            >
+              {formatDisplayLink(primaryLink.promoLink)}
+            </a>
+          </div>
+
+          <LinkIconActions
+            link={primaryLink}
+            deletingLinkId={deletingLinkId}
+            onCopyLink={onCopyLink}
+            onDeleteLink={onDeleteLink}
+          />
+        </div>
+      ) : (
+        <p className={styles.emptyInlineText}>Nenhum link cadastrado.</p>
+      )}
+    </article>
+  );
+}
+
+function AffiliateMediumCard({
+  block,
+  deletingLinkId,
+  onCopyLink,
+  onDeleteLink,
+}: AffiliateCardProps) {
+  const previewLinks = block.links.slice(0, 3);
+  const hiddenLinks = Math.max(block.links.length - previewLinks.length, 0);
+
+  return (
+    <article
+      className={`${styles.affiliateCard} ${styles.affiliateCardMedium}`}
+    >
+      <div className={styles.affiliateHeader}>
+        <div>
+          <h3 className={styles.affiliateName}>{block.affiliate}</h3>
+
+          <span className={styles.affiliateId}>
+            ID #{block.affiliateId}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.statsGrid}>
+        <div className={styles.statBox}>
+          <span>Links</span>
+          <strong>{block.totalLinks}</strong>
+        </div>
+
+        <div className={styles.statBox}>
+          <span>Cliques</span>
+          <strong>{block.totalClicks}</strong>
+        </div>
+
+        <div className={styles.statBox}>
+          <span>Conversoes</span>
+          <strong>{block.totalConversions ?? 0}</strong>
+        </div>
+      </div>
+
+      <div className={styles.linkPreviewHeader}>
+        <h4>Links de divulgacao</h4>
+        <span>{block.links.length} links</span>
+      </div>
+
+      {previewLinks.length === 0 ? (
+        <p className={styles.emptyInlineText}>Nenhum link cadastrado.</p>
+      ) : (
+        <div className={styles.linkPreviewList}>
+          {previewLinks.map((link) => (
+            <div key={link.id} className={styles.linkPreviewRow}>
+              <div className={styles.linkPreviewText}>
+                <strong>{link.name || "Link sem nome"}</strong>
+                <a
+                  href={link.promoLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={link.promoLink}
+                >
+                  {formatDisplayLink(link.promoLink)}
+                </a>
+              </div>
+
+              <div className={styles.previewMetrics}>
+                <span className={styles.clickBadge}>
+                  {link.clicks}
+                </span>
+                <span
+                  className={
+                    (link.conversions ?? 0) > 0
+                      ? styles.conversionBadge
+                      : styles.zeroBadge
+                  }
+                >
+                  {link.conversions ?? 0}
+                </span>
+              </div>
+
+              <LinkIconActions
+                link={link}
+                deletingLinkId={deletingLinkId}
+                onCopyLink={onCopyLink}
+                onDeleteLink={onDeleteLink}
+              />
+            </div>
+          ))}
+
+          {hiddenLinks > 0 && (
+            <p className={styles.moreLinksText}>
+              +{hiddenLinks} links cadastrados
+            </p>
+          )}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function AffiliateDetailedCard({
+  block,
+  deletingLinkId,
+  onCopyLink,
+  onDeleteLink,
+}: AffiliateCardProps) {
+  return (
+    <article className={styles.affiliateCard}>
+      <div className={styles.affiliateHeader}>
+        <div>
+          <h3 className={styles.affiliateName}>{block.affiliate}</h3>
+
+          <span className={styles.affiliateId}>
+            ID #{block.affiliateId}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.statsGrid}>
+        <div className={styles.statBox}>
+          <span>Links</span>
+          <strong>{block.totalLinks}</strong>
+        </div>
+
+        <div className={styles.statBox}>
+          <span>Cliques</span>
+          <strong>{block.totalClicks}</strong>
+        </div>
+
+        <div className={styles.statBox}>
+          <span>Conversoes</span>
+          <strong>{block.totalConversions ?? 0}</strong>
+        </div>
+      </div>
+
+      <div className={styles.linksSection}>
+        <h4>Links de divulgacao</h4>
+      </div>
+
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr className={styles.tableHead}>
+              <th className={styles.smallCell}>Nome do link</th>
+              <th className={styles.smallCell}>Links dos afiliados</th>
+              <th className={styles.smallCell}>Cliques</th>
+              <th className={styles.smallCell}>Conversoes</th>
+              <th className={styles.smallCell}>Copiar Link</th>
+              <th className={styles.smallCell}>Apagar</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {block.links.map((l) => (
+              <tr key={l.id} className={styles.tableRow}>
+                <td className={styles.smallCell}>
+                  <strong>{l.name || "Sem nome"}</strong>
+                </td>
+
+                <td className={styles.smallCell}>
+                  <div className={styles.linkInfo}>
+                    <div className={styles.linkGroup}>
+                      <span className={styles.linkLabel}>
+                        Destino:
+                      </span>
+
+                      <span className={styles.breakWord}>
+                        {l.originalUrl}
+                      </span>
+                    </div>
+
+                    <div className={styles.linkGroup}>
+                      <span className={styles.linkLabel}>
+                        Afiliado:
+                      </span>
+
+                      <a
+                        href={l.promoLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${styles.link} ${styles.breakWord}`}
+                      >
+                        {l.promoLink}
+                      </a>
+                    </div>
+                  </div>
+                </td>
+
+                <td className={styles.smallCell}>
+                  <span className={styles.clickBadge}>
+                    {l.clicks}
+                  </span>
+                </td>
+
+                <td className={styles.smallCell}>
+                  <span
+                    className={
+                      (l.conversions ?? 0) > 0
+                        ? styles.conversionBadge
+                        : styles.zeroBadge
+                    }
+                  >
+                    {l.conversions ?? 0}
+                  </span>
+                </td>
+
+                <td className={styles.smallCell}>
+                  <button
+                    type="button"
+                    className={styles.copyButton}
+                    onClick={() => onCopyLink(l.promoLink)}
+                  >
+                    <FiCopy aria-hidden="true" />
+                    Copiar
+                  </button>
+                </td>
+
+                <td className={styles.smallCell}>
+                  <button
+                    type="button"
+                    className={styles.deleteButton}
+                    onClick={() => onDeleteLink(l.id, l.name)}
+                    disabled={deletingLinkId === l.id}
+                  >
+                    <FiTrash2 aria-hidden="true" />
+                    {deletingLinkId === l.id ? "Apagando..." : "Apagar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  );
+}
+
+function MiniStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className={styles.miniStat}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function LinkIconActions({
+  link,
+  deletingLinkId,
+  onCopyLink,
+  onDeleteLink,
+}: {
+  link: AffiliateLink;
+  deletingLinkId: number | null;
+  onCopyLink: (link: string) => Promise<void>;
+  onDeleteLink: (
+    id: number,
+    name?: string | null
+  ) => Promise<void>;
+}) {
+  const deleting = deletingLinkId === link.id;
+
+  return (
+    <div className={styles.inlineActions}>
+      <button
+        type="button"
+        className={styles.iconActionButton}
+        onClick={() => onCopyLink(link.promoLink)}
+        aria-label={`Copiar link ${link.name || link.shortCode}`}
+        title="Copiar link"
+      >
+        <FiCopy aria-hidden="true" />
+      </button>
+
+      <button
+        type="button"
+        className={`${styles.iconActionButton} ${styles.iconDangerButton}`}
+        onClick={() => onDeleteLink(link.id, link.name)}
+        disabled={deleting}
+        aria-label={`Apagar link ${link.name || link.shortCode}`}
+        title="Apagar link"
+      >
+        <FiTrash2 aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+function getAffiliateInitials(name: string) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  return initials || "AF";
 }

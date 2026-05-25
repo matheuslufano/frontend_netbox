@@ -324,6 +324,54 @@
   font-weight: 700;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.viewSwitcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f4f6fb;
+}
+
+.viewButton {
+  display: inline-flex;
+  width: 42px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #55627a;
+  font-size: 19px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.viewButton:hover {
+  color: #1f2937;
+  transform: translateY(-1px);
+}
+
+.viewButtonActive {
+  background: #fff;
+  color: #1d4ed8;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
 .infoText {
   margin: 8px 0;
 }
@@ -346,6 +394,10 @@
 
 .refreshButton,
 .copyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 0;
   border-radius: 10px;
   padding: 10px 14px;
@@ -393,6 +445,10 @@
 }
 
 .deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 0;
   border-radius: 10px;
   padding: 10px 14px;
@@ -421,6 +477,27 @@
 /* =========================
    DETALHE POR AFILIADO
 ========================= */
+
+.affiliateList {
+  display: grid;
+  gap: 16px;
+}
+
+.affiliateList .affiliateCard {
+  margin-top: 0;
+}
+
+.affiliateListCompact {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.affiliateListMedium {
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+}
+
+.affiliateListDetailed {
+  grid-template-columns: 1fr;
+}
 
 .affiliateCard {
   margin-top: 20px;
@@ -455,6 +532,215 @@
    MÉTRICAS
 ========================= */
 
+.affiliateCardCompact {
+  display: grid;
+  align-content: space-between;
+  gap: 16px;
+  min-height: 232px;
+  padding: 18px;
+}
+
+.affiliateCardMedium {
+  padding: 20px;
+}
+
+.compactHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.initialBadge {
+  display: inline-flex;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.compactIdentity {
+  min-width: 0;
+}
+
+.compactIdentity .affiliateName {
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.miniStat {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  background: #fafbff;
+}
+
+.miniStat span {
+  display: block;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.miniStat strong {
+  display: block;
+  margin-top: 5px;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.compactLink {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eef1f5;
+}
+
+.linkPreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.linkPreviewHeader h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+}
+
+.linkPreviewHeader span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.linkPreviewList {
+  display: grid;
+  gap: 10px;
+}
+
+.linkPreviewRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.linkPreviewText {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.linkPreviewText strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkPreviewText a {
+  overflow: hidden;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkPreviewText a:hover {
+  text-decoration: underline;
+}
+
+.previewMetrics,
+.inlineActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.iconActionButton {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.iconActionButton:hover:not(:disabled) {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.iconActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.iconDangerButton {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.iconDangerButton:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.moreLinksText,
+.emptyInlineText {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.moreLinksText {
+  padding: 2px 4px 0;
+  font-weight: 700;
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -480,6 +766,19 @@
   margin-top: 6px;
   font-size: 28px;
   font-weight: 700;
+}
+
+.affiliateCardMedium .statsGrid {
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.affiliateCardMedium .statBox {
+  padding: 14px;
+}
+
+.affiliateCardMedium .statBox strong {
+  font-size: 24px;
 }
 
 /* =========================
@@ -663,8 +962,33 @@
     align-items: flex-start;
   }
 
+  .headerActions {
+    width: 100%;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .viewSwitcher {
+    align-self: flex-start;
+  }
+
+  .affiliateListCompact,
+  .affiliateListMedium {
+    grid-template-columns: 1fr;
+  }
+
   .affiliateHeader {
     gap: 8px;
+  }
+
+  .linkPreviewRow {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .previewMetrics,
+  .inlineActions {
+    justify-content: flex-start;
   }
 
   .refreshButton,
