@@ -486,7 +486,9 @@ function AffiliateDetailedCard({
                       </span>
 
                       <span className={styles.breakWord}>
-                        {l.originalUrl}
+                        <span title={l.originalUrl}>
+                          {formatDisplayLink(l.originalUrl)}
+                        </span>
                       </span>
                     </div>
 
@@ -500,8 +502,9 @@ function AffiliateDetailedCard({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`${styles.link} ${styles.breakWord}`}
+                        title={l.promoLink}
                       >
-                        {l.promoLink}
+                        {formatDisplayLink(l.promoLink)}
                       </a>
                     </div>
                   </div>

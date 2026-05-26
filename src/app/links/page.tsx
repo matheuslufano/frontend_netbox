@@ -4,6 +4,7 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import {
   FiCopy,
+  FiDownload,
   FiExternalLink,
   FiEye,
   FiLink,
@@ -155,6 +156,34 @@ export default function Links() {
       window.setTimeout(() => setCopiedLinkId(null), 2000);
     } catch {
       setLinksError("Nao foi possivel copiar o link.");
+    }
+  }
+
+  async function downloadQrCode(link: LinkItem) {
+    try {
+      const fileName = buildQrCodeFileName(link);
+      const anchor = document.createElement("a");
+      let objectUrl: string | null = null;
+
+      if (link.qrCode.startsWith("data:")) {
+        anchor.href = link.qrCode;
+      } else {
+        const response = await fetch(link.qrCode);
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        anchor.href = objectUrl;
+      }
+
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch {
+      setLinksError("Nao foi possivel baixar o QR code.");
     }
   }
 
@@ -409,6 +438,14 @@ export default function Links() {
                           alt={`QR code do link ${link.name || link.shortCode}`}
                         />
                         <span>QR code</span>
+                        <button
+                          type="button"
+                          className={styles.qrDownloadButton}
+                          onClick={() => downloadQrCode(link)}
+                        >
+                          <FiDownload aria-hidden="true" />
+                          Baixar QR
+                        </button>
                       </div>
                     </article>
                   ))}
@@ -420,4 +457,16 @@ export default function Links() {
       </div>
     </div>
   );
+}
+
+function buildQrCodeFileName(link: LinkItem) {
+  const label = link.name || link.affiliate?.name || link.shortCode;
+  const safeLabel = label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+
+  return `qr-code-${safeLabel || link.id}.png`;
 }

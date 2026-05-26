@@ -441,6 +441,31 @@
   background: #dbeafe;
 }
 
+.qrDownloadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #ff5f34;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.qrDownloadButton:hover {
+  background: #c22a00;
+  transform: translateY(-1px);
+}
+
 .qrBox {
   display: grid;
   align-content: center;
