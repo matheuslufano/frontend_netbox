@@ -33,6 +33,7 @@ export default function Afiliado() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAffiliates, setShowAffiliates] = useState(false);
 
   async function refreshAffiliates() {
     setLoading(true);
@@ -114,7 +115,7 @@ export default function Afiliado() {
 
     const normalizedEmail = email.trim().toLowerCase();
     const emailAlreadyExists = affiliates.some(
-      (affiliate) => affiliate.email?.toLowerCase() === normalizedEmail
+      (affiliate) => affiliate.email?.toLowerCase() === normalizedEmail,
     );
 
     if (emailAlreadyExists) {
@@ -138,9 +139,7 @@ export default function Afiliado() {
       setCity(cities[0]?.name ?? "");
       setMessage("Afiliado criado com sucesso.");
     } catch (err) {
-      setError(
-        getApiErrorMessage(err, "Nao foi possivel criar o afiliado.")
-      );
+      setError(getApiErrorMessage(err, "Nao foi possivel criar o afiliado."));
     } finally {
       setSubmitting(false);
     }
@@ -177,7 +176,7 @@ export default function Afiliado() {
     const emailAlreadyExists = affiliates.some(
       (affiliate) =>
         affiliate.id !== id &&
-        affiliate.email?.toLowerCase() === normalizedEmail
+        affiliate.email?.toLowerCase() === normalizedEmail,
     );
 
     if (emailAlreadyExists) {
@@ -196,17 +195,14 @@ export default function Afiliado() {
 
       setAffiliates((current) =>
         current.map((affiliate) =>
-          affiliate.id === id ? updatedAffiliate : affiliate
-        )
+          affiliate.id === id ? updatedAffiliate : affiliate,
+        ),
       );
       handleCancelEdit();
       setMessage("Afiliado atualizado com sucesso.");
     } catch (err) {
       setError(
-        getApiErrorMessage(
-          err,
-          "Nao foi possivel atualizar o afiliado."
-        )
+        getApiErrorMessage(err, "Nao foi possivel atualizar o afiliado."),
       );
     } finally {
       setSavingId(null);
@@ -217,9 +213,7 @@ export default function Afiliado() {
     setError(null);
     setMessage(null);
 
-    const confirmed = window.confirm(
-      `Apagar o afiliado ${affiliate.name}?`
-    );
+    const confirmed = window.confirm(`Apagar o afiliado ${affiliate.name}?`);
 
     if (!confirmed) {
       return;
@@ -229,7 +223,7 @@ export default function Afiliado() {
     try {
       await apagarAfiliado(affiliate.id);
       setAffiliates((current) =>
-        current.filter((item) => item.id !== affiliate.id)
+        current.filter((item) => item.id !== affiliate.id),
       );
 
       if (editingId === affiliate.id) {
@@ -238,9 +232,7 @@ export default function Afiliado() {
 
       setMessage("Afiliado apagado com sucesso.");
     } catch (err) {
-      setError(
-        getApiErrorMessage(err, "Nao foi possivel apagar o afiliado.")
-      );
+      setError(getApiErrorMessage(err, "Nao foi possivel apagar o afiliado."));
       await refreshAffiliates();
     } finally {
       setDeletingId(null);
@@ -248,8 +240,8 @@ export default function Afiliado() {
   }
 
   return (
-    <div className={conteine.contreine}>
-      <div>
+    <div className={`${conteine.contreine} ${styles.glassShell}`}>
+      <div className={styles.glassPage}>
         <h2>Cadastro de afiliados</h2>
 
         <form className={styles.conteiner} onSubmit={handleSubmit}>
@@ -310,52 +302,63 @@ export default function Afiliado() {
         </form>
 
         <div className={styles.conteiner} style={{ marginTop: 24 }}>
-          <strong>Afiliados cadastrados</strong>
-          {loading ? (
+          <div className={styles.listHeader}>
+            <div>
+              <strong>Afiliados cadastrados</strong>
+              <p className={styles.listSummary}>
+                {loading
+                  ? "Carregando clientes..."
+                  : `${affiliates.length} cliente${
+                      affiliates.length === 1 ? "" : "s"
+                    } cadastrado${affiliates.length === 1 ? "" : "s"}`}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className={styles.showListButton}
+              onClick={() => setShowAffiliates((current) => !current)}
+            >
+              {showAffiliates
+                ? "Ocultar clientes"
+                : "Mostrar todos os clientes"}
+            </button>
+          </div>
+
+          {showAffiliates && loading ? (
             <p>Carregando...</p>
-          ) : affiliates.length === 0 ? (
+          ) : showAffiliates && affiliates.length === 0 ? (
             <p>Nenhum afiliado cadastrado.</p>
-          ) : (
+          ) : showAffiliates ? (
             <ul className={styles.affiliateList}>
               {affiliates.map((affiliate) => (
-                <li
-                  key={affiliate.id}
-                  className={styles.affiliateItem}
-                >
+                <li key={affiliate.id} className={styles.affiliateItem}>
                   {editingId === affiliate.id ? (
                     <div className={styles.editGrid}>
                       <input
                         type="text"
                         value={editName}
-                        onChange={(event) =>
-                          setEditName(event.target.value)
-                        }
+                        onChange={(event) => setEditName(event.target.value)}
                         aria-label="Nome do afiliado"
                       />
 
                       <input
                         type="email"
                         value={editEmail}
-                        onChange={(event) =>
-                          setEditEmail(event.target.value)
-                        }
+                        onChange={(event) => setEditEmail(event.target.value)}
                         aria-label="E-mail do afiliado"
                       />
 
                       <input
                         type="text"
                         value={editPhone}
-                        onChange={(event) =>
-                          setEditPhone(event.target.value)
-                        }
+                        onChange={(event) => setEditPhone(event.target.value)}
                         aria-label="Numero do afiliado"
                       />
 
                       <select
                         value={editCity}
-                        onChange={(event) =>
-                          setEditCity(event.target.value)
-                        }
+                        onChange={(event) => setEditCity(event.target.value)}
                         disabled={loadingCities}
                         aria-label="Cidade do afiliado"
                       >
@@ -366,10 +369,7 @@ export default function Afiliado() {
                           <option>Nenhuma cidade encontrada</option>
                         )}
                         {cities.map((cidade) => (
-                          <option
-                            key={cidade.id}
-                            value={cidade.name}
-                          >
+                          <option key={cidade.id} value={cidade.name}>
                             {cidade.name}
                           </option>
                         ))}
@@ -393,9 +393,7 @@ export default function Afiliado() {
                           onClick={() => handleSaveEdit(affiliate.id)}
                           disabled={savingId === affiliate.id}
                         >
-                          {savingId === affiliate.id
-                            ? "Salvando..."
-                            : "Salvar"}
+                          {savingId === affiliate.id ? "Salvando..." : "Salvar"}
                         </button>
 
                         <button
@@ -423,19 +421,16 @@ export default function Afiliado() {
                       className={styles.deleteButton}
                       onClick={() => handleDelete(affiliate)}
                       disabled={
-                        deletingId === affiliate.id ||
-                        savingId === affiliate.id
+                        deletingId === affiliate.id || savingId === affiliate.id
                       }
                     >
-                      {deletingId === affiliate.id
-                        ? "Apagando..."
-                        : "Apagar"}
+                      {deletingId === affiliate.id ? "Apagando..." : "Apagar"}
                     </button>
                   </div>
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

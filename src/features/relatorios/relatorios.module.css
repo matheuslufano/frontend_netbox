@@ -430,6 +430,34 @@
   cursor: not-allowed;
 }
 
+.affiliateRefreshButton {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+.affiliateRefreshButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.compactRefreshButton {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.spinningIcon {
+  animation: relatoriosSpin 0.8s linear infinite;
+}
+
+@keyframes relatoriosSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .copyButton {
   background: #2563eb;
   color: #fff;
@@ -546,7 +574,7 @@
 
 .compactHeader {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 }
@@ -995,6 +1023,10 @@
   .copyButton,
   .deleteButton {
     width: 100%;
+  }
+
+  .compactRefreshButton {
+    width: 38px;
   }
 
   .title {

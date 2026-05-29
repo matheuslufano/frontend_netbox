@@ -4,6 +4,7 @@ import {
   FiCreditCard,
   FiGrid,
   FiList,
+  FiRefreshCw,
   FiTrash2,
 } from "react-icons/fi";
 import { apagarLink, getApiErrorMessage } from "@/lib/api";
@@ -43,6 +44,8 @@ type AffiliateLink = AffiliateDetail["links"][number];
 type AffiliateCardProps = {
   block: AffiliateDetail;
   deletingLinkId: number | null;
+  refreshingReport: boolean;
+  onRefreshReport: () => void;
   onCopyLink: (link: string) => Promise<void>;
   onDeleteLink: (
     id: number,
@@ -158,14 +161,6 @@ export default function AffiliateDetails({
             })}
           </div>
 
-          <button
-            type="button"
-            className={styles.refreshButton}
-            onClick={refresh}
-            disabled={refreshing}
-          >
-            {refreshing ? "Atualizando..." : "Atualizar relatorio"}
-          </button>
         </div>
       </div>
 
@@ -225,6 +220,8 @@ export default function AffiliateDetails({
                   key={block.affiliateId}
                   block={block}
                   deletingLinkId={deletingLinkId}
+                  refreshingReport={refreshing}
+                  onRefreshReport={refresh}
                   onCopyLink={handleCopyLink}
                   onDeleteLink={handleDeleteLink}
                 />
@@ -237,6 +234,8 @@ export default function AffiliateDetails({
                   key={block.affiliateId}
                   block={block}
                   deletingLinkId={deletingLinkId}
+                  refreshingReport={refreshing}
+                  onRefreshReport={refresh}
                   onCopyLink={handleCopyLink}
                   onDeleteLink={handleDeleteLink}
                 />
@@ -248,6 +247,8 @@ export default function AffiliateDetails({
                 key={block.affiliateId}
                 block={block}
                 deletingLinkId={deletingLinkId}
+                refreshingReport={refreshing}
+                onRefreshReport={refresh}
                 onCopyLink={handleCopyLink}
                 onDeleteLink={handleDeleteLink}
               />
@@ -262,6 +263,8 @@ export default function AffiliateDetails({
 function AffiliateCompactCard({
   block,
   deletingLinkId,
+  refreshingReport,
+  onRefreshReport,
   onCopyLink,
   onDeleteLink,
 }: AffiliateCardProps) {
@@ -282,6 +285,12 @@ function AffiliateCompactCard({
             ID #{block.affiliateId}
           </span>
         </div>
+
+        <RefreshReportButton
+          refreshing={refreshingReport}
+          onRefresh={onRefreshReport}
+          compact
+        />
       </div>
 
       <div className={styles.compactStats}>
@@ -324,6 +333,8 @@ function AffiliateCompactCard({
 function AffiliateMediumCard({
   block,
   deletingLinkId,
+  refreshingReport,
+  onRefreshReport,
   onCopyLink,
   onDeleteLink,
 }: AffiliateCardProps) {
@@ -342,6 +353,11 @@ function AffiliateMediumCard({
             ID #{block.affiliateId}
           </span>
         </div>
+
+        <RefreshReportButton
+          refreshing={refreshingReport}
+          onRefresh={onRefreshReport}
+        />
       </div>
 
       <div className={styles.statsGrid}>
@@ -422,6 +438,8 @@ function AffiliateMediumCard({
 function AffiliateDetailedCard({
   block,
   deletingLinkId,
+  refreshingReport,
+  onRefreshReport,
   onCopyLink,
   onDeleteLink,
 }: AffiliateCardProps) {
@@ -435,6 +453,11 @@ function AffiliateDetailedCard({
             ID #{block.affiliateId}
           </span>
         </div>
+
+        <RefreshReportButton
+          refreshing={refreshingReport}
+          onRefresh={onRefreshReport}
+        />
       </div>
 
       <div className={styles.statsGrid}>
@@ -613,6 +636,37 @@ function LinkIconActions({
         <FiTrash2 aria-hidden="true" />
       </button>
     </div>
+  );
+}
+
+function RefreshReportButton({
+  refreshing,
+  onRefresh,
+  compact = false,
+}: {
+  refreshing: boolean;
+  onRefresh: () => void;
+  compact?: boolean;
+}) {
+  const label = refreshing ? "Atualizando..." : "Atualizar relatorio";
+
+  return (
+    <button
+      type="button"
+      className={`${styles.refreshButton} ${
+        styles.affiliateRefreshButton
+      } ${compact ? styles.compactRefreshButton : ""}`}
+      onClick={onRefresh}
+      disabled={refreshing}
+      aria-label={label}
+      title={label}
+    >
+      <FiRefreshCw
+        aria-hidden="true"
+        className={refreshing ? styles.spinningIcon : undefined}
+      />
+      {!compact && <span>{label}</span>}
+    </button>
   );
 }
 

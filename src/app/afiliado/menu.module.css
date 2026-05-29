@@ -6,25 +6,77 @@
    LAYOUT PRINCIPAL
 ========================= */
 
+.glassShell {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.1)),
+    rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 26px 70px rgba(92, 25, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  backdrop-filter: blur(26px) saturate(1.25);
+  -webkit-backdrop-filter: blur(26px) saturate(1.25);
+}
+
+.glassPage {
+  display: grid;
+  gap: 22px;
+}
+
+.glassPage h2 {
+  margin: 0;
+  color: #d43508;;
+  font-size: 30px;
+  font-weight: 850;
+  line-height: 1.1;
+  text-shadow: 0 2px 18px rgba(94, 24, 0, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
 .menu,
 .conteiner {
   width: 100%;
   max-width: 650px;
-  margin: 24px auto;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
   padding: 28px;
-  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 22px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.2)),
+    rgba(255, 255, 255, 0.24);
+  box-shadow:
+    0 22px 60px rgba(95, 28, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(22px) saturate(1.25);
+  -webkit-backdrop-filter: blur(22px) saturate(1.25);
 }
 
-.menu {
-  background-color: rgba(255, 255, 255, 0.72);
-}
-
-.conteiner {
-  background-color: white;
+.conteiner::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.48),
+    rgba(255, 255, 255, 0.08) 46%,
+    rgba(255, 255, 255, 0.24)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  padding: 1px;
 }
 
 .menu h1 {
@@ -40,6 +92,11 @@
   margin: 0;
 }
 
+.conteiner strong,
+.field label {
+  color: #201611;
+}
+
 /* =========================
    INPUTS / SELECT
 ========================= */
@@ -51,20 +108,31 @@
   padding: 12px 14px;
   margin-top: 5px;
   border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.44);
   box-sizing: border-box;
-  background-color: #fff;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.38)),
+    rgba(255, 255, 255, 0.46);
   font-size: 15px;
   color: #1f1f1f;
   outline: none;
-  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 24px rgba(86, 28, 0, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .conteiner input {
-  border: 2px solid #71717150;
+  border-color: rgba(255, 255, 255, 0.44);
 }
 
 .conteiner select {
-  border: 2px solid #ff60342d;
+  border-color: rgba(255, 255, 255, 0.44);
   cursor: pointer;
   appearance: none;
   padding-right: 45px;
@@ -77,13 +145,17 @@
 
 .conteiner input:hover,
 .conteiner select:hover {
-  border-color: #ff4d00;
+  border-color: rgba(255, 111, 67, 0.74);
 }
 
 .conteiner input:focus,
 .conteiner select:focus {
-  border-color: #ff4d00;
-  box-shadow: 0 0 0 4px rgba(255, 77, 0, 0.2);
+  border-color: rgba(255, 95, 52, 0.92);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow:
+    0 0 0 4px rgba(255, 95, 52, 0.16),
+    0 12px 28px rgba(86, 28, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .conteiner option {
@@ -105,6 +177,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin-top: 12px;
 }
 
 /* =========================
@@ -113,7 +186,42 @@
 
 .button {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+}
+
+.button button {
+  background:
+    linear-gradient(135deg, rgba(255, 120, 79, 0.98), rgba(197, 49, 12, 0.94)),
+    rgba(255, 95, 52, 0.86);
+  margin-top: 16px;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow:
+    0 14px 28px rgba(149, 36, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  transition:
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    transform 0.2s ease;
+}
+
+.button button:hover:not(:disabled) {
+  filter: brightness(1.04);
+  box-shadow:
+    0 18px 34px rgba(149, 36, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  transform: translateY(-1px);
+}
+
+.button button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .menu button {
@@ -138,6 +246,49 @@
    LISTA DE AFILIADOS
 ========================= */
 
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.listSummary {
+  margin-top: 6px;
+  color: #5c4a42;
+  font-size: 14px;
+}
+
+.showListButton {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 12px;
+  padding: 0 16px;
+  background:
+    linear-gradient(135deg, rgba(67, 115, 238, 0.94), rgba(25, 75, 180, 0.92)),
+    rgba(37, 99, 235, 0.72);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow:
+    0 14px 28px rgba(28, 65, 149, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.showListButton:hover {
+  filter: brightness(1.04);
+  box-shadow:
+    0 18px 34px rgba(28, 65, 149, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  transform: translateY(-1px);
+}
+
 .affiliateList {
   display: flex;
   flex-direction: column;
@@ -153,9 +304,16 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  border: 1px solid #f0d8cf;
-  border-radius: 14px;
-  background: #fffaf8;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.2)),
+    rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 12px 26px rgba(95, 28, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .affiliateInfo {
@@ -167,7 +325,7 @@
 }
 
 .affiliateInfo span {
-  color: #555;
+  color: #5c4a42;
   overflow-wrap: anywhere;
 }
 
@@ -188,19 +346,31 @@
 
 .actions {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
 }
 
 .actions button {
   min-width: 80px;
   padding: 10px 12px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.34);
   border-radius: 10px;
   color: #fff;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.2s ease;
+  box-shadow:
+    0 10px 22px rgba(37, 37, 37, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition:
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    transform 0.2s ease;
+}
+
+.actions button:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .actions button:disabled {
@@ -209,35 +379,51 @@
 }
 
 .editButton {
-  background: #2563eb;
+  background:
+    linear-gradient(135deg, rgba(76, 124, 243, 0.96), rgba(29, 78, 216, 0.9)),
+    rgba(37, 99, 235, 0.72);
 }
 
 .editButton:hover:not(:disabled) {
-  background: #1d4ed8;
+  background:
+    linear-gradient(135deg, rgba(86, 133, 250, 0.98), rgba(29, 78, 216, 0.94)),
+    rgba(37, 99, 235, 0.78);
 }
 
 .saveButton {
-  background: #137333;
+  background:
+    linear-gradient(135deg, rgba(34, 146, 79, 0.96), rgba(15, 95, 42, 0.9)),
+    rgba(19, 115, 51, 0.72);
 }
 
 .saveButton:hover:not(:disabled) {
-  background: #0f5f2a;
+  background:
+    linear-gradient(135deg, rgba(42, 158, 88, 0.98), rgba(15, 95, 42, 0.94)),
+    rgba(19, 115, 51, 0.78);
 }
 
 .secondaryButton {
-  background: #6b7280;
+  background:
+    linear-gradient(135deg, rgba(122, 132, 150, 0.96), rgba(75, 85, 99, 0.9)),
+    rgba(107, 114, 128, 0.72);
 }
 
 .secondaryButton:hover:not(:disabled) {
-  background: #4b5563;
+  background:
+    linear-gradient(135deg, rgba(132, 142, 160, 0.98), rgba(75, 85, 99, 0.94)),
+    rgba(107, 114, 128, 0.78);
 }
 
 .deleteButton {
-  background: #b00020;
+  background:
+    linear-gradient(135deg, rgba(210, 41, 74, 0.96), rgba(143, 0, 26, 0.9)),
+    rgba(176, 0, 32, 0.72);
 }
 
 .deleteButton:hover:not(:disabled) {
-  background: #8f001a;
+  background:
+    linear-gradient(135deg, rgba(224, 51, 84, 0.98), rgba(143, 0, 26, 0.94)),
+    rgba(176, 0, 32, 0.78);
 }
 
 /* =========================
@@ -275,6 +461,15 @@
   .affiliateItem {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .listHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .showListButton {
+    width: 100%;
   }
 
   .editGrid {
