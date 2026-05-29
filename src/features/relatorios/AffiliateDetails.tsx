@@ -485,7 +485,6 @@ function AffiliateDetailedCard({
         <table className={styles.table}>
           <thead>
             <tr className={styles.tableHead}>
-              <th className={styles.smallCell}>Nome do link</th>
               <th className={styles.smallCell}>Links dos afiliados</th>
               <th className={styles.smallCell}>Cliques</th>
               <th className={styles.smallCell}>Conversoes</th>
@@ -498,11 +497,11 @@ function AffiliateDetailedCard({
             {block.links.map((l) => (
               <tr key={l.id} className={styles.tableRow}>
                 <td className={styles.smallCell}>
-                  <strong>{l.name || "Sem nome"}</strong>
-                </td>
-
-                <td className={styles.smallCell}>
                   <div className={styles.linkInfo}>
+                    <strong className={styles.linkNameHighlight}>
+                      {l.name || "Link sem nome"}
+                    </strong>
+
                     <div className={styles.linkGroup}>
                       <span className={styles.linkLabel}>
                         Destino:
