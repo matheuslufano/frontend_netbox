@@ -8,6 +8,77 @@
   font-weight: 700;
 }
 
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.searchField {
+  display: flex;
+  width: min(100%, 520px);
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid #d7dde8;
+  border-radius: 10px;
+  background: #fff;
+  color: #64748b;
+}
+
+.searchField input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #111827;
+  font: inherit;
+}
+
+.searchField input::placeholder {
+  color: #94a3b8;
+}
+
+.clearSearchButton {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 18px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.clearSearchButton:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.searchCount {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* =========================
    CARDS GERAIS
 ========================= */
@@ -1017,6 +1088,15 @@
   .conversionSummary,
   .statsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .searchBar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .searchField {
+    width: 100%;
   }
 
   .affiliateCard {

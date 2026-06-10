@@ -16,6 +16,7 @@ interface AffiliateDetailsProps {
   details: AffiliateDetail[];
   refresh: () => void;
   refreshing: boolean;
+  emptyMessage?: string;
 }
 
 const affiliateViewOptions = [
@@ -57,6 +58,7 @@ export default function AffiliateDetails({
   details,
   refresh,
   refreshing,
+  emptyMessage = "Nenhum afiliado encontrado no relatorio.",
 }: AffiliateDetailsProps) {
   const [deletingLinkId, setDeletingLinkId] =
     useState<number | null>(null);
@@ -209,7 +211,7 @@ export default function AffiliateDetails({
 
       {details.length === 0 ? (
         <p className={styles.emptyText}>
-          Nenhum afiliado encontrado no relatorio.
+          {emptyMessage}
         </p>
       ) : (
         <div className={affiliateListClass}>

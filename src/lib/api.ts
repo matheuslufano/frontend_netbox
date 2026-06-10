@@ -178,10 +178,13 @@ export type LoginResponse = {
   };
 };
 
+const defaultApiUrl =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3001"
+    : undefined;
+
 const api = axios.create({
-  baseURL:
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://afiliadosbackend-production.up.railway.app",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || defaultApiUrl,
 });
 
 function getApiBaseUrl() {

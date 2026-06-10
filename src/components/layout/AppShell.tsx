@@ -9,12 +9,11 @@ import Sidebar from "./Sidebar";
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const isLoginPage = pathname === "/login";
+  const [checkingAuth, setCheckingAuth] = useState(() => !isLoginPage);
 
   useEffect(() => {
     if (isLoginPage) {
-      setCheckingAuth(false);
       return;
     }
 
@@ -25,7 +24,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
       return;
     }
 
-    setCheckingAuth(false);
+    const authCheck = window.setTimeout(() => {
+      setCheckingAuth(false);
+    }, 0);
+
+    return () => window.clearTimeout(authCheck);
   }, [isLoginPage, router]);
 
   if (isLoginPage) {
