@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
+  FiCheckCircle,
+  FiClock,
   FiCopy,
   FiCreditCard,
+  FiGitBranch,
   FiGrid,
+  FiLink,
   FiList,
   FiRefreshCw,
   FiTrash2,
@@ -37,10 +41,33 @@ const affiliateViewOptions = [
   },
 ] as const;
 
+const detailTabOptions = [
+  {
+    value: "links",
+    label: "Links",
+    icon: FiLink,
+  },
+  {
+    value: "conversions",
+    label: "Conversoes",
+    icon: FiGitBranch,
+  },
+] as const;
+
 type AffiliateViewMode =
   (typeof affiliateViewOptions)[number]["value"];
 
+type DetailTab = (typeof detailTabOptions)[number]["value"];
+
 type AffiliateLink = AffiliateDetail["links"][number];
+
+type AffiliateConversion =
+  AffiliateDetail["conversionEvents"][number];
+
+type ConversionWithAffiliate = AffiliateConversion & {
+  affiliate: string;
+  affiliateId: number;
+};
 
 type AffiliateCardProps = {
   block: AffiliateDetail;
@@ -64,6 +91,8 @@ export default function AffiliateDetails({
     useState<number | null>(null);
   const [viewMode, setViewMode] =
     useState<AffiliateViewMode>("detailed");
+  const [detailTab, setDetailTab] =
+    useState<DetailTab>("links");
 
   const conversionRanking = details
     .filter((affiliate) => (affiliate.totalConversions ?? 0) > 0)
@@ -76,6 +105,24 @@ export default function AffiliateDetails({
     (sum, affiliate) =>
       sum + (affiliate.totalConversions ?? 0),
     0
+  );
+
+  const conversionEvents = useMemo(
+    () =>
+      details
+        .flatMap((affiliate) =>
+          (affiliate.conversionEvents ?? []).map((conversion) => ({
+            ...conversion,
+            affiliate: affiliate.affiliate,
+            affiliateId: affiliate.affiliateId,
+          }))
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.convertedAt).getTime() -
+            new Date(a.convertedAt).getTime()
+        ),
+    [details]
   );
 
   const affiliateListClass = [
@@ -137,36 +184,66 @@ export default function AffiliateDetails({
 
         <div className={styles.headerActions}>
           <div
-            className={styles.viewSwitcher}
-            aria-label="Visualizacao dos afiliados"
-            role="group"
+            className={styles.detailTabs}
+            aria-label="Dados do detalhe"
+            role="tablist"
           >
-            {affiliateViewOptions.map((option) => {
+            {detailTabOptions.map((option) => {
               const Icon = option.icon;
-              const isActive = viewMode === option.value;
+              const isActive = detailTab === option.value;
 
               return (
                 <button
                   key={option.value}
                   type="button"
-                  className={`${styles.viewButton} ${
-                    isActive ? styles.viewButtonActive : ""
+                  className={`${styles.detailTab} ${
+                    isActive ? styles.detailTabActive : ""
                   }`}
-                  onClick={() => setViewMode(option.value)}
-                  aria-label={option.label}
-                  aria-pressed={isActive}
-                  title={option.label}
+                  onClick={() => setDetailTab(option.value)}
+                  aria-selected={isActive}
+                  role="tab"
                 >
                   <Icon aria-hidden="true" />
+                  <span>{option.label}</span>
                 </button>
               );
             })}
           </div>
 
+          {detailTab === "links" && (
+            <div
+              className={styles.viewSwitcher}
+              aria-label="Visualizacao dos afiliados"
+              role="group"
+            >
+              {affiliateViewOptions.map((option) => {
+                const Icon = option.icon;
+                const isActive = viewMode === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`${styles.viewButton} ${
+                      isActive ? styles.viewButtonActive : ""
+                    }`}
+                    onClick={() => setViewMode(option.value)}
+                    aria-label={option.label}
+                    aria-pressed={isActive}
+                    title={option.label}
+                  >
+                    <Icon aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className={styles.conversionSummary}>
+      {detailTab === "links" ? (
+        <>
+          <div className={styles.conversionSummary}>
         <div className={styles.conversionHero}>
           <span>Conversoes pelo WhatsApp</span>
           <strong>{totalConversions}</strong>
@@ -258,7 +335,170 @@ export default function AffiliateDetails({
           })}
         </div>
       )}
+        </>
+      ) : (
+        <ConversionFlowPanel
+          conversionEvents={conversionEvents}
+          emptyMessage={emptyMessage}
+          totalConversions={totalConversions}
+        />
+      )}
     </>
+  );
+}
+
+function ConversionFlowPanel({
+  conversionEvents,
+  emptyMessage,
+  totalConversions,
+}: {
+  conversionEvents: ConversionWithAffiliate[];
+  emptyMessage: string;
+  totalConversions: number;
+}) {
+  const whatsappConversions =
+    conversionEvents.filter(hasWhatsappStage).length;
+  const chatmixConversions =
+    conversionEvents.filter(hasChatmixValidation).length;
+  const sgpConversions =
+    conversionEvents.filter(hasSgpSale).length;
+
+  return (
+    <section className={styles.conversionFlowPanel} role="tabpanel">
+      <div className={styles.conversionFlowOverview}>
+        <FlowMetric label="Conversoes" value={totalConversions} />
+        <FlowMetric label="WhatsApp" value={whatsappConversions} />
+        <FlowMetric label="Chatmix" value={chatmixConversions} />
+        <FlowMetric label="SGP" value={sgpConversions} />
+      </div>
+
+      {conversionEvents.length === 0 ? (
+        <p className={styles.emptyText}>
+          {emptyMessage}
+        </p>
+      ) : (
+        <div className={styles.conversionFlowList}>
+          {conversionEvents.map((conversion) => {
+            const steps = getConversionFlowSteps(conversion);
+            const finalStatus = getConversionFinalStatus(conversion);
+
+            return (
+              <article
+                key={conversion.id}
+                className={styles.conversionFlowCard}
+              >
+                <div className={styles.conversionFlowHeader}>
+                  <div className={styles.conversionIdentity}>
+                    <span>Conversao #{conversion.id}</span>
+                    <h3>{conversion.affiliate}</h3>
+                    <p>
+                      {conversion.linkName || "Link sem nome"} - codigo{" "}
+                      {conversion.shortCode}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`${styles.finalStatusBadge} ${
+                      finalStatus.className
+                    }`}
+                  >
+                    {finalStatus.label}
+                  </span>
+                </div>
+
+                <div className={styles.conversionMetaGrid}>
+                  <MetaItem
+                    label="Evento"
+                    value={formatEventType(conversion.type)}
+                  />
+                  <MetaItem
+                    label="Produto"
+                    value={conversion.product || "Nao informado"}
+                  />
+                  <MetaItem
+                    label="Destino"
+                    value={
+                      conversion.destination
+                        ? formatDisplayLink(conversion.destination)
+                        : "Nao informado"
+                    }
+                    title={conversion.destination || undefined}
+                  />
+                  <MetaItem
+                    label="Data"
+                    value={formatDateTime(conversion.convertedAt)}
+                  />
+                </div>
+
+                <ol className={styles.flowSteps}>
+                  {steps.map((step, index) => {
+                    const Icon = step.completed
+                      ? FiCheckCircle
+                      : FiClock;
+
+                    return (
+                      <li
+                        key={step.title}
+                        className={`${styles.flowStep} ${
+                          step.completed
+                            ? styles.flowStepDone
+                            : styles.flowStepPending
+                        }`}
+                      >
+                        <span className={styles.stepMarker}>
+                          <Icon aria-hidden="true" />
+                        </span>
+
+                        <div className={styles.stepContent}>
+                          <span className={styles.stepNumber}>
+                            {index + 1} etapa
+                          </span>
+                          <strong>{step.title}</strong>
+                          <p>{step.description}</p>
+                          <small>{step.detail}</small>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FlowMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className={styles.flowMetric}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function MetaItem({
+  label,
+  value,
+  title,
+}: {
+  label: string;
+  value: string;
+  title?: string;
+}) {
+  return (
+    <div className={styles.metaItem} title={title}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
@@ -669,6 +909,149 @@ function RefreshReportButton({
       {!compact && <span>{label}</span>}
     </button>
   );
+}
+
+function getConversionFlowSteps(conversion: ConversionWithAffiliate) {
+  const hasVisit =
+    Boolean(conversion.latestClickAt) || conversion.totalClicks > 0;
+  const hasWhatsapp = hasWhatsappStage(conversion);
+  const hasChatmix = hasChatmixValidation(conversion);
+  const hasSgp = hasSgpSale(conversion);
+  const eventDate = formatDateTime(conversion.convertedAt);
+
+  return [
+    {
+      title: "Visita na landing page",
+      description: "Visitante acessou a landing page do link.",
+      completed: hasVisit,
+      detail: hasVisit
+        ? conversion.latestClickAt
+          ? `Ultima visita: ${formatDateTime(conversion.latestClickAt)}`
+          : `${conversion.totalClicks} visita(s) registradas`
+        : "Aguardando visita",
+    },
+    {
+      title: "Clique no WhatsApp",
+      description: "Entrou no atendimento pelo botao de WhatsApp.",
+      completed: hasWhatsapp,
+      detail: hasWhatsapp
+        ? isWhatsappEvent(conversion)
+          ? `Registrado: ${eventDate}`
+          : "Confirmado por etapa posterior"
+        : "Aguardando clique",
+    },
+    {
+      title: "Validacao no Chatmix",
+      description: "Webhook confirmou o atendimento no Chatmix.",
+      completed: hasChatmix,
+      detail: hasChatmix ? `Validado: ${eventDate}` : "Aguardando webhook",
+    },
+    {
+      title: "Registro no SGP",
+      description: "Venda concluida e registrada no SGP.",
+      completed: hasSgp,
+      detail: hasSgp ? `Concluido: ${eventDate}` : "Aguardando venda",
+    },
+  ];
+}
+
+function getConversionFinalStatus(conversion: ConversionWithAffiliate) {
+  if (hasSgpSale(conversion)) {
+    return {
+      label: "Venda concluida",
+      className: styles.finalStatusDone,
+    };
+  }
+
+  if (hasChatmixValidation(conversion)) {
+    return {
+      label: "Validado no Chatmix",
+      className: styles.finalStatusActive,
+    };
+  }
+
+  if (hasWhatsappStage(conversion)) {
+    return {
+      label: "Em atendimento",
+      className: styles.finalStatusActive,
+    };
+  }
+
+  return {
+    label: "Pendente",
+    className: styles.finalStatusPending,
+  };
+}
+
+function hasWhatsappStage(conversion: ConversionWithAffiliate) {
+  return (
+    isWhatsappEvent(conversion) ||
+    hasChatmixValidation(conversion) ||
+    hasSgpSale(conversion)
+  );
+}
+
+function isWhatsappEvent(conversion: ConversionWithAffiliate) {
+  return /whatsapp|wa\.me|api\.whatsapp/.test(
+    getConversionSearchText(conversion)
+  );
+}
+
+function hasChatmixValidation(conversion: ConversionWithAffiliate) {
+  return (
+    /chatmix|webhook/.test(getConversionSearchText(conversion)) ||
+    hasSgpSale(conversion)
+  );
+}
+
+function hasSgpSale(conversion: ConversionWithAffiliate) {
+  return /sgp|spg|venda|sale|concluid|aprovad|contrato|finalizad/.test(
+    getConversionSearchText(conversion)
+  );
+}
+
+function getConversionSearchText(conversion: ConversionWithAffiliate) {
+  return [
+    conversion.type,
+    conversion.product,
+    conversion.destination,
+    conversion.userAgent,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function formatEventType(type: string) {
+  if (!type) {
+    return "Nao informado";
+  }
+
+  return type
+    .replace(/^chatmix:/, "Chatmix - ")
+    .replace(/_/g, " ");
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return "Sem data";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Data invalida";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function getAffiliateInitials(name: string) {

@@ -36,11 +36,30 @@ export type DashboardData = {
   }[];
 };
 
+export type AffiliateConversionEvent = {
+  id: number;
+  type: string;
+  product: string | null;
+  destination: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  convertedAt: string;
+  linkId: number;
+  linkName: string | null;
+  shortCode: string;
+  originalUrl: string;
+  promoLink: string;
+  whatsappLink: string;
+  totalClicks: number;
+  latestClickAt: string | null;
+};
+
 export type AffiliateStats = {
   affiliate: string;
   totalLinks: number;
   totalClicks: number;
   totalConversions: number;
+  conversionEvents: AffiliateConversionEvent[];
   links: {
     id: number;
     name: string | null;
@@ -50,6 +69,8 @@ export type AffiliateStats = {
     conversions: number;
     promoLink: string;
     whatsappLink: string;
+    latestClickAt: string | null;
+    conversionEvents: AffiliateConversionEvent[];
   }[];
 };
 
@@ -199,6 +220,16 @@ function normalizePromoLink(link: string) {
   return `${getApiBaseUrl()}${link}`;
 }
 
+function normalizeConversionEvent(
+  event: AffiliateConversionEvent
+) {
+  return {
+    ...event,
+    promoLink: normalizePromoLink(event.promoLink),
+    whatsappLink: normalizePromoLink(event.whatsappLink),
+  };
+}
+
 export function getApiErrorMessage(
   error: unknown,
   fallback: string
@@ -346,10 +377,16 @@ export async function buscarEstatisticasAfiliado(id: number) {
   );
   return {
     ...data,
+    conversionEvents: (data.conversionEvents ?? []).map(
+      normalizeConversionEvent
+    ),
     links: data.links.map((link) => ({
       ...link,
       promoLink: normalizePromoLink(link.promoLink),
       whatsappLink: normalizePromoLink(link.whatsappLink),
+      conversionEvents: (link.conversionEvents ?? []).map(
+        normalizeConversionEvent
+      ),
     })),
   };
 }

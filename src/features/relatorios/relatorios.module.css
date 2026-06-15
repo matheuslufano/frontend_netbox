@@ -376,6 +376,241 @@
   color: #c2410c;
   font-weight: 800;
 }
+
+.conversionFlowPanel {
+  display: grid;
+  gap: 16px;
+}
+
+.conversionFlowOverview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.flowMetric {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
+
+.flowMetric span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.flowMetric strong {
+  display: block;
+  margin-top: 8px;
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.conversionFlowList {
+  display: grid;
+  gap: 16px;
+}
+
+.conversionFlowCard {
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.conversionFlowHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.conversionIdentity {
+  min-width: 0;
+}
+
+.conversionIdentity span {
+  display: inline-flex;
+  margin-bottom: 7px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.conversionIdentity h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+}
+
+.conversionIdentity p {
+  margin: 5px 0 0;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finalStatusBadge {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.finalStatusDone {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.finalStatusActive {
+  background: #eef4ff;
+  color: #1d4ed8;
+}
+
+.finalStatusPending {
+  background: #f3f4f6;
+  color: #64748b;
+}
+
+.conversionMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+  padding: 14px 0;
+  border-top: 1px solid #eef1f5;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.metaItem {
+  min-width: 0;
+}
+
+.metaItem span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.metaItem strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flowSteps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flowStep {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding-right: 14px;
+}
+
+.flowStep:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 16px;
+  right: 10px;
+  left: 34px;
+  height: 2px;
+  background: #e5e7eb;
+}
+
+.flowStepDone:not(:last-child)::after {
+  background: #86efac;
+}
+
+.stepMarker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.flowStepDone .stepMarker {
+  border-color: #86efac;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.stepContent {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.stepNumber {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.stepContent strong {
+  display: block;
+  margin-top: 4px;
+  color: #111827;
+  font-size: 14px;
+}
+
+.stepContent p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.stepContent small {
+  display: block;
+  margin-top: 5px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+}
 /* =========================
    SEÇÕES
 ========================= */
@@ -401,6 +636,54 @@
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.detailTabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.detailTab {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: transparent;
+  color: #55627a;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.detailTab svg {
+  width: 17px;
+  height: 17px;
+}
+
+.detailTab:hover {
+  color: #1f2937;
+  transform: translateY(-1px);
+}
+
+.detailTabActive {
+  background: #111827;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
 }
 
 .viewSwitcher {
@@ -1086,6 +1369,8 @@
 
   .summaryGrid,
   .conversionSummary,
+  .conversionFlowOverview,
+  .conversionMetaGrid,
   .statsGrid {
     grid-template-columns: 1fr;
   }
@@ -1117,6 +1402,48 @@
 
   .viewSwitcher {
     align-self: flex-start;
+  }
+
+  .detailTabs {
+    width: 100%;
+  }
+
+  .detailTab {
+    flex: 1;
+  }
+
+  .conversionFlowCard {
+    padding: 18px;
+  }
+
+  .conversionFlowHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .finalStatusBadge {
+    justify-self: flex-start;
+  }
+
+  .conversionIdentity p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .flowSteps {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .flowStep {
+    padding-right: 0;
+  }
+
+  .flowStep:not(:last-child)::after {
+    top: 34px;
+    right: auto;
+    left: 16px;
+    width: 2px;
+    height: calc(100% + 14px);
   }
 
   .affiliateListCompact,
@@ -1183,6 +1510,15 @@
 
   .affiliateCard {
     padding: 14px;
+  }
+
+  .conversionFlowCard {
+    padding: 14px;
+  }
+
+  .detailTab {
+    padding: 0 10px;
+    font-size: 12px;
   }
 
   .statBox {
