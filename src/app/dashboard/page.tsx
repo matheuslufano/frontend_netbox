@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import AffiliatesTable from "@/components/report/AffiliatesTable";
 import DashboardCharts from "@/components/report/DashboardCharts";
 import SummaryCard from "@/components/report/SummaryCard";
@@ -12,7 +16,10 @@ import {
   getApiErrorMessage,
   listarAfiliados,
 } from "@/lib/api";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./relatorios.module.css";
+
+const AUTO_REFRESH_MS = 10000;
 
 export default function Dashboard() {
   const [data, setData] =
@@ -24,10 +31,10 @@ export default function Dashboard() {
   const [error, setError] =
     useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
 
-    async function load() {
       try {
         const [dashboard, affiliates] =
           await Promise.all([
@@ -35,12 +42,11 @@ export default function Dashboard() {
             listarAfiliados(),
           ]);
 
-        if (!cancelled) {
-          setData(dashboard);
-          setAffiliateRows(affiliates);
-        }
+        setData(dashboard);
+        setAffiliateRows(affiliates);
+        setError(null);
       } catch (err) {
-        if (!cancelled) {
+        if (!silent) {
           setError(
             getApiErrorMessage(
               err,
@@ -49,14 +55,29 @@ export default function Dashboard() {
           );
         }
       }
-    }
+    },
+    []
+  );
 
+  const refreshDashboardFromEvent = useCallback(() => {
+    if (document.visibilityState === "visible") {
+      load({ silent: true });
+    }
+  }, [load]);
+
+  useRealtimeEvents(refreshDashboardFromEvent);
+
+  useEffect(() => {
     load();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        load({ silent: true });
+      }
+    }, AUTO_REFRESH_MS);
+
+    return () => window.clearInterval(interval);
+  }, [load]);
 
   if (error) {
     return (

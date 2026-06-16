@@ -15,6 +15,9 @@ import {
   getApiErrorMessage,
   listarAfiliados,
 } from "@/lib/api";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+
+const AUTO_REFRESH_MS = 15000;
 
 export type AffiliateDetail = AffiliateStats & {
   affiliateId: number;
@@ -128,14 +131,29 @@ export function useRelatorios() {
     []
   );
 
+  const refreshFromEvent = useCallback(() => {
+    if (document.visibilityState === "visible") {
+      load({ silent: true });
+    }
+  }, [load]);
+
+  useRealtimeEvents(refreshFromEvent);
+
   useEffect(() => {
     mountedRef.current = true;
     const timer = window.setTimeout(() => {
       load();
     }, 0);
 
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        load({ silent: true });
+      }
+    }, AUTO_REFRESH_MS);
+
     return () => {
       window.clearTimeout(timer);
+      window.clearInterval(interval);
       mountedRef.current = false;
     };
   }, [load]);

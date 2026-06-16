@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Campaign,
   apagarCampanha,
   getApiErrorMessage,
   listarCampanhas,
 } from "@/lib/api";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./campanhas.module.css";
 import conteine from "@/styles/components.module.css";
+
+const AUTO_REFRESH_MS = 10000;
 
 export default function Campanhas() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -20,18 +28,20 @@ export default function Campanhas() {
   const [deletingCampaignId, setDeletingCampaignId] =
     useState<number | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadCampaigns = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
 
-    async function loadCampaigns() {
+      if (!silent) {
+        setLoading(true);
+      }
+
       try {
         const data = await listarCampanhas();
-
-        if (!cancelled) {
-          setCampaigns(data);
-        }
+        setCampaigns(data);
+        setError(null);
       } catch (err) {
-        if (!cancelled) {
+        if (!silent) {
           setError(
             getApiErrorMessage(
               err,
@@ -40,18 +50,33 @@ export default function Campanhas() {
           );
         }
       } finally {
-        if (!cancelled) {
+        if (!silent) {
           setLoading(false);
         }
       }
-    }
+    },
+    []
+  );
 
+  const refreshCampaignsFromEvent = useCallback(() => {
+    if (document.visibilityState === "visible") {
+      loadCampaigns({ silent: true });
+    }
+  }, [loadCampaigns]);
+
+  useRealtimeEvents(refreshCampaignsFromEvent);
+
+  useEffect(() => {
     loadCampaigns();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadCampaigns({ silent: true });
+      }
+    }, AUTO_REFRESH_MS);
+
+    return () => window.clearInterval(interval);
+  }, [loadCampaigns]);
 
   async function copyLink(link: string) {
     try {

@@ -1,7 +1,7 @@
 "use client";
 
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FiCopy,
   FiDownload,
@@ -22,11 +22,13 @@ import {
   listarLinks,
 } from "@/lib/api";
 import { formatDisplayLink } from "@/lib/links";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import conteine from "@/styles/components.module.css";
 import styles from "./links.module.css";
 
 const defaultLandingPageUrl =
   process.env.NEXT_PUBLIC_LANDING_PAGE_URL || "";
+const AUTO_REFRESH_MS = 10000;
 
 export default function Links() {
   const [name, setName] = useState("");
@@ -128,7 +130,7 @@ export default function Links() {
     }
   }
 
-  async function loadLinks() {
+  const loadLinks = useCallback(async () => {
     setLoadingLinks(true);
     setLinksError(null);
 
@@ -145,11 +147,45 @@ export default function Links() {
     } finally {
       setLoadingLinks(false);
     }
-  }
+  }, []);
 
-  async function openLinksModal() {
+  const refreshLinksFromEvent = useCallback(() => {
+    if (linksModalOpen && document.visibilityState === "visible") {
+      loadLinks();
+    }
+  }, [linksModalOpen, loadLinks]);
+
+  useRealtimeEvents(refreshLinksFromEvent);
+
+  useEffect(() => {
+    if (!linksModalOpen) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function refreshLinks() {
+      if (cancelled || document.visibilityState !== "visible") {
+        return;
+      }
+
+      await loadLinks();
+    }
+
+    refreshLinks();
+    const interval = window.setInterval(
+      refreshLinks,
+      AUTO_REFRESH_MS
+    );
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [linksModalOpen, loadLinks]);
+
+  function openLinksModal() {
     setLinksModalOpen(true);
-    await loadLinks();
   }
 
   async function copyStoredLink(link: LinkItem) {
