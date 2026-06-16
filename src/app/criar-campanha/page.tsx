@@ -11,9 +11,12 @@ import {
 import conteine from "@/styles/components.module.css";
 import styles from "./menu.module.css";
 
+const defaultLandingPageUrl =
+  process.env.NEXT_PUBLIC_LANDING_PAGE_URL || "";
+
 export default function CriarProjetos() {
   const [name, setName] = useState("");
-  const [destinationUrl, setDestinationUrl] = useState("");
+  const [destinationUrl, setDestinationUrl] = useState(defaultLandingPageUrl);
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [selectedAffiliateIds, setSelectedAffiliateIds] = useState<number[]>([]);
   const [loadingAffiliates, setLoadingAffiliates] = useState(true);
@@ -102,7 +105,7 @@ export default function CriarProjetos() {
         `Campanha criada com ${campaign.totalLinks} links de divulgacao.`
       );
       setName("");
-      setDestinationUrl("");
+      setDestinationUrl(defaultLandingPageUrl);
       setSelectedAffiliateIds([]);
     } catch (err) {
       setError(
@@ -144,7 +147,9 @@ export default function CriarProjetos() {
               type="url"
               value={destinationUrl}
               onChange={(event) => setDestinationUrl(event.target.value)}
-              placeholder="https://netbox.com.br/oferta"
+              placeholder={
+                defaultLandingPageUrl || "https://netbox.com.br/oferta"
+              }
             />
           </div>
 

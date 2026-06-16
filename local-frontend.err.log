@@ -1,0 +1,41 @@
+⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from "127.0.0.1".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['127.0.0.1'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[browser] Uncaught Error: ./src/app/express/page.tsx:14:1
+Export buildWhatsAppConversionUrl doesn't exist in target module
+  12 |   FiWifi,
+  13 | } from "react-icons/fi";
+> 14 | import {
+     | ^^^^^^^
+> 15 |   buildWhatsAppConversionUrl,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 16 | } from "@/lib/api";
+     | ^^^^^^^^^^^^^^^^^^
+  17 | import logo from "../../../public/logo.jpg";
+  18 | import styles from "./express.module.css";
+  19 |
+
+The export buildWhatsAppConversionUrl was not found in module [project]/src/lib/api.ts [app-client] (ecmascript).
+Did you mean to import listarUsuarios?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./src/app/express/page.tsx [Client Component Browser]
+    ./src/app/express/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/express/page.tsx [Client Component SSR]
+    ./src/app/express/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./src/app/express/page.tsx:14:1)
+    at <unknown> (Error: (./src/app/express/page.tsx:14:1)

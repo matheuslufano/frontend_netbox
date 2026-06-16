@@ -25,9 +25,12 @@ import { formatDisplayLink } from "@/lib/links";
 import conteine from "@/styles/components.module.css";
 import styles from "./links.module.css";
 
+const defaultLandingPageUrl =
+  process.env.NEXT_PUBLIC_LANDING_PAGE_URL || "";
+
 export default function Links() {
   const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(defaultLandingPageUrl);
   const [affiliateId, setAffiliateId] = useState("");
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [loadingAffiliates, setLoadingAffiliates] = useState(true);
@@ -101,7 +104,7 @@ export default function Links() {
       const data = await criarLink(payload);
       setCreatedLink(data.link);
       setName("");
-      setUrl("");
+      setUrl(defaultLandingPageUrl);
     } catch (err) {
       setError(
         getApiErrorMessage(
@@ -241,7 +244,9 @@ export default function Links() {
                 id="dest-url"
                 type="url"
                 name="url"
-                placeholder="https://exemplo.com/pagina"
+                placeholder={
+                  defaultLandingPageUrl || "https://exemplo.com/pagina"
+                }
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 autoComplete="off"
