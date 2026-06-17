@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BsClipboardDataFill, BsMegaphoneFill } from "react-icons/bs";
+import { FiDatabase } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
 import { ImUsers } from "react-icons/im";
 import { IoChevronBack, IoChevronForward, IoFolderOpen } from "react-icons/io5";
@@ -101,6 +102,13 @@ export default function Sidebar() {
             <Link href="/relatorios" className={styles.menuItem} aria-label="Relatorios">
               <BsClipboardDataFill className={styles.icon} />
               <span className={styles.itemLabel}>Relat&oacute;rios</span>
+            </Link>
+          </li>
+
+          <li className={styles.button}>
+            <Link href="/sgp" className={styles.menuItem} aria-label="SGP">
+              <FiDatabase className={styles.icon} />
+              <span className={styles.itemLabel}>SGP</span>
             </Link>
           </li>
 

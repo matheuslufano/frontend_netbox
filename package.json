@@ -1,12 +1,13 @@
 {
   "name": "afiliados_netbox",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "version:bump": "node scripts/bump-version.mjs"
   },
   "dependencies": {
     "@react-icons/all-files": "^4.1.0",

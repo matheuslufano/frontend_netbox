@@ -5,18 +5,23 @@ import { useCallback, useEffect, useState } from "react";
 import {
   FiCopy,
   FiDownload,
+  FiEdit2,
   FiExternalLink,
   FiEye,
   FiLink,
   FiRefreshCw,
+  FiSave,
   FiTag,
+  FiTrash2,
   FiUser,
   FiX,
 } from "react-icons/fi";
 import {
   Affiliate,
   LinkItem,
+  apagarLink,
   criarLink,
+  editarLink,
   getApiErrorMessage,
   listarAfiliados,
   listarLinks,
@@ -28,7 +33,6 @@ import styles from "./links.module.css";
 
 const defaultLandingPageUrl =
   process.env.NEXT_PUBLIC_LANDING_PAGE_URL || "";
-const AUTO_REFRESH_MS = 10000;
 
 export default function Links() {
   const [name, setName] = useState("");
@@ -44,7 +48,14 @@ export default function Links() {
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [linksError, setLinksError] = useState<string | null>(null);
+  const [linksMessage, setLinksMessage] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<number | null>(null);
+  const [editingLinkId, setEditingLinkId] = useState<number | null>(null);
+  const [editLinkName, setEditLinkName] = useState("");
+  const [editLinkUrl, setEditLinkUrl] = useState("");
+  const [editLinkAffiliateId, setEditLinkAffiliateId] = useState("");
+  const [savingLinkId, setSavingLinkId] = useState<number | null>(null);
+  const [deletingLinkId, setDeletingLinkId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +144,7 @@ export default function Links() {
   const loadLinks = useCallback(async () => {
     setLoadingLinks(true);
     setLinksError(null);
+    setLinksMessage(null);
 
     try {
       const data = await listarLinks();
@@ -162,30 +174,105 @@ export default function Links() {
       return;
     }
 
-    let cancelled = false;
-
-    async function refreshLinks() {
-      if (cancelled || document.visibilityState !== "visible") {
-        return;
+    const timeout = window.setTimeout(() => {
+      if (document.visibilityState === "visible") {
+        loadLinks();
       }
+    }, 0);
 
-      await loadLinks();
-    }
-
-    refreshLinks();
-    const interval = window.setInterval(
-      refreshLinks,
-      AUTO_REFRESH_MS
-    );
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
+    return () => window.clearTimeout(timeout);
   }, [linksModalOpen, loadLinks]);
 
   function openLinksModal() {
     setLinksModalOpen(true);
+  }
+
+  function startEditLink(link: LinkItem) {
+    setLinksError(null);
+    setLinksMessage(null);
+    setEditingLinkId(link.id);
+    setEditLinkName(link.name ?? "");
+    setEditLinkUrl(link.originalUrl);
+    setEditLinkAffiliateId(
+      link.affiliate ? String(link.affiliate.id) : ""
+    );
+  }
+
+  function cancelEditLink() {
+    setEditingLinkId(null);
+    setEditLinkName("");
+    setEditLinkUrl("");
+    setEditLinkAffiliateId("");
+  }
+
+  async function saveLinkEdit(link: LinkItem) {
+    const trimmedUrl = editLinkUrl.trim();
+
+    setLinksError(null);
+    setLinksMessage(null);
+
+    if (!trimmedUrl) {
+      setLinksError("Informe a URL de destino.");
+      return;
+    }
+
+    setSavingLinkId(link.id);
+    try {
+      const updatedLink = await editarLink(link.id, {
+        name: editLinkName.trim(),
+        url: trimmedUrl,
+        affiliateId:
+          editLinkAffiliateId === "" ? null : Number(editLinkAffiliateId),
+      });
+
+      setLinks((current) =>
+        current.map((item) =>
+          item.id === updatedLink.id ? updatedLink : item
+        )
+      );
+      cancelEditLink();
+      setLinksMessage("Link atualizado com sucesso.");
+    } catch (err) {
+      setLinksError(
+        getApiErrorMessage(err, "Nao foi possivel atualizar o link.")
+      );
+    } finally {
+      setSavingLinkId(null);
+    }
+  }
+
+  async function deleteStoredLink(link: LinkItem) {
+    setLinksError(null);
+    setLinksMessage(null);
+
+    const label = link.name || link.shortCode;
+    const confirmed = window.confirm(
+      `Apagar o link "${label}"? Esta acao tambem remove cliques e conversoes relacionados.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingLinkId(link.id);
+    try {
+      await apagarLink(link.id);
+      setLinks((current) =>
+        current.filter((item) => item.id !== link.id)
+      );
+
+      if (editingLinkId === link.id) {
+        cancelEditLink();
+      }
+
+      setLinksMessage("Link apagado com sucesso.");
+    } catch (err) {
+      setLinksError(
+        getApiErrorMessage(err, "Nao foi possivel apagar o link.")
+      );
+    } finally {
+      setDeletingLinkId(null);
+    }
   }
 
   async function copyStoredLink(link: LinkItem) {
@@ -321,14 +408,14 @@ export default function Links() {
                 {submitting ? "Gerando..." : "Gerar link"}
               </button>
             </div>
-                      <button
-            type="button"
-            className={styles.viewLinksButton}
-            onClick={openLinksModal}
-          >
-            <FiEye aria-hidden="true" />
-            Ver links criados
-          </button>
+            <button
+              type="button"
+              className={styles.viewLinksButton}
+              onClick={openLinksModal}
+            >
+              <FiEye aria-hidden="true" />
+              Ver links criados
+            </button>
           </form>
 
           {error && (
@@ -409,6 +496,12 @@ export default function Links() {
                 </p>
               )}
 
+              {linksMessage && (
+                <p className={styles.success} role="status">
+                  {linksMessage}
+                </p>
+              )}
+
               {loadingLinks ? (
                 <p className={styles.loadingText}>Carregando links...</p>
               ) : links.length === 0 ? (
@@ -421,54 +514,180 @@ export default function Links() {
                   {links.map((link) => (
                     <article key={link.id} className={styles.linkCard}>
                       <div className={styles.linkCardBody}>
-                        <div className={styles.linkMeta}>
-                          <strong>{link.name || "Link sem nome"}</strong>
-                          <span>
-                            {link.affiliate?.name ?? "Sem afiliado"} |{" "}
-                            {link.clicks} clique{link.clicks === 1 ? "" : "s"}
-                          </span>
-                        </div>
+                        {editingLinkId === link.id ? (
+                          <div className={styles.linkEditGrid}>
+                            <label
+                              className={styles.editField}
+                              htmlFor={`edit-link-name-${link.id}`}
+                            >
+                              <span>Nome do link</span>
+                              <input
+                                id={`edit-link-name-${link.id}`}
+                                type="text"
+                                value={editLinkName}
+                                onChange={(event) =>
+                                  setEditLinkName(event.target.value)
+                                }
+                                disabled={savingLinkId === link.id}
+                                autoComplete="off"
+                              />
+                            </label>
 
-                        <div className={styles.linkGroup}>
-                          <span>Divulgacao</span>
-                          <a
-                            href={link.promoLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={link.promoLink}
-                          >
-                            {formatDisplayLink(link.promoLink)}
-                          </a>
-                        </div>
+                            <label
+                              className={styles.editField}
+                              htmlFor={`edit-link-url-${link.id}`}
+                            >
+                              <span>URL de destino</span>
+                              <input
+                                id={`edit-link-url-${link.id}`}
+                                type="url"
+                                value={editLinkUrl}
+                                onChange={(event) =>
+                                  setEditLinkUrl(event.target.value)
+                                }
+                                disabled={savingLinkId === link.id}
+                                autoComplete="off"
+                              />
+                            </label>
 
-                        <div className={styles.linkGroup}>
-                          <span>Destino</span>
-                          <a
-                            href={link.originalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={link.originalUrl}
-                          >
-                            {formatDisplayLink(link.originalUrl)}
-                          </a>
-                        </div>
+                            <label
+                              className={styles.editField}
+                              htmlFor={`edit-link-affiliate-${link.id}`}
+                            >
+                              <span>Afiliado</span>
+                              <select
+                                id={`edit-link-affiliate-${link.id}`}
+                                value={editLinkAffiliateId}
+                                onChange={(event) =>
+                                  setEditLinkAffiliateId(event.target.value)
+                                }
+                                disabled={
+                                  loadingAffiliates ||
+                                  savingLinkId === link.id
+                                }
+                              >
+                                <option value="">Nenhum</option>
+                                {affiliates.map((affiliate) => (
+                                  <option
+                                    key={affiliate.id}
+                                    value={String(affiliate.id)}
+                                  >
+                                    {affiliate.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                        ) : (
+                          <>
+                            <div className={styles.linkMeta}>
+                              <strong>{link.name || "Link sem nome"}</strong>
+                              <span>
+                                {link.affiliate?.name ?? "Sem afiliado"} |{" "}
+                                {link.clicks} clique
+                                {link.clicks === 1 ? "" : "s"}
+                              </span>
+                            </div>
+
+                            <div className={styles.linkGroup}>
+                              <span>Divulgacao</span>
+                              <a
+                                href={link.promoLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={link.promoLink}
+                              >
+                                {formatDisplayLink(link.promoLink)}
+                              </a>
+                            </div>
+
+                            <div className={styles.linkGroup}>
+                              <span>Destino</span>
+                              <a
+                                href={link.originalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={link.originalUrl}
+                              >
+                                {formatDisplayLink(link.originalUrl)}
+                              </a>
+                            </div>
+                          </>
+                        )}
 
                         <div className={styles.linkActions}>
-                          <a
-                            href={link.promoLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.secondaryButton}
-                          >
-                            Ver
-                          </a>
+                          {editingLinkId === link.id ? (
+                            <>
+                              <button
+                                type="button"
+                                className={styles.saveButton}
+                                onClick={() => saveLinkEdit(link)}
+                                disabled={
+                                  savingLinkId === link.id ||
+                                  deletingLinkId === link.id
+                                }
+                              >
+                                <FiSave aria-hidden="true" />
+                                {savingLinkId === link.id
+                                  ? "Salvando..."
+                                  : "Salvar"}
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.cancelButton}
+                                onClick={cancelEditLink}
+                                disabled={savingLinkId === link.id}
+                              >
+                                Cancelar
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <a
+                                href={link.promoLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.secondaryButton}
+                              >
+                                <FiExternalLink aria-hidden="true" />
+                                Ver
+                              </a>
+                              <button
+                                type="button"
+                                className={styles.editButton}
+                                onClick={() => startEditLink(link)}
+                                disabled={deletingLinkId === link.id}
+                              >
+                                <FiEdit2 aria-hidden="true" />
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.copyButton}
+                                onClick={() => copyStoredLink(link)}
+                                disabled={deletingLinkId === link.id}
+                              >
+                                <FiCopy aria-hidden="true" />
+                                {copiedLinkId === link.id
+                                  ? "Copiado"
+                                  : "Copiar"}
+                              </button>
+                            </>
+                          )}
+
                           <button
                             type="button"
-                            className={styles.copyButton}
-                            onClick={() => copyStoredLink(link)}
+                            className={styles.deleteButton}
+                            onClick={() => deleteStoredLink(link)}
+                            disabled={
+                              deletingLinkId === link.id ||
+                              savingLinkId === link.id
+                            }
                           >
-                            <FiCopy aria-hidden="true" />
-                            {copiedLinkId === link.id ? "Copiado" : "Copiar"}
+                            <FiTrash2 aria-hidden="true" />
+                            {deletingLinkId === link.id
+                              ? "Apagando..."
+                              : "Apagar"}
                           </button>
                         </div>
                       </div>

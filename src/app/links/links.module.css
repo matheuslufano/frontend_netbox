@@ -172,7 +172,12 @@
 }
 
 .primaryButton,
-.copyButton {
+.copyButton,
+.secondaryButton,
+.editButton,
+.saveButton,
+.cancelButton,
+.deleteButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -201,7 +206,12 @@
 }
 
 .primaryButton:disabled,
-.copyButton:disabled {
+.copyButton:disabled,
+.secondaryButton:disabled,
+.editButton:disabled,
+.saveButton:disabled,
+.cancelButton:disabled,
+.deleteButton:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
@@ -212,6 +222,16 @@
   border-radius: 10px;
   background: #fef2f2;
   color: #b91c1c;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.success {
+  margin: 18px 22px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
   font-size: 14px;
   font-weight: 700;
 }
@@ -416,6 +436,56 @@
   text-decoration: underline;
 }
 
+.linkEditGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.linkEditGrid .editField:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+.editField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.editField span {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.editField input,
+.editField select {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dbe1ea;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #111827;
+  font-size: 14px;
+}
+
+.editField input:focus,
+.editField select:focus {
+  border-color: #ff5f34;
+  box-shadow: 0 0 0 4px rgba(255, 95, 52, 0.14);
+}
+
+.editField input:disabled,
+.editField select:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
 .linkActions {
   display: flex;
   gap: 8px;
@@ -423,22 +493,52 @@
 }
 
 .secondaryButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 46px;
-  border: 0;
-  border-radius: 10px;
   padding: 0 16px;
   background: #eef4ff;
   color: #1d4ed8;
-  font-size: 15px;
-  font-weight: 800;
   text-decoration: none;
 }
 
-.secondaryButton:hover {
+.secondaryButton:hover:not(:disabled),
+.editButton:hover:not(:disabled) {
   background: #dbeafe;
+}
+
+.editButton {
+  padding: 0 16px;
+  background: #eef4ff;
+  color: #1d4ed8;
+}
+
+.saveButton {
+  padding: 0 16px;
+  background: #15803d;
+  color: #fff;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #166534;
+  transform: translateY(-1px);
+}
+
+.cancelButton {
+  padding: 0 16px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.deleteButton {
+  padding: 0 16px;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #fecaca;
 }
 
 .qrDownloadButton {
@@ -521,7 +621,8 @@
   }
 
   .modalHeader,
-  .linkCard {
+  .linkCard,
+  .linkEditGrid {
     grid-template-columns: 1fr;
   }
 
@@ -539,7 +640,11 @@
   }
 
   .linkActions,
-  .secondaryButton {
+  .secondaryButton,
+  .editButton,
+  .saveButton,
+  .cancelButton,
+  .deleteButton {
     width: 100%;
   }
 

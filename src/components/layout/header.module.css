@@ -1,0 +1,178 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 14px 18px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(105, 24, 0, 0.16);
+  backdrop-filter: blur(18px);
+}
+
+.brandBlock {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.eyebrow {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.brandBlock strong {
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.headerTools {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.versionPill,
+.healthPanel {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.versionPill {
+  display: grid;
+  min-width: 116px;
+  align-content: center;
+  gap: 2px;
+  padding: 9px 12px;
+}
+
+.versionPill span,
+.versionPill small {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.versionPill strong {
+  font-size: 15px;
+}
+
+.healthPanel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+}
+
+.healthIcon {
+  flex: 0 0 auto;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.healthItems {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.healthLed {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 96px;
+}
+
+.healthLed > span:last-child {
+  display: grid;
+  gap: 1px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.healthLed strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.ledDot {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.18);
+}
+
+.ledOnline {
+  background: #22c55e;
+  box-shadow:
+    0 0 0 4px rgba(34, 197, 94, 0.18),
+    0 0 14px rgba(34, 197, 94, 0.9);
+}
+
+.ledOffline {
+  background: #ef4444;
+  box-shadow:
+    0 0 0 4px rgba(239, 68, 68, 0.18),
+    0 0 14px rgba(239, 68, 68, 0.82);
+}
+
+.ledChecking {
+  background: #fbbf24;
+  box-shadow:
+    0 0 0 4px rgba(251, 191, 36, 0.18),
+    0 0 14px rgba(251, 191, 36, 0.78);
+}
+
+@media (max-width: 920px) {
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerTools {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    margin: 10px 10px 0;
+    padding: 12px;
+  }
+
+  .brandBlock strong {
+    font-size: 19px;
+  }
+
+  .headerTools,
+  .healthItems {
+    flex-direction: column;
+  }
+
+  .versionPill,
+  .healthPanel,
+  .healthLed {
+    width: 100%;
+  }
+}

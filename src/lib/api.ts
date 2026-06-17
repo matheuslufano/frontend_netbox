@@ -105,6 +105,12 @@ export type CreateLinkPayload = {
   affiliateId?: number;
 };
 
+export type UpdateLinkPayload = {
+  name?: string;
+  url?: string;
+  affiliateId?: number | null;
+};
+
 export type CreateLinkResponse = {
   message: string;
   link: string;
@@ -197,6 +203,43 @@ export type LoginResponse = {
     email: string;
     city: string | null;
   };
+};
+
+export type SgpStatus = {
+  configured: boolean;
+  baseUrl?: string;
+  app?: string;
+  error?: string;
+};
+
+export type SgpContract = {
+  id: string | null;
+  plan: string | null;
+  status: string;
+  active: boolean | null;
+  address: string | null;
+  raw: unknown;
+};
+
+export type SgpCustomer = {
+  id: string | null;
+  name: string | null;
+  document: string;
+  status: string;
+  active: boolean | null;
+  contracts: SgpContract[];
+  raw: unknown;
+};
+
+export type SgpCustomerResponse = {
+  provider: "sgp";
+  customer: SgpCustomer;
+  result: unknown;
+};
+
+export type HealthStatus = {
+  status: string;
+  database: string;
 };
 
 const defaultApiUrl =
@@ -329,6 +372,18 @@ export async function listarLinks() {
     : [];
 }
 
+export async function editarLink(
+  id: number,
+  payload: UpdateLinkPayload
+) {
+  const { data } = await api.put<LinkItem>(`/links/${id}`, payload);
+  return {
+    ...data,
+    promoLink: normalizePromoLink(data.promoLink),
+    whatsappLink: normalizePromoLink(data.whatsappLink),
+  };
+}
+
 function normalizeCampaignLinks(campaign: Campaign) {
   const links = campaign.links.map((link) => ({
     ...link,
@@ -397,6 +452,29 @@ export async function fazerLogin(payload: LoginPayload) {
     payload
   );
 
+  return data;
+}
+
+export async function buscarStatusSgp() {
+  const { data } = await api.get<SgpStatus>("/integrations/sgp/status");
+  return data;
+}
+
+export async function consultarClienteSgp(document: string) {
+  const { data } = await api.get<SgpCustomerResponse>(
+    "/integrations/sgp/clientes",
+    {
+      params: {
+        document,
+      },
+    }
+  );
+
+  return data;
+}
+
+export async function consultarSaudeSistema() {
+  const { data } = await api.get<HealthStatus>("/health");
   return data;
 }
 
