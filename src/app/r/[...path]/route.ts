@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 
 const backendUrl =
-  process.env.BACKEND_URL || "http://72.62.8.85:3001";
+  process.env.BACKEND_URL ||
+  "http://72.62.8.85:3001";
 
 type RouteContext = {
   params: Promise<{

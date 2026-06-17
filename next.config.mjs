@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const backendUrl =
-  process.env.BACKEND_URL || "http://72.62.8.85:3001";
+  process.env.BACKEND_URL ||
+  "http://72.62.8.85:3001";
 
 const nextConfig = {
   /* config options here */
