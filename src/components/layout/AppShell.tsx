@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import CompactHeader from "./CompactHeader";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -10,6 +11,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isLoginPage = pathname === "/login";
+  const isSettingsPage = pathname === "/configuracoes";
   const [checkingAuth, setCheckingAuth] = useState(() => !isLoginPage);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
 
       <div className="main">
-        <Header />
+        {isSettingsPage ? <Header /> : <CompactHeader />}
         <div className="content">{children}</div>
       </div>
     </div>

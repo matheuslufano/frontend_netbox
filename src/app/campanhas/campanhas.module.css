@@ -1,76 +1,247 @@
 .page {
-  padding: 24px;
+  min-height: 100%;
+  padding: 32px 40px;
+  background: linear-gradient(135deg, #ff6749 0%, #e92f0f 100%);
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 22px;
+  align-items: center;
+  margin-bottom: 28px;
 }
 
-.badge {
+.searchBox {
   display: inline-flex;
-  margin-bottom: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #fff1eb;
+  width: min(100%, 300px);
+  min-height: 58px;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  border-radius: 30px;
+  background: rgba(255, 226, 219, 0.9);
+  color: #050505;
+  box-shadow: 0 5px 10px rgba(83, 35, 19, 0.22);
+}
+
+.searchBox svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.searchBox input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #050505;
+  font: inherit;
+  font-size: 20px;
+}
+
+.searchBox input::placeholder {
+  color: #050505;
+  opacity: 1;
+}
+
+.campaignList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 270px));
+  gap: 20px;
+  align-items: start;
+}
+
+.card,
+.emptyCard {
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(249, 188, 175, 0.92);
+}
+
+.card {
+  display: grid;
+  width: 270px;
+  min-height: 270px;
+  grid-template-rows: minmax(144px, 1fr) 126px;
+  padding: 0;
+  border: 0;
+  color: #050505;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s ease,
+    outline-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(83, 35, 19, 0.18);
+}
+
+.card:focus-visible {
+  outline: 2px solid #00a2ff;
+  outline-offset: 0;
+}
+
+.cardTop {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 22px;
+}
+
+.cardTop strong {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: #050505;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardBottom {
+  display: grid;
+  min-width: 0;
+  align-content: space-between;
+  gap: 14px;
+  padding: 24px 16px 16px;
+  border-radius: 12px 12px 0 0;
+  background: #fff;
+}
+
+.emptyCard {
+  max-width: 540px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.emptyCard p {
+  margin-bottom: 0;
+  color: #525252;
+}
+
+.detailPage {
+  display: grid;
+  gap: 18px;
+  max-width: 1120px;
+}
+
+.detailHero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(220px, auto);
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(249, 188, 175, 0.92);
+}
+
+.backButton {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: #fff;
   color: #c22a00;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.detailTitle {
+  min-width: 0;
+}
+
+.detailTitle span {
+  display: block;
+  color: #7f1d1d;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.detailTitle h1 {
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: #050505;
+  font-size: 32px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailSummary {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.cardInfo {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.cardInfo span {
+  overflow: hidden;
+  color: #050505;
+  font-size: 17px;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardBottom time {
+  justify-self: end;
+  color: #050505;
+  font-size: 16px;
+}
+
+.detailSummary time {
+  justify-self: end;
+  color: #050505;
+  font-size: 16px;
+}
+
+.expandedHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.expandedHeader span {
+  display: block;
+  color: #6b7280;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
-.header h1 {
-  margin: 0;
+.expandedHeader strong {
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 5px;
   color: #111827;
-  font-size: 32px;
-}
-
-.header p {
-  margin: 8px 0 0;
-  color: #ffffff;
-}
-
-.campaignList {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.card,
-.emptyCard {
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.emptyCard {
-  padding: 24px;
-}
-
-.emptyCard p {
-  margin-bottom: 0;
-  color: #6b7280;
-}
-
-.cardButton {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr) auto;
-  gap: 16px;
-  align-items: center;
-  width: 100%;
-  padding: 20px;
-  border: 0;
-  background: #fff;
-  text-align: left;
-  cursor: pointer;
-}
-
-.cardButton:hover {
-  background: #fffaf8;
+  font-size: 15px;
 }
 
 .cardActions {
@@ -81,27 +252,11 @@
   flex-wrap: wrap;
 }
 
-.cardTitleBlock {
-  min-width: 0;
-}
-
-.cardTitleBlock strong {
-  display: block;
-  color: #111827;
-  font-size: 20px;
-}
-
-.cardTitleBlock span {
-  display: block;
-  margin-top: 6px;
-  color: #6b7280;
-  overflow-wrap: anywhere;
-}
-
 .cardMetrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  margin: 14px 0;
 }
 
 .metric {
@@ -156,15 +311,15 @@
 }
 
 .report {
-  padding: 0 20px 20px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #fff;
 }
 
 .reportGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
 }
 
 .infoBox {
@@ -296,6 +451,7 @@
 
 .copyHint {
   margin: 0 0 14px;
+  max-width: 420px;
   padding: 10px 12px;
   border-radius: 10px;
   background: #f0fdf4;
@@ -307,29 +463,70 @@
   color: #b91c1c;
 }
 
-@media (max-width: 900px) {
-  .cardButton {
-    grid-template-columns: 1fr;
+@media (max-width: 1100px) {
+  .campaignList {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 250px));
   }
 
-  .cardMetrics,
-  .reportGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .card {
+    width: 250px;
   }
 }
 
 @media (max-width: 768px) {
   .page {
-    padding: 16px;
+    padding: 28px 16px;
   }
 
-  .header h1 {
-    font-size: 26px;
+  .searchBox {
+    min-height: 52px;
+    gap: 14px;
+    padding: 0 20px;
+    border-radius: 32px;
   }
 
-  .cardButton,
-  .report {
-    padding: 16px;
+  .searchBox svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .searchBox input {
+    font-size: 18px;
+  }
+
+  .campaignList {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 230px;
+    grid-template-rows: minmax(112px, 1fr) 112px;
+  }
+
+  .cardTop strong {
+    font-size: 30px;
+  }
+
+  .detailHero {
+    grid-template-columns: 1fr;
+  }
+
+  .detailTitle h1 {
+    white-space: normal;
+  }
+
+  .expandedHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    justify-content: stretch;
+  }
+
+  .expandButton,
+  .deleteButton {
+    flex: 1;
   }
 
   .cardMetrics,
@@ -344,11 +541,5 @@
   .rankingItem .clickPill {
     grid-column: 1 / -1;
     justify-content: flex-start;
-  }
-}
-
-@media (max-width: 420px) {
-  .page {
-    padding: 12px;
   }
 }

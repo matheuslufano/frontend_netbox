@@ -22,6 +22,22 @@ export async function GET(
   const response = await fetch(destination, {
     headers: {
       "user-agent": request.headers.get("user-agent") || "",
+      "referer": request.headers.get("referer") || "",
+      "accept-language":
+        request.headers.get("accept-language") || "",
+      "sec-ch-ua": request.headers.get("sec-ch-ua") || "",
+      "sec-ch-ua-mobile":
+        request.headers.get("sec-ch-ua-mobile") || "",
+      "sec-ch-ua-platform":
+        request.headers.get("sec-ch-ua-platform") || "",
+      "x-vercel-ip-country":
+        request.headers.get("x-vercel-ip-country") || "",
+      "x-vercel-ip-country-region":
+        request.headers.get("x-vercel-ip-country-region") || "",
+      "x-vercel-ip-city":
+        request.headers.get("x-vercel-ip-city") || "",
+      "x-vercel-ip-timezone":
+        request.headers.get("x-vercel-ip-timezone") || "",
       "x-forwarded-for":
         request.headers.get("x-forwarded-for") || "",
       "x-forwarded-proto": "https",

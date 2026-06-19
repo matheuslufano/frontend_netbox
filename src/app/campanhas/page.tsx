@@ -12,9 +12,9 @@ import {
   getApiErrorMessage,
   listarCampanhas,
 } from "@/lib/api";
+import { FiArrowLeft, FiSearch } from "react-icons/fi";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./campanhas.module.css";
-import conteine from "@/styles/components.module.css";
 
 const AUTO_REFRESH_MS = 10000;
 
@@ -25,8 +25,39 @@ export default function Campanhas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copyHint, setCopyHint] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [deletingCampaignId, setDeletingCampaignId] =
     useState<number | null>(null);
+
+  const filteredCampaigns = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      return campaigns;
+    }
+
+    return campaigns.filter((campaign) => {
+      const searchText = [
+        campaign.name,
+        campaign.destinationUrl,
+        campaign.topAffiliate?.name,
+        campaign.topLink?.name,
+        ...campaign.links.map((link) => link.affiliate?.name),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchText.includes(term);
+    });
+  }, [campaigns, searchTerm]);
+
+  const selectedCampaign = useMemo(
+    () =>
+      campaigns.find((campaign) => campaign.id === expandedCampaignId) ??
+      null,
+    [campaigns, expandedCampaignId]
+  );
 
   const loadCampaigns = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -67,7 +98,9 @@ export default function Campanhas() {
   useRealtimeEvents(refreshCampaignsFromEvent);
 
   useEffect(() => {
-    loadCampaigns();
+    const timer = window.setTimeout(() => {
+      loadCampaigns();
+    }, 0);
 
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") {
@@ -75,7 +108,10 @@ export default function Campanhas() {
       }
     }, AUTO_REFRESH_MS);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearInterval(interval);
+    };
   }, [loadCampaigns]);
 
   async function copyLink(link: string) {
@@ -141,13 +177,14 @@ export default function Campanhas() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <div>
-          <span className={styles.badge}>Relatorio comercial</span>
-          <h1>Campanhas</h1>
-          <p>
-              .
-          </p>
-        </div>
+        <label className={styles.searchBox}>
+          <FiSearch aria-hidden="true" />
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Pesquisar"
+          />
+        </label>
       </div>
 
       {copyHint && (
@@ -156,26 +193,31 @@ export default function Campanhas() {
         </p>
       )}
 
-      {campaigns.length === 0 ? (
+      {selectedCampaign ? (
+        <CampaignDetail
+          campaign={selectedCampaign}
+          deleting={deletingCampaignId === selectedCampaign.id}
+          onBack={() => setExpandedCampaignId(null)}
+          onCopyLink={copyLink}
+          onDelete={() => deleteCampaign(selectedCampaign)}
+        />
+      ) : campaigns.length === 0 ? (
         <div className={styles.emptyCard}>
           <strong>Nenhuma campanha criada.</strong>
           <p>Crie uma campanha para gerar links por grupo de afiliados.</p>
         </div>
+      ) : filteredCampaigns.length === 0 ? (
+        <div className={styles.emptyCard}>
+          <strong>Nenhuma campanha encontrada.</strong>
+          <p>Tente pesquisar por outro nome, destino ou afiliado.</p>
+        </div>
       ) : (
         <div className={styles.campaignList}>
-          {campaigns.map((campaign) => (
+          {filteredCampaigns.map((campaign) => (
             <CampaignCard
               key={campaign.id}
               campaign={campaign}
-              expanded={expandedCampaignId === campaign.id}
-              deleting={deletingCampaignId === campaign.id}
-              onToggle={() =>
-                setExpandedCampaignId((current) =>
-                  current === campaign.id ? null : campaign.id
-                )
-              }
-              onCopyLink={copyLink}
-              onDelete={() => deleteCampaign(campaign)}
+              onOpen={() => setExpandedCampaignId(campaign.id)}
             />
           ))}
         </div>
@@ -186,21 +228,53 @@ export default function Campanhas() {
 
 type CampaignCardProps = {
   campaign: Campaign;
-  expanded: boolean;
-  deleting: boolean;
-  onToggle: () => void;
-  onCopyLink: (link: string) => void;
-  onDelete: () => void;
+  onOpen: () => void;
 };
 
 function CampaignCard({
   campaign,
-  expanded,
+  onOpen,
+}: CampaignCardProps) {
+  const createdAt = formatDate(campaign.createdAt);
+  const firstAffiliate = campaign.links.find((link) => link.affiliate)?.affiliate;
+
+  return (
+    <button
+      type="button"
+      className={styles.card}
+      onClick={onOpen}
+    >
+      <div className={styles.cardTop}>
+        <strong>{campaign.name}</strong>
+      </div>
+
+      <div className={styles.cardBottom}>
+        <div className={styles.cardInfo}>
+          <span>Criado: {createdAt}</span>
+          <span>
+            Afiliado: {firstAffiliate?.name ?? `${campaign.totalAffiliates} afiliados`}
+          </span>
+        </div>
+
+        <time dateTime={campaign.createdAt}>{createdAt}</time>
+      </div>
+    </button>
+  );
+}
+
+function CampaignDetail({
+  campaign,
   deleting,
-  onToggle,
+  onBack,
   onCopyLink,
   onDelete,
-}: CampaignCardProps) {
+}: {
+  campaign: Campaign;
+  deleting: boolean;
+  onBack: () => void;
+  onCopyLink: (link: string) => void;
+  onDelete: () => void;
+}) {
   const ranking = useMemo(
     () =>
       campaign.links
@@ -214,43 +288,71 @@ function CampaignCard({
     campaign.totalLinks > 0
       ? `${(campaign.totalClicks / campaign.totalLinks).toFixed(1)} cliques/link`
       : "0 cliques/link";
+  const createdAt = formatDate(campaign.createdAt);
+  const firstAffiliate = campaign.links.find((link) => link.affiliate)?.affiliate;
 
   return (
-    <section className={styles.card}>
-      <div className={styles.cardButton}>
-        <div className={styles.cardTitleBlock}>
-          <strong>{campaign.name}</strong>
-          <span>{campaign.destinationUrl}</span>
+    <section className={styles.detailPage}>
+      <div className={styles.detailHero}>
+        <button
+          type="button"
+          className={styles.backButton}
+          onClick={onBack}
+        >
+          <FiArrowLeft aria-hidden="true" />
+          Voltar
+        </button>
+
+        <div className={styles.detailTitle}>
+          <span>Campanha</span>
+          <h1>{campaign.name}</h1>
         </div>
 
-        <div className={styles.cardMetrics}>
-          <Metric label="Afiliados" value={campaign.totalAffiliates} />
-          <Metric label="Links" value={campaign.totalLinks} />
-          <Metric label="Cliques" value={campaign.totalClicks} />
-        </div>
+        <div className={styles.detailSummary}>
+          <div className={styles.cardInfo}>
+            <span>Criado: {createdAt}</span>
+            <span>
+              Afiliado: {firstAffiliate?.name ?? `${campaign.totalAffiliates} afiliados`}
+            </span>
+          </div>
 
-        <div className={styles.cardActions}>
-          <button
-            type="button"
-            className={styles.expandButton}
-            onClick={onToggle}
-          >
-            {expanded ? "Fechar relatorio" : "Abrir relatorio"}
-          </button>
-
-          <button
-            type="button"
-            className={styles.deleteButton}
-            onClick={onDelete}
-            disabled={deleting}
-          >
-            {deleting ? "Apagando..." : "Apagar"}
-          </button>
+          <time dateTime={campaign.createdAt}>{createdAt}</time>
         </div>
       </div>
 
-      {expanded && (
-        <div className={styles.report}>
+      <div className={styles.report}>
+          <div className={styles.expandedHeader}>
+            <div>
+              <span>Destino</span>
+              <strong>{campaign.destinationUrl}</strong>
+            </div>
+
+            <div className={styles.cardActions}>
+              <button
+                type="button"
+                className={styles.expandButton}
+                onClick={onBack}
+              >
+                Fechar
+              </button>
+
+              <button
+                type="button"
+                className={styles.deleteButton}
+                onClick={onDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Apagando..." : "Apagar"}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.cardMetrics}>
+            <Metric label="Afiliados" value={campaign.totalAffiliates} />
+            <Metric label="Links" value={campaign.totalLinks} />
+            <Metric label="Cliques" value={campaign.totalClicks} />
+          </div>
+
           <div className={styles.reportGrid}>
             <div className={styles.infoBox}>
               <span>Melhor afiliado</span>
@@ -345,7 +447,6 @@ function CampaignCard({
             </table>
           </div>
         </div>
-      )}
     </section>
   );
 }
@@ -363,4 +464,20 @@ function Metric({
       <span>{label}</span>
     </div>
   );
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "dd/mm/aaaa";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "dd/mm/aaaa";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }

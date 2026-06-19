@@ -41,8 +41,30 @@ export type AffiliateConversionEvent = {
   type: string;
   product: string | null;
   destination: string | null;
+  visitorName: string | null;
+  visitorPhone: string | null;
+  visitorDocument: string | null;
+  visitorCity: string | null;
+  source: string | null;
   ipAddress: string | null;
   userAgent: string | null;
+  referrer: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
+  deviceType: string | null;
+  browser: string | null;
+  operatingSystem: string | null;
+  platform: string | null;
+  language: string | null;
+  geoCountry: string | null;
+  geoRegion: string | null;
+  geoCity: string | null;
+  timezone: string | null;
+  screenWidth: number | null;
+  screenHeight: number | null;
   convertedAt: string;
   linkId: number;
   linkName: string | null;
@@ -109,6 +131,15 @@ export type UpdateLinkPayload = {
   name?: string;
   url?: string;
   affiliateId?: number | null;
+};
+
+export type UpdateConversionPayload = {
+  visitorName?: string;
+  visitorPhone?: string;
+  visitorDocument?: string;
+  visitorCity?: string;
+  product?: string;
+  source?: string;
 };
 
 export type CreateLinkResponse = {
@@ -225,6 +256,8 @@ export type SgpCustomer = {
   id: string | null;
   name: string | null;
   document: string;
+  phone: string | null;
+  city: string | null;
   status: string;
   active: boolean | null;
   contracts: SgpContract[];
@@ -234,6 +267,25 @@ export type SgpCustomer = {
 export type SgpCustomerResponse = {
   provider: "sgp";
   customer: SgpCustomer;
+  result: unknown;
+};
+
+export type SgpCustomersSummary = {
+  total: number;
+  active: number;
+  inactive: number;
+  unknown: number;
+  byCity: {
+    city: string;
+    total: number;
+    active: number;
+  }[];
+};
+
+export type SgpCustomersResponse = {
+  provider: "sgp";
+  customers: SgpCustomer[];
+  summary: SgpCustomersSummary;
   result: unknown;
 };
 
@@ -426,6 +478,22 @@ export async function apagarLink(id: number) {
   await api.delete(`/links/${id}`);
 }
 
+export async function editarConversao(
+  id: number,
+  payload: UpdateConversionPayload
+) {
+  const { data } = await api.put<AffiliateConversionEvent>(
+    `/conversions/${id}`,
+    payload
+  );
+
+  return data;
+}
+
+export async function apagarConversao(id: number) {
+  await api.delete(`/conversions/${id}`);
+}
+
 export async function buscarEstatisticasAfiliado(id: number) {
   const { data } = await api.get<AffiliateStats>(
     `/affiliate/${id}/stats`
@@ -460,14 +528,22 @@ export async function buscarStatusSgp() {
   return data;
 }
 
-export async function consultarClienteSgp(document: string) {
+export async function consultarClienteSgp(query: string) {
   const { data } = await api.get<SgpCustomerResponse>(
     "/integrations/sgp/clientes",
     {
       params: {
-        document,
+        query,
       },
     }
+  );
+
+  return data;
+}
+
+export async function listarClientesSgp() {
+  const { data } = await api.get<SgpCustomersResponse>(
+    "/integrations/sgp/clientes/list"
   );
 
   return data;
