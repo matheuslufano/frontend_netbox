@@ -3,8 +3,6 @@ import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiCheckCircle,
-  FiChevronDown,
-  FiChevronUp,
   FiClock,
   FiCopy,
   FiCreditCard,
@@ -17,7 +15,6 @@ import {
   FiRefreshCw,
   FiSave,
   FiTrash2,
-  FiUser,
   FiX,
 } from "react-icons/fi";
 
@@ -55,11 +52,18 @@ type ConversionEditForm = {
   product: string;
 };
 
+type ConversionStepDataItem = {
+  label: string;
+  value: string;
+};
+
 type ConversionStep = {
   title: string;
   description: string;
   completed: boolean;
   detail: string;
+  dateLabel: string;
+  dataItems?: ConversionStepDataItem[];
 };
 
 type StageStatusOverrides = Record<string, boolean>;
@@ -880,9 +884,6 @@ function ConversionFlowPanel({
   const [savingConversionId, setSavingConversionId] = useState<number | null>(null);
   const [deletingConversionId, setDeletingConversionId] = useState<number | null>(null);
   const [validatingSgpId, setValidatingSgpId] = useState<number | null>(null);
-  const [expandedClientPanels, setExpandedClientPanels] = useState<Set<number>>(
-    () => new Set()
-  );
   const [stageStatusOverrides, setStageStatusOverrides] =
     useState<StageStatusOverrides>({});
   const [editForm, setEditForm] = useState<ConversionEditForm>(
@@ -945,16 +946,6 @@ function ConversionFlowPanel({
     } finally {
       setDeletingConversionId(null);
     }
-  }
-
-  function toggleClientPanel(id: number) {
-    setExpandedClientPanels((current) => {
-      const next = new Set(current);
-
-      next.has(id) ? next.delete(id) : next.add(id);
-
-      return next;
-    });
   }
 
   function toggleStageStatus(conversionId: number, stepIndex: number) {
@@ -1034,16 +1025,12 @@ function ConversionFlowPanel({
               conversion,
               stageStatusOverrides
             );
-            const isClientPanelMinimized = !expandedClientPanels.has(
-              conversion.id
-            );
 
             return (
               <ConversionFlowCard
                 key={conversion.id}
                 conversion={conversion}
                 steps={steps}
-                isClientPanelMinimized={isClientPanelMinimized}
                 isEditing={editingConversionId === conversion.id}
                 isSaving={savingConversionId === conversion.id}
                 isDeleting={deletingConversionId === conversion.id}
@@ -1053,7 +1040,6 @@ function ConversionFlowPanel({
                 onCancelEditing={cancelEditingConversion}
                 onSave={() => saveConversion(conversion.id)}
                 onDelete={() => deleteConversion(conversion)}
-                onToggleClientPanel={() => toggleClientPanel(conversion.id)}
                 onToggleStage={(stepIndex) =>
                   toggleStageStatus(conversion.id, stepIndex)
                 }
@@ -1071,7 +1057,6 @@ function ConversionFlowPanel({
 function ConversionFlowCard({
   conversion,
   steps,
-  isClientPanelMinimized,
   isEditing,
   isSaving,
   isDeleting,
@@ -1081,14 +1066,12 @@ function ConversionFlowCard({
   onCancelEditing,
   onSave,
   onDelete,
-  onToggleClientPanel,
   onToggleStage,
   onOpenSgp,
   isValidatingSgp,
 }: {
   conversion: ConversionWithAffiliate;
   steps: ConversionStep[];
-  isClientPanelMinimized: boolean;
   isEditing: boolean;
   isSaving: boolean;
   isDeleting: boolean;
@@ -1098,12 +1081,14 @@ function ConversionFlowCard({
   onCancelEditing: () => void;
   onSave: () => void;
   onDelete: () => void;
-  onToggleClientPanel: () => void;
   onToggleStage: (stepIndex: number) => void;
   onOpenSgp: () => void;
   isValidatingSgp: boolean;
 }) {
   const finalStatus = getConversionFinalStatusFromSteps(steps);
+  const [activeClientTab, setActiveClientTab] =
+    useState<ClientDataTab>("main");
+  const [showConversionData, setShowConversionData] = useState(false);
 
   return (
     <article className={styles.conversionFlowCard}>
@@ -1114,18 +1099,14 @@ function ConversionFlowCard({
         onDelete={onDelete}
       />
 
-      <div
-        className={cx(
-          styles.conversionBoard,
-          isClientPanelMinimized && styles.conversionBoardClientMinimized
-        )}
-      >
+      <div className={styles.conversionBoard}>
         <div className={styles.conversionStageTrack}>
           {steps.map((step, index) => (
             <ConversionStageCard
               key={step.title}
               step={step}
               index={index}
+              conversion={conversion}
               onToggleStatus={() => onToggleStage(index)}
               onOpenSgp={index === 3 ? onOpenSgp : undefined}
               isLoading={index === 3 && isValidatingSgp}
@@ -1133,20 +1114,95 @@ function ConversionFlowCard({
           ))}
         </div>
 
-        <ClientDataPanel
-          conversion={conversion}
-          minimized={isClientPanelMinimized}
-          isEditing={isEditing}
-          isSaving={isSaving}
-          editForm={editForm}
-          onChangeEditForm={onChangeEditForm}
-          onTogglePanel={onToggleClientPanel}
-          onStartEditing={onStartEditing}
-          onCancelEditing={onCancelEditing}
-          onSave={onSave}
-        />
+        <button
+          type="button"
+          className={cx(
+            styles.conversionDataGuide,
+            showConversionData && styles.conversionDataGuideActive
+          )}
+          onClick={() => setShowConversionData((current) => !current)}
+          aria-expanded={showConversionData}
+          aria-controls={`conversion-data-${conversion.id}`}
+        >
+          <span>Dados da conversao</span>
+          <strong>{conversion.visitorName || "Cliente sem nome"}</strong>
+          <small>{showConversionData ? "Ocultar" : "Mostrar"}</small>
+        </button>
+
+        {showConversionData && (
+          <ConversionDataTabsPanel
+            id={`conversion-data-${conversion.id}`}
+            conversion={conversion}
+            activeTab={activeClientTab}
+            onChangeTab={setActiveClientTab}
+            isEditing={isEditing}
+            isSaving={isSaving}
+            editForm={editForm}
+            onChangeEditForm={onChangeEditForm}
+            onStartEditing={onStartEditing}
+            onCancelEditing={onCancelEditing}
+            onSave={onSave}
+          />
+        )}
       </div>
     </article>
+  );
+}
+
+function ConversionDataTabsPanel({
+  id,
+  conversion,
+  activeTab,
+  onChangeTab,
+  isEditing,
+  isSaving,
+  editForm,
+  onChangeEditForm,
+  onStartEditing,
+  onCancelEditing,
+  onSave,
+}: {
+  id: string;
+  conversion: ConversionWithAffiliate;
+  activeTab: ClientDataTab;
+  onChangeTab: (tab: ClientDataTab) => void;
+  isEditing: boolean;
+  isSaving: boolean;
+  editForm: ConversionEditForm;
+  onChangeEditForm: Dispatch<SetStateAction<ConversionEditForm>>;
+  onStartEditing: () => void;
+  onCancelEditing: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <section id={id} className={styles.conversionDataTabsPanel}>
+      <ClientDataHeader
+        conversion={conversion}
+        minimized={false}
+        isEditing={isEditing}
+        isSaving={isSaving}
+        onStartEditing={onStartEditing}
+        onCancelEditing={onCancelEditing}
+        onSave={onSave}
+      />
+
+      <ClientDataTabs
+        activeTab={activeTab}
+        onChangeTab={onChangeTab}
+      />
+
+      {isEditing ? (
+        <ConversionEditFormFields
+          form={editForm}
+          onChangeForm={onChangeEditForm}
+        />
+      ) : (
+        <ClientDataList
+          conversion={conversion}
+          activeTab={activeTab}
+        />
+      )}
+    </section>
   );
 }
 
@@ -1191,104 +1247,6 @@ function ConversionCardHeader({
   );
 }
 
-function ClientDataPanel({
-  conversion,
-  minimized,
-  isEditing,
-  isSaving,
-  editForm,
-  onChangeEditForm,
-  onTogglePanel,
-  onStartEditing,
-  onCancelEditing,
-  onSave,
-}: {
-  conversion: ConversionWithAffiliate;
-  minimized: boolean;
-  isEditing: boolean;
-  isSaving: boolean;
-  editForm: ConversionEditForm;
-  onChangeEditForm: Dispatch<SetStateAction<ConversionEditForm>>;
-  onTogglePanel: () => void;
-  onStartEditing: () => void;
-  onCancelEditing: () => void;
-  onSave: () => void;
-}) {
-  const [activeClientTab, setActiveClientTab] =
-    useState<ClientDataTab>("main");
-
-  return (
-    <aside
-      className={cx(
-        styles.clientDataPanel,
-        minimized && styles.clientDataPanelMinimized
-      )}
-    >
-      <ClientPanelToggleButton minimized={minimized} onClick={onTogglePanel} />
-
-      <div className={styles.clientAvatar} aria-hidden="true">
-        <FiUser />
-      </div>
-
-      <div className={styles.clientDataCard}>
-        <ClientDataHeader
-          conversion={conversion}
-          minimized={minimized}
-          isEditing={isEditing}
-          isSaving={isSaving}
-          onStartEditing={onStartEditing}
-          onCancelEditing={onCancelEditing}
-          onSave={onSave}
-        />
-
-        {minimized ? (
-          <ClientMiniSummary conversion={conversion} />
-        ) : isEditing ? (
-          <ConversionEditFormFields
-            form={editForm}
-            onChangeForm={onChangeEditForm}
-          />
-        ) : (
-          <>
-            <ClientDataTabs
-              activeTab={activeClientTab}
-              onChangeTab={setActiveClientTab}
-            />
-            <ClientDataList
-              conversion={conversion}
-              activeTab={activeClientTab}
-            />
-          </>
-        )}
-      </div>
-    </aside>
-  );
-}
-
-function ClientPanelToggleButton({
-  minimized,
-  onClick,
-}: {
-  minimized: boolean;
-  onClick: () => void;
-}) {
-  const label = minimized ? "Expandir dados do cliente" : "Minimizar dados do cliente";
-  const Icon = minimized ? FiChevronDown : FiChevronUp;
-
-  return (
-    <button
-      type="button"
-      className={styles.clientMinimizeButton}
-      onClick={onClick}
-      aria-expanded={!minimized}
-      aria-label={label}
-      title={label}
-    >
-      <Icon aria-hidden="true" />
-    </button>
-  );
-}
-
 function ClientDataHeader({
   conversion,
   minimized,
@@ -1309,7 +1267,7 @@ function ClientDataHeader({
   return (
     <div className={styles.clientDataHeader}>
       <div>
-        <span>Dados do cliente</span>
+        <span>Dados da conversao</span>
         <strong>{conversion.visitorName || "Cliente sem nome"}</strong>
       </div>
 
@@ -1369,15 +1327,6 @@ function ClientDataActions({
         <FiX aria-hidden="true" />
         Cancelar
       </button>
-    </div>
-  );
-}
-
-function ClientMiniSummary({ conversion }: { conversion: ConversionWithAffiliate }) {
-  return (
-    <div className={styles.clientMiniSummary}>
-      <span>{formatPhone(conversion.visitorPhone)}</span>
-      <small>{conversion.visitorCity || "Cidade nao informada"}</small>
     </div>
   );
 }
@@ -1527,18 +1476,21 @@ function FlowMetric({ label, value }: { label: string; value: number }) {
 function ConversionStageCard({
   step,
   index,
+  conversion,
   onToggleStatus,
   onOpenSgp,
   isLoading,
 }: {
   step: ConversionStep;
   index: number;
+  conversion: ConversionWithAffiliate;
   onToggleStatus: () => void;
   onOpenSgp?: () => void;
   isLoading?: boolean;
 }) {
   const Icon = CONVERSION_STAGE_ICONS[index] || FiLink;
   const StatusIcon = step.completed ? FiCheckCircle : FiClock;
+  const showChatmixData = index === 2;
 
   return (
     <section
@@ -1581,13 +1533,57 @@ function ConversionStageCard({
         <span>{index + 1} etapa</span>
         <strong>{step.title}</strong>
         <p>{step.description}</p>
-        <small>{isLoading ? "Validando no SGP..." : step.detail}</small>
+
+        {showChatmixData ? (
+          <ChatmixCollectedData conversion={conversion} />
+        ) : step.dataItems?.length ? (
+          <StageStructuredData items={step.dataItems} />
+        ) : (
+          <small>{isLoading ? "Validando no SGP..." : step.detail}</small>
+        )}
       </div>
 
       <span className={styles.stageStatusIcon}>
         <StatusIcon aria-hidden="true" />
       </span>
+
+      <div className={styles.stageFooterDate}>
+        <FiClock aria-hidden="true" />
+        <span>{step.dateLabel}</span>
+      </div>
     </section>
+  );
+}
+
+function StageStructuredData({ items }: { items: ConversionStepDataItem[] }) {
+  return (
+    <div className={styles.stageStructuredData}>
+      {items.map((item) => (
+        <div key={item.label}>
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChatmixCollectedData({
+  conversion,
+}: {
+  conversion: ConversionWithAffiliate;
+}) {
+  const items = getChatmixCollectedItems(conversion);
+
+  return (
+    <div className={styles.chatmixCollectedData}>
+      {items.map((item) => (
+        <div key={item.label} title={item.title}>
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1698,6 +1694,14 @@ function getConversionFlowSteps(
   const hasChatmix = hasChatmixValidation(conversion);
   const hasSgp = hasSgpSale(conversion);
   const eventDate = formatDateTime(conversion.convertedAt);
+  const visitDate = conversion.latestClickAt
+    ? formatDateTime(conversion.latestClickAt)
+    : hasVisit
+      ? eventDate
+      : "Sem data";
+  const whatsappDate = hasWhatsapp ? eventDate : "Sem data";
+  const chatmixDate = hasChatmix ? eventDate : "Sem data";
+  const sgpDate = hasSgp ? eventDate : "Sem data";
 
   return [
     {
@@ -1706,31 +1710,64 @@ function getConversionFlowSteps(
       completed: hasVisit,
       detail: hasVisit
         ? conversion.latestClickAt
-          ? `Ultima visita: ${formatDateTime(conversion.latestClickAt)}`
+          ? `${conversion.totalClicks || 1} visita(s) registradas`
           : `${conversion.totalClicks} visita(s) registradas`
         : "Aguardando visita",
+      dateLabel: visitDate,
     },
     {
       title: "Pre-cadastro",
-      description: "Dados coletados pelo formulario.",
+      description: "Contato iniciado pelo WhatsApp com codigo do afiliado.",
       completed: hasWhatsapp,
       detail: hasWhatsapp
         ? getWhatsappStepDetail(conversion, eventDate)
-        : "Aguardando clique",
+        : "Aguardando clique no WhatsApp",
+      dateLabel: whatsappDate,
+      dataItems: getPreCadastroStepItems(conversion),
     },
     {
       title: "Validacao no Chatmix",
       description: "Webhook confirmou o atendimento no Chatmix.",
       completed: hasChatmix,
-      detail: hasChatmix ? `Validado: ${eventDate}` : "Aguardando webhook",
+      detail: hasChatmix ? "Atendimento validado" : "Aguardando webhook",
+      dateLabel: chatmixDate,
     },
     {
       title: "Registro no SGP",
       description: "Venda concluida e registrada no SGP.",
       completed: hasSgp,
-      detail: hasSgp ? `Concluido: ${eventDate}` : "Aguardando venda",
+      detail: hasSgp ? "Venda concluida" : "Aguardando venda",
+      dateLabel: sgpDate,
     },
   ];
+}
+
+function getPreCadastroStepItems(
+  conversion: ConversionWithAffiliate
+): ConversionStepDataItem[] {
+  const items = [
+    {
+      label: "Codigo",
+      value: conversion.shortCode || "Nao informado",
+    },
+    {
+      label: "Origem",
+      value: conversion.source || "WhatsApp",
+    },
+    {
+      label: "Cliente",
+      value: conversion.visitorName || "Nao informado",
+    },
+  ];
+
+  if (conversion.visitorPhone) {
+    items.push({
+      label: "WhatsApp",
+      value: formatPhone(conversion.visitorPhone),
+    });
+  }
+
+  return items;
 }
 
 function getWhatsappStepDetail(
@@ -1753,6 +1790,36 @@ function getWhatsappStepDetail(
   return isWhatsappEvent(conversion)
     ? `Registrado: ${eventDate}`
     : "Confirmado por etapa posterior";
+}
+
+function getChatmixCollectedItems(conversion: ConversionWithAffiliate) {
+  return [
+    {
+      label: "Nome",
+      value: conversion.visitorName || "Nao informado",
+    },
+    {
+      label: "WhatsApp",
+      value: formatPhone(conversion.visitorPhone),
+    },
+    {
+      label: "CPF/CNPJ",
+      value: formatDocument(conversion.visitorDocument),
+    },
+    {
+      label: "Cidade",
+      value: conversion.visitorCity || "Nao informado",
+    },
+    {
+      label: "Origem",
+      value: conversion.source || "Nao informado",
+    },
+    {
+      label: "Evento",
+      value: conversion.type || "Nao informado",
+      title: conversion.type || undefined,
+    },
+  ];
 }
 
 function getConversionFinalStatusFromSteps(steps: ConversionStep[]) {

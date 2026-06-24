@@ -1,6 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Affiliate,
   City,
@@ -16,6 +22,7 @@ import {
   listarCidadesTocantins,
   listarUsuarios,
 } from "@/lib/api";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./configuracoes.module.css";
 
 type UserForm = {
@@ -33,6 +40,29 @@ type AffiliateForm = {
   active: boolean;
 };
 
+type ChatmixWebhookPayload = {
+  receivedAt?: string;
+  attendanceId?: string | null;
+  channel?: {
+    name?: string | null;
+    type?: string | null;
+  };
+  raw?: unknown;
+  query?: Record<string, unknown>;
+  result?: Record<string, unknown>;
+};
+
+type ChatmixRealtimeMessage = {
+  type: "chatmix-webhook";
+  payload: ChatmixWebhookPayload;
+  emittedAt: string;
+};
+
+type ChatmixWebhookLog = {
+  id: string;
+  message: ChatmixRealtimeMessage;
+};
+
 const emptyUserForm: UserForm = {
   name: "",
   email: "",
@@ -47,6 +77,8 @@ const emptyAffiliateForm: AffiliateForm = {
   city: "",
   active: true,
 };
+
+const chatmixRealtimeEvents: ["chatmix-webhook"] = ["chatmix-webhook"];
 
 export default function Configuracoes() {
   const [users, setUsers] = useState<User[]>([]);
@@ -65,6 +97,7 @@ export default function Configuracoes() {
   const [newUser, setNewUser] = useState<UserForm>(emptyUserForm);
   const [newAffiliate, setNewAffiliate] =
     useState<AffiliateForm>(emptyAffiliateForm);
+  const [chatmixLogs, setChatmixLogs] = useState<ChatmixWebhookLog[]>([]);
 
   const activeAffiliates = useMemo(
     () => affiliates.filter((affiliate) => affiliate.active).length,
@@ -117,6 +150,45 @@ export default function Configuracoes() {
       cancelled = true;
     };
   }, []);
+
+  const handleChatmixWebhookEvent = useCallback(
+    (event: MessageEvent<string>) => {
+      try {
+        const message = JSON.parse(event.data) as ChatmixRealtimeMessage;
+
+        setChatmixLogs((current) => [
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            message,
+          },
+          ...current,
+        ].slice(0, 20));
+      } catch {
+        const fallbackMessage: ChatmixRealtimeMessage = {
+          type: "chatmix-webhook",
+          emittedAt: new Date().toISOString(),
+          payload: {
+            receivedAt: new Date().toISOString(),
+            raw: event.data,
+            result: {
+              status: "invalid-json",
+            },
+          },
+        };
+
+        setChatmixLogs((current) => [
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            message: fallbackMessage,
+          },
+          ...current,
+        ].slice(0, 20));
+      }
+    },
+    []
+  );
+
+  useRealtimeEvents(handleChatmixWebhookEvent, chatmixRealtimeEvents);
 
   function resetStatus() {
     setError(null);
@@ -400,6 +472,46 @@ export default function Configuracoes() {
 
       {message && <p className={styles.success}>{message}</p>}
       {error && <p className={styles.error}>{error}</p>}
+
+      <section className={`${styles.card} ${styles.webhookMonitor}`}>
+        <div className={styles.cardHeader}>
+          <div>
+            <h2>Webhooks Chatmix em tempo real</h2>
+            <p className={styles.cardDescription}>
+              Configure no Chatmix a URL{" "}
+              <strong>/webhooks/chatmix</strong> e acompanhe aqui os JSONs
+              recebidos pelo backend.
+            </p>
+          </div>
+          <div className={styles.webhookActions}>
+            <span className={styles.liveBadge}>Escutando</span>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => setChatmixLogs([])}
+              disabled={!chatmixLogs.length}
+            >
+              Limpar
+            </button>
+          </div>
+        </div>
+
+        {chatmixLogs.length ? (
+          <div className={styles.webhookList}>
+            {chatmixLogs.map((log) => (
+              <WebhookLogItem key={log.id} log={log} />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.webhookEmpty}>
+            <strong>Nenhum webhook recebido nesta tela.</strong>
+            <span>
+              Deixe esta pagina aberta e faca um teste no Chatmix para o JSON
+              aparecer aqui automaticamente.
+            </span>
+          </div>
+        )}
+      </section>
 
       <section className={styles.grid}>
         <form className={styles.card} onSubmit={handleCreateUser}>
@@ -740,6 +852,54 @@ export default function Configuracoes() {
       </section>
     </div>
   );
+}
+
+function WebhookLogItem({ log }: { log: ChatmixWebhookLog }) {
+  const payload = log.message.payload;
+  const receivedAt = payload.receivedAt || log.message.emittedAt;
+  const resultStatus =
+    typeof payload.result?.status === "string"
+      ? payload.result.status
+      : "recebido";
+  const jsonToShow = {
+    raw: payload.raw,
+    query: payload.query,
+    result: payload.result,
+  };
+
+  return (
+    <article className={styles.webhookItem}>
+      <div className={styles.webhookItemHeader}>
+        <div>
+          <strong>{resultStatus}</strong>
+          <span>
+            {formatDateTime(receivedAt)}
+            {payload.attendanceId ? ` | Atendimento ${payload.attendanceId}` : ""}
+          </span>
+        </div>
+        <span className={styles.webhookChannel}>
+          {payload.channel?.name || "Chatmix"}
+        </span>
+      </div>
+      <pre className={styles.webhookJson}>
+        {JSON.stringify(jsonToShow, null, 2)}
+      </pre>
+    </article>
+  );
+}
+
+function formatDateTime(value?: string) {
+  if (!value) {
+    return "Agora";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("pt-BR");
 }
 
 function Field({

@@ -5,7 +5,10 @@ import { useEffect } from "react";
 const realtimeEventsUrl =
   process.env.NEXT_PUBLIC_REALTIME_EVENTS_URL || "/api-backend/events";
 
-type RealtimeEventName = "link-clicked" | "link-converted";
+type RealtimeEventName =
+  | "link-clicked"
+  | "link-converted"
+  | "chatmix-webhook";
 
 const defaultEvents: RealtimeEventName[] = [
   "link-clicked",
@@ -13,7 +16,7 @@ const defaultEvents: RealtimeEventName[] = [
 ];
 
 export function useRealtimeEvents(
-  onEvent: () => void,
+  onEvent: (event: MessageEvent<string>) => void,
   events: RealtimeEventName[] = defaultEvents
 ) {
   useEffect(() => {

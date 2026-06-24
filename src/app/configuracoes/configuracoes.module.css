@@ -85,6 +85,19 @@
   font-size: 20px;
 }
 
+.cardDescription {
+  max-width: 760px;
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.cardDescription strong {
+  color: #111827;
+  font-family: monospace;
+}
+
 .cardHeader span {
   color: #6b7280;
   font-size: 13px;
@@ -229,6 +242,112 @@
   flex-wrap: wrap;
 }
 
+.webhookMonitor {
+  display: grid;
+  gap: 14px;
+}
+
+.webhookActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.liveBadge {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 11px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.webhookList {
+  display: grid;
+  gap: 12px;
+}
+
+.webhookItem {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.webhookItemHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.webhookItemHeader strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.webhookItemHeader span {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.webhookChannel {
+  max-width: 320px;
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: #eef4ff;
+  color: #1d4ed8 !important;
+  font-size: 11px !important;
+  font-weight: 900;
+  text-align: right;
+}
+
+.webhookJson {
+  max-height: 360px;
+  margin: 0;
+  overflow: auto;
+  border-radius: 10px;
+  padding: 12px;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre;
+}
+
+.webhookEmpty {
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.webhookEmpty strong {
+  color: #111827;
+}
+
+.webhookEmpty span {
+  color: #64748b;
+  font-size: 13px;
+}
+
 @media (max-width: 920px) {
   .summaryGrid,
   .grid,
@@ -242,6 +361,15 @@
 
   .actions {
     justify-content: flex-start;
+  }
+
+  .webhookItemHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .webhookChannel {
+    max-width: 100%;
+    text-align: left;
   }
 }
 
@@ -257,6 +385,16 @@
   .cardHeader {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .webhookActions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .liveBadge {
+    width: 100%;
   }
 
   .primaryButton,
