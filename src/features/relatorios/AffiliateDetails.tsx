@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
+import type { ComponentType, CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiCheckCircle,
@@ -77,6 +77,7 @@ type SelectOption<T extends string> = {
 type AffiliateViewMode = "compact" | "medium" | "detailed";
 type DetailTab = "links" | "conversions";
 type ClientDataTab = "main" | "access" | "device";
+type ConversionLinkFilter = Pick<AffiliateLink, "id" | "name" | "shortCode">;
 
 const DEFAULT_EMPTY_MESSAGE = "Nenhum afiliado encontrado no relatorio.";
 
@@ -118,10 +119,24 @@ export default function AffiliateDetails({
   const [deletingLinkId, setDeletingLinkId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<AffiliateViewMode>("detailed");
   const [detailTab, setDetailTab] = useState<DetailTab>("links");
+  const [conversionLinkFilter, setConversionLinkFilter] =
+    useState<ConversionLinkFilter | null>(null);
 
   const conversionEvents = useConversionEvents(details);
   const conversionRanking = useConversionRanking(details);
   const totalConversions = useTotalConversions(details);
+  const visibleConversionEvents = useMemo(
+    () =>
+      conversionLinkFilter
+        ? conversionEvents.filter(
+            (conversion) => conversion.linkId === conversionLinkFilter.id
+          )
+        : conversionEvents,
+    [conversionEvents, conversionLinkFilter]
+  );
+  const visibleTotalConversions = conversionLinkFilter
+    ? visibleConversionEvents.length
+    : totalConversions;
 
   const affiliateListClassName = cx(
     styles.affiliateList,
@@ -160,12 +175,31 @@ export default function AffiliateDetails({
     }
   }
 
+  function handleChangeDetailTab(tab: DetailTab) {
+    if (tab === "conversions") {
+      setConversionLinkFilter(null);
+    }
+
+    setDetailTab(tab);
+  }
+
+  function handleOpenLinkConversions(link: AffiliateLink) {
+    if ((link.conversions ?? 0) <= 0) return;
+
+    setConversionLinkFilter({
+      id: link.id,
+      name: link.name,
+      shortCode: link.shortCode,
+    });
+    setDetailTab("conversions");
+  }
+
   return (
     <>
       <DetailsHeader
         activeTab={detailTab}
         activeViewMode={viewMode}
-        onChangeTab={setDetailTab}
+        onChangeTab={handleChangeDetailTab}
         onChangeViewMode={setViewMode}
       />
 
@@ -181,14 +215,17 @@ export default function AffiliateDetails({
           onRefresh={refresh}
           onCopyLink={handleCopyLink}
           onDeleteLink={handleDeleteLink}
+          onOpenLinkConversions={handleOpenLinkConversions}
           viewMode={viewMode}
         />
       ) : (
         <ConversionFlowPanel
-          conversionEvents={conversionEvents}
+          conversionEvents={visibleConversionEvents}
           emptyMessage={emptyMessage}
-          totalConversions={totalConversions}
+          totalConversions={visibleTotalConversions}
           onRefresh={refresh}
+          linkFilter={conversionLinkFilter}
+          onClearLinkFilter={() => setConversionLinkFilter(null)}
         />
       )}
     </>
@@ -298,6 +335,7 @@ function LinksTab({
   onRefresh,
   onCopyLink,
   onDeleteLink,
+  onOpenLinkConversions,
   viewMode,
 }: {
   details: AffiliateDetail[];
@@ -310,6 +348,7 @@ function LinksTab({
   onRefresh: () => void;
   onCopyLink: (link: string) => Promise<void>;
   onDeleteLink: (id: number, name?: string | null) => Promise<void>;
+  onOpenLinkConversions: (link: AffiliateLink) => void;
   viewMode: AffiliateViewMode;
 }) {
   return (
@@ -333,6 +372,7 @@ function LinksTab({
               onRefreshReport={onRefresh}
               onCopyLink={onCopyLink}
               onDeleteLink={onDeleteLink}
+              onOpenLinkConversions={onOpenLinkConversions}
             />
           ))}
         </div>
@@ -407,6 +447,7 @@ type AffiliateCardProps = {
   onRefreshReport: () => void;
   onCopyLink: (link: string) => Promise<void>;
   onDeleteLink: (id: number, name?: string | null) => Promise<void>;
+  onOpenLinkConversions: (link: AffiliateLink) => void;
 };
 
 function AffiliateCompactCard({
@@ -416,6 +457,7 @@ function AffiliateCompactCard({
   onRefreshReport,
   onCopyLink,
   onDeleteLink,
+  onOpenLinkConversions,
 }: AffiliateCardProps) {
   const primaryLink = block.links[0];
 
@@ -465,6 +507,7 @@ function AffiliateMediumCard({
   onRefreshReport,
   onCopyLink,
   onDeleteLink,
+  onOpenLinkConversions,
 }: AffiliateCardProps) {
   const previewLinks = block.links.slice(0, 3);
   const hiddenLinks = Math.max(block.links.length - previewLinks.length, 0);
@@ -496,7 +539,10 @@ function AffiliateMediumCard({
             <div key={link.id} className={styles.linkPreviewRow}>
               <LinkPreview link={link} />
 
-              <LinkMetrics link={link} />
+              <LinkMetrics
+                link={link}
+                onOpenConversions={onOpenLinkConversions}
+              />
 
               <LinkIconActions
                 link={link}
@@ -516,39 +562,184 @@ function AffiliateMediumCard({
   );
 }
 
+function AffiliateShowcaseAvatar({ block }: { block: AffiliateDetail }) {
+  const photoUrl = getAffiliatePhotoUrl(block);
+  const initials = getAffiliateInitials(block.affiliate);
+  const avatarPalette = getAffiliateAvatarPalette(block.affiliate, block.affiliateId);
+
+  const avatarStyle = {
+    "--avatar-bg": avatarPalette.background,
+    "--avatar-color": avatarPalette.color,
+  } as CSSProperties;
+
+  return (
+    <div className={styles.showcaseAvatar}>
+      <div className={styles.showcaseAvatarCircle} style={avatarStyle}>
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt={`Foto de ${block.affiliate}`}
+            className={styles.showcaseAvatarImage}
+          />
+        ) : (
+          <span className={styles.showcaseAvatarInitials}>{initials}</span>
+        )}
+      </div>
+
+      <strong title={block.affiliate}>{block.affiliate}</strong>
+      <span className={styles.showcaseAvatarHint}>
+        {photoUrl ? "Foto do afiliado" : "Iniciais do afiliado"}
+      </span>
+    </div>
+  );
+}
+
 function AffiliateDetailedCard({
   block,
   deletingLinkId,
-  refreshingReport,
-  onRefreshReport,
   onCopyLink,
   onDeleteLink,
+  onOpenLinkConversions,
 }: AffiliateCardProps) {
   return (
-    <article className={styles.affiliateCard}>
-      <AffiliateCardHeader
-        block={block}
-        refreshing={refreshingReport}
-        onRefresh={onRefreshReport}
-      />
+    <article className={styles.affiliateLinkShowcase}>
+      <AffiliateShowcaseAvatar block={block} />
 
-      <AffiliateStats
-        links={block.totalLinks}
-        clicks={block.totalClicks}
-        conversions={block.totalConversions ?? 0}
-      />
-
-      <div className={styles.linksSection}>
-        <h4>Links de divulgacao</h4>
+      <div className={styles.showcaseAffiliatePanel}>
+        <strong className={styles.showcaseDetailTitle}>Detalhe</strong>
+        <div className={styles.showcaseAffiliateFields}>
+          <div>
+            <strong>Links</strong>
+            <span>{block.totalLinks}</span>
+          </div>
+          <div>
+            <strong>Cliques</strong>
+            <span>{block.totalClicks}</span>
+          </div>
+          <div>
+            <strong>Conversoes</strong>
+            <span>{block.totalConversions ?? 0}</span>
+          </div>
+        </div>
       </div>
 
-      <AffiliateLinksTable
-        links={block.links}
-        deletingLinkId={deletingLinkId}
-        onCopyLink={onCopyLink}
-        onDeleteLink={onDeleteLink}
-      />
+      <div className={styles.showcaseLinksPanel}>
+        <div className={styles.showcaseTopBar}>
+          <strong>Links do afiliado</strong>
+        </div>
+
+        {block.links.length === 0 ? (
+          <p className={styles.emptyInlineText}>Nenhum link cadastrado.</p>
+        ) : (
+          <div className={styles.showcaseLinkList}>
+            {block.links.map((link) => (
+              <AffiliateShowcaseLink
+                key={link.id}
+                link={link}
+                deleting={deletingLinkId === link.id}
+                onCopyLink={onCopyLink}
+                onDeleteLink={onDeleteLink}
+                onOpenConversions={onOpenLinkConversions}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </article>
+  );
+}
+
+function AffiliateShowcaseLink({
+  link,
+  deleting,
+  onCopyLink,
+  onDeleteLink,
+  onOpenConversions,
+}: {
+  link: AffiliateLink;
+  deleting: boolean;
+  onCopyLink: (link: string) => Promise<void>;
+  onDeleteLink: (id: number, name?: string | null) => Promise<void>;
+  onOpenConversions: (link: AffiliateLink) => void;
+}) {
+  const hasConversions = (link.conversions ?? 0) > 0;
+
+  return (
+    <section
+      className={cx(
+        styles.showcaseLinkCard,
+        hasConversions && styles.showcaseLinkCardConverted
+      )}
+    >
+      <div className={styles.showcaseLinkInfo}>
+        <strong>Nome: {link.name || "Link sem nome"}</strong>
+        <span title={link.originalUrl}>
+          Destino: {formatDisplayLink(link.originalUrl)}
+        </span>
+        <a
+          href={link.promoLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={link.promoLink}
+        >
+          Afiliado: {formatDisplayLink(link.promoLink)}
+        </a>
+      </div>
+
+      <div
+        className={cx(
+          styles.showcaseMetrics,
+          hasConversions && styles.showcaseMetricsConverted
+        )}
+      >
+        <span>
+          Links: <strong>{link.shortCode}</strong>
+        </span>
+        <span>
+          Cliques: <strong>{link.clicks}</strong>
+        </span>
+        {hasConversions ? (
+          <button
+            type="button"
+            className={cx(
+              styles.showcaseMetricButton,
+              styles.showcaseMetricButtonActive
+            )}
+            onClick={() => onOpenConversions(link)}
+            aria-label={`Ver ${link.conversions} conversoes do link ${
+              link.name || link.shortCode
+            }`}
+            title="Ver fluxograma e dados coletados"
+          >
+            Conversões: <strong>{link.conversions ?? 0}</strong>
+          </button>
+        ) : (
+          <span>
+            Conversões: <strong>0</strong>
+          </span>
+        )}
+      </div>
+
+      <div className={styles.showcaseLinkActions}>
+        <button
+          type="button"
+          onClick={() => onDeleteLink(link.id, link.name)}
+          disabled={deleting}
+          aria-label={`Apagar link ${link.name || link.shortCode}`}
+          title="Apagar link"
+        >
+          <FiTrash2 aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onCopyLink(link.promoLink)}
+          aria-label={`Copiar link ${link.name || link.shortCode}`}
+          title="Copiar link"
+        >
+          <FiCopy aria-hidden="true" />
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -677,8 +868,15 @@ function AffiliateLinkRow({
   onCopyLink: (link: string) => Promise<void>;
   onDeleteLink: (id: number, name?: string | null) => Promise<void>;
 }) {
+  const hasConversions = (link.conversions ?? 0) > 0;
+
   return (
-    <tr className={styles.tableRow}>
+    <tr
+      className={cx(
+        styles.tableRow,
+        hasConversions && styles.tableRowConverted
+      )}
+    >
       <td className={styles.smallCell}>
         <div className={styles.linkInfo}>
           <strong className={styles.linkNameHighlight}>
@@ -770,16 +968,44 @@ function LinkPreview({ link }: { link: AffiliateLink }) {
   );
 }
 
-function LinkMetrics({ link }: { link: AffiliateLink }) {
+function LinkMetrics({
+  link,
+  onOpenConversions,
+}: {
+  link: AffiliateLink;
+  onOpenConversions: (link: AffiliateLink) => void;
+}) {
   return (
     <div className={styles.previewMetrics}>
       <span className={styles.clickBadge}>{link.clicks}</span>
-      <ConversionCountBadge value={link.conversions ?? 0} />
+      <ConversionCountBadge
+        value={link.conversions ?? 0}
+        onClick={() => onOpenConversions(link)}
+      />
     </div>
   );
 }
 
-function ConversionCountBadge({ value }: { value: number }) {
+function ConversionCountBadge({
+  value,
+  onClick,
+}: {
+  value: number;
+  onClick?: () => void;
+}) {
+  if (value > 0 && onClick) {
+    return (
+      <button
+        type="button"
+        className={cx(styles.conversionBadge, styles.conversionBadgeButton)}
+        onClick={onClick}
+        title="Ver fluxograma e dados coletados"
+      >
+        {value}
+      </button>
+    );
+  }
+
   return (
     <span className={value > 0 ? styles.conversionBadge : styles.zeroBadge}>
       {value}
@@ -873,11 +1099,15 @@ function ConversionFlowPanel({
   emptyMessage,
   totalConversions,
   onRefresh,
+  linkFilter,
+  onClearLinkFilter,
 }: {
   conversionEvents: ConversionWithAffiliate[];
   emptyMessage: string;
   totalConversions: number;
   onRefresh: () => void;
+  linkFilter: ConversionLinkFilter | null;
+  onClearLinkFilter: () => void;
 }) {
   const router = useRouter();
   const [editingConversionId, setEditingConversionId] = useState<number | null>(null);
@@ -1010,6 +1240,21 @@ function ConversionFlowPanel({
 
   return (
     <section className={styles.conversionFlowPanel} role="tabpanel">
+      {linkFilter && (
+        <div className={styles.conversionFilterNotice}>
+          <div>
+            <span>Conversoes do link</span>
+            <strong>
+              {linkFilter.name || "Link sem nome"} - codigo {linkFilter.shortCode}
+            </strong>
+          </div>
+
+          <button type="button" onClick={onClearLinkFilter}>
+            Ver todas
+          </button>
+        </div>
+      )}
+
       <div className={styles.conversionFlowOverview}>
         {flowMetrics.map((metric) => (
           <FlowMetric key={metric.label} {...metric} />
@@ -1088,7 +1333,7 @@ function ConversionFlowCard({
   const finalStatus = getConversionFinalStatusFromSteps(steps);
   const [activeClientTab, setActiveClientTab] =
     useState<ClientDataTab>("main");
-  const [showConversionData, setShowConversionData] = useState(false);
+  const [isConversionDataModalOpen, setIsConversionDataModalOpen] = useState(false);
 
   return (
     <article className={styles.conversionFlowCard}>
@@ -1097,6 +1342,7 @@ function ConversionFlowCard({
         finalStatus={finalStatus}
         isDeleting={isDeleting}
         onDelete={onDelete}
+        onOpenDataModal={() => setIsConversionDataModalOpen(true)}
       />
 
       <div className={styles.conversionBoard}>
@@ -1113,43 +1359,29 @@ function ConversionFlowCard({
             />
           ))}
         </div>
-
-        <button
-          type="button"
-          className={cx(
-            styles.conversionDataGuide,
-            showConversionData && styles.conversionDataGuideActive
-          )}
-          onClick={() => setShowConversionData((current) => !current)}
-          aria-expanded={showConversionData}
-          aria-controls={`conversion-data-${conversion.id}`}
-        >
-          <span>Dados da conversao</span>
-          <strong>{conversion.visitorName || "Cliente sem nome"}</strong>
-          <small>{showConversionData ? "Ocultar" : "Mostrar"}</small>
-        </button>
-
-        {showConversionData && (
-          <ConversionDataTabsPanel
-            id={`conversion-data-${conversion.id}`}
-            conversion={conversion}
-            activeTab={activeClientTab}
-            onChangeTab={setActiveClientTab}
-            isEditing={isEditing}
-            isSaving={isSaving}
-            editForm={editForm}
-            onChangeEditForm={onChangeEditForm}
-            onStartEditing={onStartEditing}
-            onCancelEditing={onCancelEditing}
-            onSave={onSave}
-          />
-        )}
       </div>
+
+      {isConversionDataModalOpen && (
+        <ConversionDataModal
+          id={`conversion-data-${conversion.id}`}
+          conversion={conversion}
+          activeTab={activeClientTab}
+          onChangeTab={setActiveClientTab}
+          isEditing={isEditing}
+          isSaving={isSaving}
+          editForm={editForm}
+          onChangeEditForm={onChangeEditForm}
+          onStartEditing={onStartEditing}
+          onCancelEditing={onCancelEditing}
+          onSave={onSave}
+          onClose={() => setIsConversionDataModalOpen(false)}
+        />
+      )}
     </article>
   );
 }
 
-function ConversionDataTabsPanel({
+function ConversionDataModal({
   id,
   conversion,
   activeTab,
@@ -1161,6 +1393,7 @@ function ConversionDataTabsPanel({
   onStartEditing,
   onCancelEditing,
   onSave,
+  onClose,
 }: {
   id: string;
   conversion: ConversionWithAffiliate;
@@ -1173,36 +1406,71 @@ function ConversionDataTabsPanel({
   onStartEditing: () => void;
   onCancelEditing: () => void;
   onSave: () => void;
+  onClose: () => void;
 }) {
   return (
-    <section id={id} className={styles.conversionDataTabsPanel}>
-      <ClientDataHeader
-        conversion={conversion}
-        minimized={false}
-        isEditing={isEditing}
-        isSaving={isSaving}
-        onStartEditing={onStartEditing}
-        onCancelEditing={onCancelEditing}
-        onSave={onSave}
-      />
+    <div
+      className={styles.conversionDataModalOverlay}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={`${id}-title`}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <section id={id} className={styles.conversionDataModalCard}>
+        <div className={styles.conversionDataModalHero}>
+          <div>
+            <span>Dados da conversao</span>
+            <h2 id={`${id}-title`}>{conversion.visitorName || "Cliente sem nome"}</h2>
+            <p>
+              Confira todos os dados coletados durante a jornada deste cliente.
+            </p>
+          </div>
 
-      <ClientDataTabs
-        activeTab={activeTab}
-        onChangeTab={onChangeTab}
-      />
+          <button
+            type="button"
+            className={styles.conversionDataModalClose}
+            onClick={onClose}
+            aria-label="Fechar dados da conversao"
+            title="Fechar"
+          >
+            <FiX aria-hidden="true" />
+          </button>
+        </div>
 
-      {isEditing ? (
-        <ConversionEditFormFields
-          form={editForm}
-          onChangeForm={onChangeEditForm}
-        />
-      ) : (
-        <ClientDataList
-          conversion={conversion}
-          activeTab={activeTab}
-        />
-      )}
-    </section>
+        <div className={styles.conversionDataModalBody}>
+          <ClientDataHeader
+            conversion={conversion}
+            minimized={false}
+            isEditing={isEditing}
+            isSaving={isSaving}
+            onStartEditing={onStartEditing}
+            onCancelEditing={onCancelEditing}
+            onSave={onSave}
+          />
+
+          <ClientDataTabs
+            activeTab={activeTab}
+            onChangeTab={onChangeTab}
+          />
+
+          {isEditing ? (
+            <ConversionEditFormFields
+              form={editForm}
+              onChangeForm={onChangeEditForm}
+            />
+          ) : (
+            <ClientDataList
+              conversion={conversion}
+              activeTab={activeTab}
+            />
+          )}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -1211,11 +1479,13 @@ function ConversionCardHeader({
   finalStatus,
   isDeleting,
   onDelete,
+  onOpenDataModal,
 }: {
   conversion: ConversionWithAffiliate;
   finalStatus: { label: string; className: string };
   isDeleting: boolean;
   onDelete: () => void;
+  onOpenDataModal: () => void;
 }) {
   return (
     <div className={styles.conversionFlowHeader}>
@@ -1228,6 +1498,17 @@ function ConversionCardHeader({
       </div>
 
       <div className={styles.conversionHeaderActions}>
+        <button
+          type="button"
+          className={styles.openConversionDataButton}
+          onClick={onOpenDataModal}
+          aria-label={`Visualizar dados da conversao ${conversion.id}`}
+          title="Visualizar dados da conversao"
+        >
+          <FiGrid aria-hidden="true" />
+          <span>Dados da conversao</span>
+        </button>
+
         <span className={cx(styles.finalStatusBadge, finalStatus.className)}>
           {finalStatus.label}
         </span>
@@ -1865,8 +2146,17 @@ function isWhatsappEvent(conversion: ConversionWithAffiliate) {
 }
 
 function hasChatmixValidation(conversion: ConversionWithAffiliate) {
+  const searchText = getConversionSearchText(conversion);
+  const hasCollectedClientData = Boolean(
+    conversion.visitorName ||
+      conversion.visitorPhone ||
+      conversion.visitorDocument ||
+      conversion.source
+  );
+
   return (
-    /chatmix|webhook/.test(getConversionSearchText(conversion)) ||
+    /chatmix|webhook|trafego pago|whatsapp/.test(searchText) &&
+      hasCollectedClientData ||
     hasSgpSale(conversion)
   );
 }
@@ -1882,6 +2172,10 @@ function getConversionSearchText(conversion: ConversionWithAffiliate) {
     conversion.type,
     conversion.product,
     conversion.destination,
+    conversion.source,
+    conversion.visitorName,
+    conversion.visitorPhone,
+    conversion.visitorDocument,
     conversion.userAgent,
   ]
     .filter(Boolean)
@@ -2059,6 +2353,50 @@ function buildSgpUrl(conversion: ConversionWithAffiliate) {
   return `/sgp?${params.toString()}`;
 }
 
+const AFFILIATE_AVATAR_PALETTE = [
+  { background: "linear-gradient(135deg, #2563eb, #1e40af)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #f97316, #c2410c)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #16a34a, #166534)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #9333ea, #6b21a8)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #db2777, #9d174d)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #0891b2, #155e75)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #ca8a04, #854d0e)", color: "#ffffff" },
+  { background: "linear-gradient(135deg, #475569, #0f172a)", color: "#ffffff" },
+];
+
+function getAffiliateAvatarPalette(name: string, id?: number) {
+  const baseValue = `${name || "afiliado"}-${id || ""}`;
+  const hash = Array.from(baseValue).reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0
+  );
+
+  return AFFILIATE_AVATAR_PALETTE[hash % AFFILIATE_AVATAR_PALETTE.length];
+}
+
+function getAffiliatePhotoUrl(block: AffiliateDetail) {
+  const record = block as unknown as Record<string, unknown>;
+
+  const possibleFields = [
+    record.affiliatePhotoUrl,
+    record.affiliateAvatarUrl,
+    record.avatarUrl,
+    record.photoUrl,
+    record.imageUrl,
+    record.profileImageUrl,
+    record.pictureUrl,
+    record.photo,
+    record.avatar,
+    record.image,
+  ];
+
+  const photoUrl = possibleFields.find(
+    (value): value is string => typeof value === "string" && value.trim().length > 0
+  );
+
+  return photoUrl?.trim() || "";
+}
+
 function getAffiliateInitials(name: string) {
   const initials = name
     .trim()
@@ -2068,4 +2406,8 @@ function getAffiliateInitials(name: string) {
     .join("");
 
   return initials || "AF";
+}
+
+function getAffiliateFirstName(name: string) {
+  return name.trim().split(/\s+/)[0]?.toUpperCase() || "AFILIADO";
 }

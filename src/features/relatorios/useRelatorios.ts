@@ -15,9 +15,17 @@ import {
   getApiErrorMessage,
   listarAfiliados,
 } from "@/lib/api";
-import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import {
+  RealtimeEventName,
+  useRealtimeEvents,
+} from "@/lib/useRealtimeEvents";
 
 const AUTO_REFRESH_MS = 15000;
+const REPORT_REALTIME_EVENTS: RealtimeEventName[] = [
+  "link-clicked",
+  "link-converted",
+  "chatmix-webhook",
+];
 
 export type AffiliateDetail = AffiliateStats & {
   affiliateId: number;
@@ -137,7 +145,7 @@ export function useRelatorios() {
     }
   }, [load]);
 
-  useRealtimeEvents(refreshFromEvent);
+  useRealtimeEvents(refreshFromEvent, REPORT_REALTIME_EVENTS);
 
   useEffect(() => {
     mountedRef.current = true;

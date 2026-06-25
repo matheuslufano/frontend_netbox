@@ -294,6 +294,19 @@ export type HealthStatus = {
   database: string;
 };
 
+export type ChatmixWebhookLogResponse = {
+  id: number;
+  receivedAt: string;
+  attendanceId: string | null;
+  channel: {
+    name: string | null;
+    type: string | null;
+  };
+  raw: unknown;
+  query: Record<string, unknown>;
+  result: Record<string, unknown>;
+};
+
 const defaultApiUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3001"
@@ -552,6 +565,19 @@ export async function listarClientesSgp() {
 export async function consultarSaudeSistema() {
   const { data } = await api.get<HealthStatus>("/health");
   return data;
+}
+
+export async function listarChatmixWebhookLogs(limit = 50) {
+  const { data } = await api.get<ChatmixWebhookLogResponse[]>(
+    "/webhooks/chatmix/logs",
+    {
+      params: {
+        limit,
+      },
+    }
+  );
+
+  return Array.isArray(data) ? data : [];
 }
 
 export default api;
