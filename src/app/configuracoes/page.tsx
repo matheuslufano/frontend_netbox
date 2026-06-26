@@ -513,7 +513,7 @@ export default function Configuracoes() {
         password,
         city: newUser.city || undefined,
         photoUrl: newUser.photoUrl || undefined,
-      } as any);
+      });
 
       setUsers((current) => [
         preserveProfilePhoto(created, newUser.photoUrl),
@@ -564,7 +564,7 @@ export default function Configuracoes() {
         city: userForm.city || undefined,
         password: password || undefined,
         photoUrl: userForm.photoUrl || undefined,
-      } as any);
+      });
 
       setUsers((current) =>
         current.map((user) =>
@@ -624,7 +624,7 @@ export default function Configuracoes() {
         phone: newAffiliate.phone.trim() || undefined,
         city: newAffiliate.city || undefined,
         photoUrl: newAffiliate.photoUrl || undefined,
-      } as any);
+      });
 
       if (!newAffiliate.active) {
         const inactive = await editarAfiliado(created.id, {
@@ -670,7 +670,7 @@ export default function Configuracoes() {
         city: affiliateForm.city || undefined,
         active: affiliateForm.active,
         photoUrl: affiliateForm.photoUrl || undefined,
-      } as any);
+      });
 
       setAffiliates((current) =>
         current.map((affiliate) =>

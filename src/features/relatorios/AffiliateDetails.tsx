@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ComponentType, CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
-import { useRouter } from "next/navigation";
 import {
   FiCheckCircle,
   FiClock,
@@ -68,6 +67,23 @@ type ConversionStep = {
 
 type StageStatusOverrides = Record<string, boolean>;
 
+type SgpStageCheckStatus =
+  | "checking"
+  | "not_found"
+  | "active"
+  | "inactive"
+  | "divergent"
+  | "error";
+
+type SgpStageCheck = {
+  status: SgpStageCheckStatus;
+  document: string;
+  statusLabel: string;
+  messages?: string[];
+};
+
+type SgpStageChecks = Record<number, SgpStageCheck>;
+
 type SelectOption<T extends string> = {
   value: T;
   label: string;
@@ -78,6 +94,14 @@ type AffiliateViewMode = "compact" | "medium" | "detailed";
 type DetailTab = "links" | "conversions";
 type ClientDataTab = "main" | "access" | "device";
 type ConversionLinkFilter = Pick<AffiliateLink, "id" | "name" | "shortCode">;
+type ConversionReportView = "objective" | "flow";
+type SaleStatusKind = "sold" | "in_progress" | "lost" | "pending";
+
+type SaleStatusInfo = {
+  kind: SaleStatusKind;
+  label: string;
+  description: string;
+};
 
 const DEFAULT_EMPTY_MESSAGE = "Nenhum afiliado encontrado no relatorio.";
 
@@ -125,18 +149,6 @@ export default function AffiliateDetails({
   const conversionEvents = useConversionEvents(details);
   const conversionRanking = useConversionRanking(details);
   const totalConversions = useTotalConversions(details);
-  const visibleConversionEvents = useMemo(
-    () =>
-      conversionLinkFilter
-        ? conversionEvents.filter(
-            (conversion) => conversion.linkId === conversionLinkFilter.id
-          )
-        : conversionEvents,
-    [conversionEvents, conversionLinkFilter]
-  );
-  const visibleTotalConversions = conversionLinkFilter
-    ? visibleConversionEvents.length
-    : totalConversions;
 
   const affiliateListClassName = cx(
     styles.affiliateList,
@@ -195,7 +207,7 @@ export default function AffiliateDetails({
   }
 
   return (
-    <>
+    <section className={styles.affiliateDetailsSurface}>
       <DetailsHeader
         activeTab={detailTab}
         activeViewMode={viewMode}
@@ -220,15 +232,16 @@ export default function AffiliateDetails({
         />
       ) : (
         <ConversionFlowPanel
-          conversionEvents={visibleConversionEvents}
+          details={details}
+          conversionEvents={conversionEvents}
           emptyMessage={emptyMessage}
-          totalConversions={visibleTotalConversions}
+          totalConversions={totalConversions}
           onRefresh={refresh}
           linkFilter={conversionLinkFilter}
           onClearLinkFilter={() => setConversionLinkFilter(null)}
         />
       )}
-    </>
+    </section>
   );
 }
 
@@ -1095,6 +1108,7 @@ function RefreshReportButton({
 }
 
 function ConversionFlowPanel({
+  details,
   conversionEvents,
   emptyMessage,
   totalConversions,
@@ -1102,6 +1116,7 @@ function ConversionFlowPanel({
   linkFilter,
   onClearLinkFilter,
 }: {
+  details: AffiliateDetail[];
   conversionEvents: ConversionWithAffiliate[];
   emptyMessage: string;
   totalConversions: number;
@@ -1109,22 +1124,86 @@ function ConversionFlowPanel({
   linkFilter: ConversionLinkFilter | null;
   onClearLinkFilter: () => void;
 }) {
-  const router = useRouter();
   const [editingConversionId, setEditingConversionId] = useState<number | null>(null);
   const [savingConversionId, setSavingConversionId] = useState<number | null>(null);
   const [deletingConversionId, setDeletingConversionId] = useState<number | null>(null);
   const [validatingSgpId, setValidatingSgpId] = useState<number | null>(null);
   const [stageStatusOverrides, setStageStatusOverrides] =
     useState<StageStatusOverrides>({});
+  const [sgpStageChecks, setSgpStageChecks] = useState<SgpStageChecks>({});
+  const [selectedAffiliateId, setSelectedAffiliateId] = useState("all");
+  const [codeFilter, setCodeFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [conversionReportView, setConversionReportView] =
+    useState<ConversionReportView>("objective");
+  const [selectedConversionForData, setSelectedConversionForData] =
+    useState<ConversionWithAffiliate | null>(null);
+  const [activeClientTab, setActiveClientTab] =
+    useState<ClientDataTab>("main");
   const [editForm, setEditForm] = useState<ConversionEditForm>(
     INITIAL_CONVERSION_FORM
   );
 
+  const selectedAffiliate = useMemo(
+    () =>
+      selectedAffiliateId === "all"
+        ? null
+        : details.find(
+            (detail) => String(detail.affiliateId) === selectedAffiliateId
+          ) ?? null,
+    [details, selectedAffiliateId]
+  );
+  const affiliateOptions = details.map((detail) => ({
+    id: detail.affiliateId,
+    name: detail.affiliate,
+  }));
+  const affiliateScopedConversionEvents = useMemo(
+    () =>
+      conversionEvents.filter(
+        (conversion) =>
+          selectedAffiliateId === "all" ||
+          String(conversion.affiliateId) === selectedAffiliateId
+      ),
+    [conversionEvents, selectedAffiliateId]
+  );
+  const codeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          affiliateScopedConversionEvents
+            .map((conversion) => conversion.shortCode)
+            .filter(Boolean)
+        )
+      ).sort(),
+    [affiliateScopedConversionEvents]
+  );
+  const effectiveCodeFilter = codeFilter || linkFilter?.shortCode || "";
+  const filteredConversionEvents = useMemo(
+    () =>
+      affiliateScopedConversionEvents.filter((conversion) => {
+        const matchesCode =
+          !effectiveCodeFilter || conversion.shortCode === effectiveCodeFilter;
+        const matchesDate =
+          !dateFilter || getDateInputValue(conversion.convertedAt) === dateFilter;
+
+        return matchesCode && matchesDate;
+      }),
+    [affiliateScopedConversionEvents, dateFilter, effectiveCodeFilter]
+  );
+  const visibleDetails = selectedAffiliate
+    ? [selectedAffiliate]
+    : details;
+  const reportStats = getConversionReportStats(
+    visibleDetails,
+    filteredConversionEvents,
+    sgpStageChecks,
+    stageStatusOverrides
+  );
   const flowMetrics = [
-    { label: "Conversoes", value: totalConversions },
-    { label: "WhatsApp", value: conversionEvents.filter(hasWhatsappStage).length },
-    { label: "Chatmix", value: conversionEvents.filter(hasChatmixValidation).length },
-    { label: "SGP", value: conversionEvents.filter(hasSgpSale).length },
+    { label: "Conversoes", value: filteredConversionEvents.length },
+    { label: "Em atendimento", value: reportStats.inProgress },
+    { label: "Vendidas", value: reportStats.sold },
+    { label: "Perdidas", value: reportStats.lost },
   ];
 
   function startEditingConversion(conversion: ConversionWithAffiliate) {
@@ -1149,6 +1228,7 @@ function ConversionFlowPanel({
     try {
       await editarConversao(id, normalizeConversionForm(editForm));
       cancelEditingConversion();
+      setSelectedConversionForData(null);
       onRefresh();
     } catch (error) {
       alert(
@@ -1194,108 +1274,576 @@ function ConversionFlowPanel({
     });
   }
 
-  async function validateSgpAndOpen(conversion: ConversionWithAffiliate) {
+  const validateSgpConversion = useCallback(async (
+    conversion: ConversionWithAffiliate,
+    options: { showAlert?: boolean; showLoading?: boolean } = {}
+  ) => {
+    const { showAlert = true, showLoading = true } = options;
     const document = onlyDigits(conversion.visitorDocument || "");
     const sgpStepIndex = 3;
 
-    if (!document) {
-      openSgpWithPreCadastro(conversion);
-      alert(
-        "Informe o CPF ou CNPJ no pre-cadastro para validar automaticamente no SGP."
-      );
+    if (![11, 14].includes(document.length)) {
+      setSgpStageChecks((current) => ({
+        ...current,
+        [conversion.id]: {
+          status: "error",
+          document,
+          statusLabel: "CPF/CNPJ invalido",
+        },
+      }));
+      if (showAlert) {
+        alert(
+          "Informe um CPF ou CNPJ valido no pre-cadastro para validar automaticamente no SGP."
+        );
+      }
       return;
     }
 
-    setValidatingSgpId(conversion.id);
+    setSgpStageChecks((current) => ({
+      ...current,
+      [conversion.id]: {
+        status: "checking",
+        document,
+        statusLabel: "Consultando SGP...",
+      },
+    }));
+    if (showLoading) {
+      setValidatingSgpId(conversion.id);
+    }
 
     try {
       const response = await consultarClienteSgp(document);
-      const validation = validatePreCadastroWithSgp(conversion, response.customer);
-
-      if (!validation.valid) {
-        alert(
-          `Cliente encontrado no SGP, mas ha divergencias: ${validation.messages.join(", ")}.`
-        );
-        openSgpWithPreCadastro(conversion);
+      if (!hasRegisteredSgpCustomer(response.customer, document)) {
+        setSgpStageChecks((current) => ({
+          ...current,
+          [conversion.id]: {
+            status: "not_found",
+            document,
+            statusLabel: "Nao cadastrado no SGP",
+          },
+        }));
+        setStageStatusOverrides((current) => ({
+          ...current,
+          [getStageStatusKey(conversion.id, sgpStepIndex)]: false,
+        }));
+        if (showAlert) {
+          alert(
+            "CPF/CNPJ do pre-cadastro ainda nao foi encontrado como cliente cadastrado no SGP."
+          );
+        }
         return;
       }
 
+      const validation = validatePreCadastroWithSgp(
+        conversion,
+        response.customer
+      );
+      const isActive = response.customer.active === true;
+      const hasKnownInactiveStatus = response.customer.active === false;
+      setSgpStageChecks((current) => ({
+        ...current,
+        [conversion.id]: {
+          status: isActive
+            ? "active"
+            : hasKnownInactiveStatus
+              ? "inactive"
+              : "divergent",
+          document,
+          statusLabel: isActive
+            ? "Ativo no SGP"
+            : hasKnownInactiveStatus
+              ? response.customer.status || "Nao ativo no SGP"
+              : response.customer.status || "Status nao informado",
+          messages: validation.messages,
+        },
+      }));
       setStageStatusOverrides((current) => ({
         ...current,
-        [getStageStatusKey(conversion.id, sgpStepIndex)]: true,
+        [getStageStatusKey(conversion.id, sgpStepIndex)]: isActive,
       }));
-
-      openSgpWithPreCadastro(conversion);
     } catch (error) {
-      alert(getApiErrorMessage(error, "Nao foi possivel validar no SGP."));
-      openSgpWithPreCadastro(conversion);
+      setSgpStageChecks((current) => ({
+        ...current,
+        [conversion.id]: {
+          status: "error",
+          document,
+          statusLabel: "Erro ao consultar SGP",
+        },
+      }));
+      if (showAlert) {
+        alert(getApiErrorMessage(error, "Nao foi possivel validar no SGP."));
+      }
     } finally {
-      setValidatingSgpId(null);
+      if (showLoading) {
+        setValidatingSgpId(null);
+      }
     }
-  }
+  }, []);
 
-  function openSgpWithPreCadastro(conversion: ConversionWithAffiliate) {
-    router.push(buildSgpUrl(conversion));
+  useEffect(() => {
+    const pendingConversions = conversionEvents.filter((conversion) => {
+      const document = onlyDigits(conversion.visitorDocument);
+      if (![11, 14].includes(document.length)) return false;
+
+      const currentCheck = sgpStageChecks[conversion.id];
+      return currentCheck?.document !== document;
+    });
+
+    pendingConversions.forEach((conversion) => {
+      void validateSgpConversion(conversion, {
+        showAlert: false,
+        showLoading: false,
+      });
+    });
+  }, [conversionEvents, sgpStageChecks, validateSgpConversion]);
+
+  function openConversionData(conversion: ConversionWithAffiliate) {
+    cancelEditingConversion();
+    setSelectedConversionForData(conversion);
   }
 
   return (
     <section className={styles.conversionFlowPanel} role="tabpanel">
-      {linkFilter && (
-        <div className={styles.conversionFilterNotice}>
-          <div>
-            <span>Conversoes do link</span>
-            <strong>
-              {linkFilter.name || "Link sem nome"} - codigo {linkFilter.shortCode}
-            </strong>
+      <div className={styles.conversionReportShell}>
+        <aside className={styles.conversionAffiliatePanel}>
+          <label className={styles.reportSelectField}>
+            <span>Selecione o afiliado</span>
+            <select
+              value={selectedAffiliateId}
+              onChange={(event) => {
+                const nextAffiliateId = event.target.value;
+                const nextCodes = new Set(
+                  conversionEvents
+                    .filter(
+                      (conversion) =>
+                        nextAffiliateId === "all" ||
+                        String(conversion.affiliateId) === nextAffiliateId
+                    )
+                    .map((conversion) => conversion.shortCode)
+                    .filter(Boolean)
+                );
+
+                setSelectedAffiliateId(nextAffiliateId);
+                if (codeFilter && !nextCodes.has(codeFilter)) {
+                  setCodeFilter("");
+                }
+                if (
+                  linkFilter?.shortCode &&
+                  !nextCodes.has(linkFilter.shortCode)
+                ) {
+                  onClearLinkFilter();
+                }
+              }}
+            >
+              <option value="all">Todos os afiliados</option>
+              {affiliateOptions.map((affiliate) => (
+                <option key={affiliate.id} value={affiliate.id}>
+                  {affiliate.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <AffiliateReportProfile
+            details={details}
+            selectedAffiliate={selectedAffiliate}
+            stats={reportStats}
+          />
+        </aside>
+
+        <div className={styles.conversionReportMain}>
+          <div className={styles.conversionReportTitleRow}>
+            <h3>Detalhe por afiliado</h3>
+            <div className={styles.conversionViewSwitcher}>
+              <span>{filteredConversionEvents.length} conversoes exibidas</span>
+              <button
+                type="button"
+                className={cx(
+                  conversionReportView === "objective" &&
+                    styles.conversionViewButtonActive
+                )}
+                onClick={() => setConversionReportView("objective")}
+              >
+                Objetivo
+              </button>
+              <button
+                type="button"
+                className={cx(
+                  conversionReportView === "flow" &&
+                    styles.conversionViewButtonActive
+                )}
+                onClick={() => setConversionReportView("flow")}
+              >
+                Fluxograma
+              </button>
+            </div>
           </div>
 
-          <button type="button" onClick={onClearLinkFilter}>
-            Ver todas
-          </button>
-        </div>
-      )}
+          <div className={styles.conversionReportFilters}>
+            <strong>Filtro</strong>
 
-      <div className={styles.conversionFlowOverview}>
-        {flowMetrics.map((metric) => (
-          <FlowMetric key={metric.label} {...metric} />
-        ))}
+            <label>
+              <span>Codigo do afiliado</span>
+              <select
+                value={effectiveCodeFilter}
+                onChange={(event) => {
+                  setCodeFilter(event.target.value);
+                  if (linkFilter) onClearLinkFilter();
+                }}
+              >
+                <option value="">Todos os codigos</option>
+                {codeOptions.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Data</span>
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(event) => setDateFilter(event.target.value)}
+              />
+            </label>
+
+            {(codeFilter || dateFilter || linkFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCodeFilter("");
+                  setDateFilter("");
+                  onClearLinkFilter();
+                }}
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+
+          <div className={styles.conversionReportMetrics}>
+            {flowMetrics.map((metric) => (
+              <FlowMetric key={metric.label} {...metric} />
+            ))}
+          </div>
+
+          {linkFilter && (
+            <div className={styles.conversionFilterNotice}>
+              <div>
+                <span>Conversoes do link</span>
+                <strong>
+                  {linkFilter.name || "Link sem nome"} - codigo {linkFilter.shortCode}
+                </strong>
+              </div>
+
+              <button type="button" onClick={onClearLinkFilter}>
+                Ver todas
+              </button>
+            </div>
+          )}
+
+          {conversionReportView === "objective" ? (
+            <div className={styles.conversionObjectiveList}>
+              {filteredConversionEvents.map((conversion) => {
+                const steps = getStepsWithOverrides(
+                  conversion,
+                  stageStatusOverrides
+                );
+                const saleStatus = getSaleStatusInfo(
+                  conversion,
+                  steps,
+                  sgpStageChecks[conversion.id]
+                );
+
+                return (
+                  <ConversionObjectiveCard
+                    key={conversion.id}
+                    conversion={conversion}
+                    steps={steps}
+                    saleStatus={saleStatus}
+                    isDeleting={deletingConversionId === conversion.id}
+                    isValidatingSgp={validatingSgpId === conversion.id}
+                    sgpCheck={sgpStageChecks[conversion.id]}
+                    onDelete={() => deleteConversion(conversion)}
+                    onOpenData={() => openConversionData(conversion)}
+                    onValidateSgp={() => validateSgpConversion(conversion)}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.conversionFlowList}>
+              {filteredConversionEvents.map((conversion) => {
+                const steps = getStepsWithOverrides(
+                  conversion,
+                  stageStatusOverrides
+                );
+
+                return (
+                  <ConversionFlowCard
+                    key={conversion.id}
+                    conversion={conversion}
+                    steps={steps}
+                    isEditing={editingConversionId === conversion.id}
+                    isSaving={savingConversionId === conversion.id}
+                    isDeleting={deletingConversionId === conversion.id}
+                    editForm={editForm}
+                    onChangeEditForm={setEditForm}
+                    onStartEditing={() => startEditingConversion(conversion)}
+                    onCancelEditing={cancelEditingConversion}
+                    onSave={() => saveConversion(conversion.id)}
+                    onDelete={() => deleteConversion(conversion)}
+                    onToggleStage={(stepIndex) =>
+                      toggleStageStatus(conversion.id, stepIndex)
+                    }
+                    onOpenSgp={() => validateSgpConversion(conversion)}
+                    isValidatingSgp={validatingSgpId === conversion.id}
+                    sgpCheck={sgpStageChecks[conversion.id]}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
-      {conversionEvents.length === 0 ? (
+      {filteredConversionEvents.length === 0 ? (
         <p className={styles.emptyText}>{emptyMessage}</p>
-      ) : (
-        <div className={styles.conversionFlowList}>
-          {conversionEvents.map((conversion) => {
-            const steps = getStepsWithOverrides(
-              conversion,
-              stageStatusOverrides
-            );
+      ) : null}
 
-            return (
-              <ConversionFlowCard
-                key={conversion.id}
-                conversion={conversion}
-                steps={steps}
-                isEditing={editingConversionId === conversion.id}
-                isSaving={savingConversionId === conversion.id}
-                isDeleting={deletingConversionId === conversion.id}
-                editForm={editForm}
-                onChangeEditForm={setEditForm}
-                onStartEditing={() => startEditingConversion(conversion)}
-                onCancelEditing={cancelEditingConversion}
-                onSave={() => saveConversion(conversion.id)}
-                onDelete={() => deleteConversion(conversion)}
-                onToggleStage={(stepIndex) =>
-                  toggleStageStatus(conversion.id, stepIndex)
-                }
-                onOpenSgp={() => validateSgpAndOpen(conversion)}
-                isValidatingSgp={validatingSgpId === conversion.id}
-              />
-            );
-          })}
-        </div>
+      {selectedConversionForData && (
+        <ConversionDataModal
+          id={`conversion-data-${selectedConversionForData.id}`}
+          conversion={selectedConversionForData}
+          activeTab={activeClientTab}
+          onChangeTab={setActiveClientTab}
+          isEditing={editingConversionId === selectedConversionForData.id}
+          isSaving={savingConversionId === selectedConversionForData.id}
+          editForm={editForm}
+          onChangeEditForm={setEditForm}
+          onStartEditing={() => startEditingConversion(selectedConversionForData)}
+          onCancelEditing={cancelEditingConversion}
+          onSave={() => saveConversion(selectedConversionForData.id)}
+          onClose={() => {
+            setSelectedConversionForData(null);
+            cancelEditingConversion();
+          }}
+        />
       )}
     </section>
+  );
+}
+
+function AffiliateReportProfile({
+  details,
+  selectedAffiliate,
+  stats,
+}: {
+  details: AffiliateDetail[];
+  selectedAffiliate: AffiliateDetail | null;
+  stats: {
+    links: number;
+    clicks: number;
+    conversions: number;
+    sold: number;
+    inProgress: number;
+    lost: number;
+  };
+}) {
+  const profileName =
+    selectedAffiliate?.affiliate ||
+    (details.length === 1 ? details[0].affiliate : "Todos os afiliados");
+  const profileId =
+    selectedAffiliate?.affiliateId || (details.length === 1 ? details[0].affiliateId : null);
+  const profileDetail =
+    selectedAffiliate || (details.length === 1 ? details[0] : null);
+  const photoUrl = profileDetail ? getAffiliatePhotoUrl(profileDetail) : "";
+  const initials = getAffiliateInitials(profileName);
+  const avatarPalette = getAffiliateAvatarPalette(profileName, profileId || 0);
+  const avatarStyle = {
+    "--avatar-bg": avatarPalette.background,
+    "--avatar-color": avatarPalette.color,
+    backgroundImage: photoUrl ? `url(${photoUrl})` : undefined,
+  } as CSSProperties;
+
+  return (
+    <div className={styles.reportProfileCard}>
+      <div className={styles.reportProfileAvatarRow}>
+        <div
+          className={cx(
+            styles.reportProfileAvatar,
+            photoUrl && styles.reportProfileAvatarPhoto
+          )}
+          style={avatarStyle}
+          title={profileName}
+        >
+          {!photoUrl && initials}
+        </div>
+      </div>
+
+      <div className={styles.reportProfileInfo}>
+        <strong>Nome: {profileName}</strong>
+        <span>E-mail: Nao informado</span>
+        <span>Cidade: {selectedAffiliate ? "Nao informada" : "Varias cidades"}</span>
+      </div>
+
+      <div className={styles.reportProfileStats}>
+        <strong>Detalhe</strong>
+        <div>
+          <span>Links:</span>
+          <b>{stats.links}</b>
+        </div>
+        <div>
+          <span>Cliques:</span>
+          <b>{stats.clicks}</b>
+        </div>
+        <div>
+          <span>Conversoes:</span>
+          <b>{stats.conversions}</b>
+        </div>
+        <div>
+          <span>Saldo do afiliado:</span>
+          <b>A calcular</b>
+        </div>
+      </div>
+
+      <div className={styles.reportMiniChart}>
+        <div>
+          <span>WhatsApp</span>
+          <b style={{ height: `${getChartBarHeight(stats.inProgress, stats.conversions)}%` }} />
+        </div>
+        <div>
+          <span>SGP</span>
+          <b style={{ height: `${getChartBarHeight(stats.sold, stats.conversions)}%` }} />
+        </div>
+        <div>
+          <span>Perdidas</span>
+          <b style={{ height: `${getChartBarHeight(stats.lost, stats.conversions)}%` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConversionObjectiveCard({
+  conversion,
+  steps,
+  saleStatus,
+  isDeleting,
+  isValidatingSgp,
+  sgpCheck,
+  onDelete,
+  onOpenData,
+  onValidateSgp,
+}: {
+  conversion: ConversionWithAffiliate;
+  steps: ConversionStep[];
+  saleStatus: SaleStatusInfo;
+  isDeleting: boolean;
+  isValidatingSgp: boolean;
+  sgpCheck?: SgpStageCheck;
+  onDelete: () => void;
+  onOpenData: () => void;
+  onValidateSgp: () => void;
+}) {
+  const clientName = conversion.visitorName || "Cliente sem nome";
+
+  return (
+    <article className={styles.conversionObjectiveCard}>
+      <div className={styles.objectiveConversionInfo}>
+        <strong>Conversao #{conversion.id}</strong>
+        <span>Nome do link: {conversion.linkName || "Link sem nome"}</span>
+        <span>Destino: {formatDisplayLink(conversion.destination || conversion.originalUrl)}</span>
+        <span>Cliente: {clientName}</span>
+        <small>{formatDateTime(conversion.convertedAt)}</small>
+      </div>
+
+      <div
+        className={cx(
+          styles.objectiveInfographic,
+          saleStatus.kind === "sold" && styles.objectiveInfographicSold,
+          saleStatus.kind === "in_progress" && styles.objectiveInfographicProgress,
+          saleStatus.kind === "lost" && styles.objectiveInfographicLost
+        )}
+      >
+        <ObjectiveStageIcon
+          title="Landing page"
+          completed={steps[0]?.completed}
+          icon={<FiLink aria-hidden="true" />}
+        />
+        <ObjectiveStageIcon
+          title="WhatsApp"
+          completed={steps[1]?.completed}
+          icon={<FiMessageCircle aria-hidden="true" />}
+        />
+        <ObjectiveStageIcon
+          title="Chatmix"
+          completed={steps[2]?.completed}
+          icon={<FiGitBranch aria-hidden="true" />}
+        />
+        <button
+          type="button"
+          className={cx(
+            styles.objectiveSgpButton,
+            sgpCheck?.status === "active" && styles.objectiveSgpButtonActive
+          )}
+          onClick={onValidateSgp}
+          disabled={isValidatingSgp}
+          title="Validar CPF/CNPJ no SGP"
+        >
+          SGP
+        </button>
+
+        <div className={styles.objectiveStatusText}>
+          <span>Etapa: {saleStatus.label}</span>
+          <small>{saleStatus.description}</small>
+        </div>
+      </div>
+
+      <div className={styles.objectiveActions}>
+        <button
+          type="button"
+          onClick={onOpenData}
+          aria-label={`Ver dados da conversao ${conversion.id}`}
+          title="Ver dados"
+        >
+          <FiGrid aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={isDeleting}
+          aria-label={`Apagar conversao ${conversion.id}`}
+          title="Apagar conversao"
+        >
+          <FiTrash2 aria-hidden="true" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function ObjectiveStageIcon({
+  title,
+  completed,
+  icon,
+}: {
+  title: string;
+  completed?: boolean;
+  icon: ReactNode;
+}) {
+  return (
+    <span
+      className={cx(
+        styles.objectiveStageIcon,
+        completed && styles.objectiveStageIconDone
+      )}
+      title={title}
+    >
+      {icon}
+    </span>
   );
 }
 
@@ -1314,6 +1862,7 @@ function ConversionFlowCard({
   onToggleStage,
   onOpenSgp,
   isValidatingSgp,
+  sgpCheck,
 }: {
   conversion: ConversionWithAffiliate;
   steps: ConversionStep[];
@@ -1329,6 +1878,7 @@ function ConversionFlowCard({
   onToggleStage: (stepIndex: number) => void;
   onOpenSgp: () => void;
   isValidatingSgp: boolean;
+  sgpCheck?: SgpStageCheck;
 }) {
   const finalStatus = getConversionFinalStatusFromSteps(steps);
   const [activeClientTab, setActiveClientTab] =
@@ -1356,6 +1906,7 @@ function ConversionFlowCard({
               onToggleStatus={() => onToggleStage(index)}
               onOpenSgp={index === 3 ? onOpenSgp : undefined}
               isLoading={index === 3 && isValidatingSgp}
+              sgpCheck={index === 3 ? sgpCheck : undefined}
             />
           ))}
         </div>
@@ -1761,6 +2312,7 @@ function ConversionStageCard({
   onToggleStatus,
   onOpenSgp,
   isLoading,
+  sgpCheck,
 }: {
   step: ConversionStep;
   index: number;
@@ -1768,10 +2320,12 @@ function ConversionStageCard({
   onToggleStatus: () => void;
   onOpenSgp?: () => void;
   isLoading?: boolean;
+  sgpCheck?: SgpStageCheck;
 }) {
   const Icon = CONVERSION_STAGE_ICONS[index] || FiLink;
   const StatusIcon = step.completed ? FiCheckCircle : FiClock;
   const showChatmixData = index === 2;
+  const showSgpData = index === 3;
 
   return (
     <section
@@ -1815,7 +2369,13 @@ function ConversionStageCard({
         <strong>{step.title}</strong>
         <p>{step.description}</p>
 
-        {showChatmixData ? (
+        {showSgpData ? (
+          <SgpStageData
+            conversion={conversion}
+            check={sgpCheck}
+            isLoading={isLoading}
+          />
+        ) : showChatmixData ? (
           <ChatmixCollectedData conversion={conversion} />
         ) : step.dataItems?.length ? (
           <StageStructuredData items={step.dataItems} />
@@ -1833,6 +2393,48 @@ function ConversionStageCard({
         <span>{step.dateLabel}</span>
       </div>
     </section>
+  );
+}
+
+function SgpStageData({
+  conversion,
+  check,
+  isLoading,
+}: {
+  conversion: ConversionWithAffiliate;
+  check?: SgpStageCheck;
+  isLoading?: boolean;
+}) {
+  const document = check?.document || onlyDigits(conversion.visitorDocument);
+  const status = isLoading ? "checking" : check?.status;
+  const statusLabel =
+    isLoading ? "Consultando SGP..." : check?.statusLabel || "Nao consultado";
+  const boxClassName = cx(
+    styles.sgpStageBox,
+    status === "active" && styles.sgpStageBoxActive,
+    (status === "inactive" ||
+      status === "not_found" ||
+      status === "divergent" ||
+      status === "error") &&
+      styles.sgpStageBoxError
+  );
+
+  return (
+    <div className={boxClassName}>
+      <div>
+        <span>CPF/CNPJ</span>
+        <strong>{formatDocument(document)}</strong>
+      </div>
+
+      <div>
+        <span>Status SGP</span>
+        <strong>{statusLabel}</strong>
+      </div>
+
+      {check?.messages?.length ? (
+        <small>{check.messages.join(", ")}</small>
+      ) : null}
+    </div>
   );
 }
 
@@ -2015,9 +2617,11 @@ function getConversionFlowSteps(
     },
     {
       title: "Registro no SGP",
-      description: "Venda concluida e registrada no SGP.",
+      description: "CPF/CNPJ do pre-cadastro conferido no SGP.",
       completed: hasSgp,
-      detail: hasSgp ? "Venda concluida" : "Aguardando venda",
+      detail: hasSgp
+        ? "CPF/CNPJ encontrado no SGP"
+        : "Clique para conferir o CPF/CNPJ no SGP",
       dateLabel: sgpDate,
     },
   ];
@@ -2129,6 +2733,109 @@ function getConversionFinalStatusFromSteps(steps: ConversionStep[]) {
     label: "Pendente",
     className: styles.finalStatusPending,
   };
+}
+
+function getSaleStatusInfo(
+  conversion: ConversionWithAffiliate,
+  steps: ConversionStep[],
+  sgpCheck?: SgpStageCheck
+): SaleStatusInfo {
+  if (steps[3]?.completed || sgpCheck?.status === "active") {
+    return {
+      kind: "sold",
+      label: "Cliente contratou",
+      description: "Venda confirmada no SGP.",
+    };
+  }
+
+  if (sgpCheck?.status === "inactive") {
+    return {
+      kind: "lost",
+      label: "Venda perdida",
+      description: "Cliente encontrado no SGP, mas nao esta ativo.",
+    };
+  }
+
+  if (isConversionOlderThanDays(conversion.convertedAt, 2)) {
+    return {
+      kind: "lost",
+      label: "Desistiu",
+      description: "Mais de 2 dias sem venda confirmada.",
+    };
+  }
+
+  if (steps[1]?.completed || steps[2]?.completed) {
+    return {
+      kind: "in_progress",
+      label: "Em atendimento",
+      description: "Dentro do prazo de tratativa comercial.",
+    };
+  }
+
+  return {
+    kind: "pending",
+    label: "Aguardando",
+    description: "Conversao ainda sem dados suficientes.",
+  };
+}
+
+function getConversionReportStats(
+  details: AffiliateDetail[],
+  conversions: ConversionWithAffiliate[],
+  sgpChecks: SgpStageChecks,
+  overrides: StageStatusOverrides
+) {
+  return conversions.reduce(
+    (stats, conversion) => {
+      const steps = getStepsWithOverrides(conversion, overrides);
+      const status = getSaleStatusInfo(
+        conversion,
+        steps,
+        sgpChecks[conversion.id]
+      );
+
+      if (status.kind === "sold") stats.sold += 1;
+      if (status.kind === "in_progress") stats.inProgress += 1;
+      if (status.kind === "lost") stats.lost += 1;
+
+      return stats;
+    },
+    {
+      links: details.reduce((total, detail) => total + detail.totalLinks, 0),
+      clicks: details.reduce((total, detail) => total + detail.totalClicks, 0),
+      conversions: conversions.length,
+      sold: 0,
+      inProgress: 0,
+      lost: 0,
+    }
+  );
+}
+
+function isConversionOlderThanDays(value: string, days: number) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return false;
+
+  return Date.now() - date.getTime() > days * 24 * 60 * 60 * 1000;
+}
+
+function getDateInputValue(value?: string | null) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getChartBarHeight(value: number, total: number) {
+  if (!total || value <= 0) return 10;
+
+  return Math.max((value / total) * 100, 18);
 }
 
 function hasWhatsappStage(conversion: ConversionWithAffiliate) {
@@ -2299,14 +3006,39 @@ function validatePreCadastroWithSgp(
     messages.push("cidade diferente");
   }
 
-  if (customer.active === false) {
-    messages.push("cliente inativo");
-  }
-
   return {
     valid: messages.length === 0,
     messages,
   };
+}
+
+function hasRegisteredSgpCustomer(customer: {
+  id: string | null;
+  name: string | null;
+  document: string;
+  phone: string | null;
+  city: string | null;
+  status: string;
+  active: boolean | null;
+  contracts: unknown[];
+}, searchedDocument: string) {
+  const phone = onlyDigits(customer.phone);
+  const customerDocument = onlyDigits(customer.document);
+  const hasMatchingDocument =
+    Boolean(searchedDocument) && customerDocument === searchedDocument;
+  const hasKnownStatus =
+    customer.active !== null &&
+    normalizeText(customer.status) !== "status nao informado";
+
+  return Boolean(
+    customer.id ||
+      customer.name ||
+      phone ||
+      customer.city ||
+      customer.contracts.length > 0 ||
+      hasKnownStatus ||
+      (hasMatchingDocument && hasKnownStatus)
+  );
 }
 
 function isFullNameCompatible(left: string, right: string) {
@@ -2338,19 +3070,6 @@ function phoneNumbersMatch(left: string, right: string) {
   }
 
   return left.slice(-8) === right.slice(-8);
-}
-
-function buildSgpUrl(conversion: ConversionWithAffiliate) {
-  const params = new URLSearchParams();
-  const document = onlyDigits(conversion.visitorDocument);
-
-  if (document) params.set("document", document);
-  if (conversion.visitorName) params.set("name", conversion.visitorName);
-  if (conversion.visitorPhone) params.set("phone", conversion.visitorPhone);
-  if (conversion.visitorCity) params.set("city", conversion.visitorCity);
-  params.set("conversionId", String(conversion.id));
-
-  return `/sgp?${params.toString()}`;
 }
 
 const AFFILIATE_AVATAR_PALETTE = [

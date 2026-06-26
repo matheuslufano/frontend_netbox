@@ -6,6 +6,7 @@ export type Affiliate = {
   email: string | null;
   phone: string | null;
   city: string | null;
+  photoUrl: string | null;
   active: boolean;
 };
 
@@ -14,6 +15,7 @@ export type User = {
   name: string;
   email: string;
   city: string | null;
+  photoUrl: string | null;
   createdAt: string;
 };
 
@@ -78,6 +80,8 @@ export type AffiliateConversionEvent = {
 
 export type AffiliateStats = {
   affiliate: string;
+  affiliatePhotoUrl: string | null;
+  photoUrl: string | null;
   totalLinks: number;
   totalClicks: number;
   totalConversions: number;
@@ -101,6 +105,7 @@ export type CreateAffiliatePayload = {
   email: string;
   phone?: string;
   city?: string;
+  photoUrl?: string;
 };
 
 export type UpdateAffiliatePayload = Partial<CreateAffiliatePayload> & {
@@ -112,6 +117,7 @@ export type CreateUserPayload = {
   email: string;
   password: string;
   city?: string;
+  photoUrl?: string;
 };
 
 export type UpdateUserPayload = {
@@ -119,6 +125,7 @@ export type UpdateUserPayload = {
   email?: string;
   password?: string;
   city?: string;
+  photoUrl?: string;
 };
 
 export type CreateLinkPayload = {
@@ -233,6 +240,7 @@ export type LoginResponse = {
     name: string;
     email: string;
     city: string | null;
+    photoUrl: string | null;
   };
 };
 
@@ -343,9 +351,51 @@ export function getApiErrorMessage(
   fallback: string
 ) {
   if (axios.isAxiosError(error)) {
-    const message = error.response?.data?.error;
-    if (message) {
-      return String(message);
+    const data = error.response?.data;
+    const status = error.response?.status;
+    const statusText = error.response?.statusText;
+    const messages: string[] = [];
+
+    if (data && typeof data === "object") {
+      const payload = data as {
+        error?: unknown;
+        message?: unknown;
+        details?: unknown;
+      };
+
+      if (payload.error) {
+        messages.push(String(payload.error));
+      }
+
+      if (payload.message && payload.message !== payload.error) {
+        messages.push(String(payload.message));
+      }
+
+      if (payload.details) {
+        if (typeof payload.details === "string") {
+          messages.push(payload.details);
+        } else {
+          messages.push(JSON.stringify(payload.details));
+        }
+      }
+    } else if (typeof data === "string" && data.trim()) {
+      messages.push(data.trim());
+    }
+
+    if (messages.length > 0) {
+      return messages.join(" - ");
+    }
+
+    if (status) {
+      return `${fallback} (${status}${statusText ? ` ${statusText}` : ""})`;
+    }
+
+    if (error.request) {
+      return `${fallback} - API indisponivel ou sem resposta`;
+    }
+
+    if (error.message) {
+      return `${fallback} - ${error.message}`;
     }
   }
 

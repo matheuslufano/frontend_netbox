@@ -377,9 +377,510 @@
   font-weight: 800;
 }
 
+.affiliateDetailsSurface {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.78));
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(10px);
+}
+
+.affiliateDetailsSurface .sectionHeader {
+  margin-top: 0;
+}
+
 .conversionFlowPanel {
   display: grid;
   gap: 16px;
+}
+
+.conversionReportShell {
+  display: grid;
+  grid-template-columns: minmax(240px, 330px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.conversionAffiliatePanel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.reportSelectField {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255, 116, 79, 0.22);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 247, 243, 0.96), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 12px 24px rgba(255, 116, 79, 0.08);
+}
+
+.reportSelectField span {
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.reportSelectField select,
+.conversionReportFilters select,
+.conversionReportFilters input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #ffd3c4;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #fff7f3;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  outline: 0;
+}
+
+.reportSelectField select {
+  min-height: 44px;
+  border-color: rgba(255, 116, 79, 0.34);
+  padding: 0 38px 0 16px;
+  background:
+    linear-gradient(45deg, transparent 50%, #ff744f 50%) right 18px center / 8px 8px no-repeat,
+    linear-gradient(135deg, #ffffff, #fff7f3);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  appearance: none;
+}
+
+.reportSelectField select:focus {
+  border-color: #ff744f;
+  box-shadow:
+    0 0 0 3px rgba(255, 116, 79, 0.16),
+    0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.reportProfileCard {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.reportProfileAvatarRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reportProfileAvatar {
+  display: inline-flex;
+  width: 128px;
+  height: 128px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--avatar-bg);
+  color: var(--avatar-color);
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow:
+    0 14px 28px rgba(15, 23, 42, 0.16),
+    inset 0 0 0 5px rgba(255, 255, 255, 0.72);
+}
+
+.reportProfileAvatarPhoto {
+  background-position: center;
+  background-size: cover;
+  color: transparent;
+}
+
+.reportProfileInfo {
+  display: grid;
+  gap: 3px;
+  color: #111827;
+}
+
+.reportProfileInfo strong,
+.reportProfileInfo span {
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reportProfileStats {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #2f2f2f;
+}
+
+.reportProfileStats > strong {
+  color: #fff;
+  text-align: center;
+}
+
+.reportProfileStats div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 900;
+}
+
+.reportProfileStats span,
+.reportProfileStats b {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reportMiniChart {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 168px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.reportMiniChart div {
+  display: grid;
+  min-height: 132px;
+  align-items: end;
+  gap: 8px;
+}
+
+.reportMiniChart span {
+  color: #111827;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.reportMiniChart b {
+  display: block;
+  width: 100%;
+  min-height: 10px;
+  border-radius: 8px 8px 3px 3px;
+  background: #ff744f;
+}
+
+.reportMiniChart div:nth-child(2) b {
+  background: #22c55e;
+}
+
+.reportMiniChart div:nth-child(3) b {
+  background: #ef4444;
+}
+
+.conversionReportMain {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+.conversionReportTitleRow {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.conversionReportTitleRow h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 21px;
+}
+
+.conversionReportTitleRow span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.conversionViewSwitcher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.conversionViewSwitcher button {
+  min-height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: #fff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.conversionViewSwitcher .conversionViewButtonActive {
+  border-color: #111827;
+  background: #111827;
+  color: #fff;
+}
+
+.conversionReportFilters {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #ff744f;
+}
+
+.conversionReportFilters strong {
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.conversionReportFilters label {
+  display: grid;
+  min-width: 150px;
+}
+
+.conversionReportFilters label span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.conversionReportFilters button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.conversionReportMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.conversionObjectiveList {
+  display: grid;
+  max-height: 620px;
+  gap: 10px;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 10px;
+  background: #2f2f2f;
+}
+
+.conversionObjectiveCard {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.2fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc, #e5e7eb);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.objectiveConversionInfo {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 4px 2px;
+}
+
+.objectiveConversionInfo strong,
+.objectiveConversionInfo span,
+.objectiveConversionInfo small {
+  overflow: hidden;
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.objectiveConversionInfo strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.objectiveConversionInfo small {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.objectiveInfographic {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, auto) minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.8));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.objectiveInfographic::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 34px;
+  right: calc(32% + 20px);
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.14);
+  transform: translateY(-50%);
+}
+
+.objectiveInfographicSold {
+  border-color: rgba(22, 101, 52, 0.28);
+  background:
+    linear-gradient(135deg, rgba(220, 252, 231, 0.98), rgba(187, 236, 179, 0.88));
+}
+
+.objectiveInfographicProgress {
+  border-color: rgba(161, 98, 7, 0.24);
+  background:
+    linear-gradient(135deg, rgba(254, 249, 195, 0.98), rgba(237, 240, 131, 0.86));
+}
+
+.objectiveInfographicLost {
+  border-color: rgba(185, 28, 28, 0.28);
+  background:
+    linear-gradient(135deg, rgba(254, 226, 226, 0.96), rgba(255, 96, 70, 0.84));
+}
+
+.objectiveStageIcon,
+.objectiveSgpButton {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(15, 23, 42, 0.82);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  color: #111827;
+  font-size: 18px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+}
+
+.objectiveStageIconDone {
+  border-color: #22c55e;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+.objectiveSgpButton {
+  border-color: #050505;
+  background: #050505;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.objectiveSgpButtonActive {
+  background: linear-gradient(135deg, #16a34a, #166534);
+  border-color: #166534;
+}
+
+.objectiveSgpButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.objectiveStatusText {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  padding-left: 2px;
+}
+
+.objectiveStatusText span,
+.objectiveStatusText small {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.objectiveStatusText small {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.objectiveActions {
+  display: grid;
+  gap: 7px;
+}
+
+.objectiveActions button {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #fff;
+  cursor: pointer;
+}
+
+.objectiveActions button:first-child {
+  background: #111827;
+}
+
+.objectiveActions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .conversionFilterNotice {
@@ -474,6 +975,29 @@
 .conversionFlowList {
   display: grid;
   gap: 16px;
+  max-height: 680px;
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  scrollbar-color: #94a3b8 rgba(226, 232, 240, 0.68);
+  scrollbar-width: thin;
+}
+
+.conversionFlowList::-webkit-scrollbar {
+  width: 10px;
+}
+
+.conversionFlowList::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.68);
+}
+
+.conversionFlowList::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(226, 232, 240, 0.68);
+  border-radius: 999px;
+  background: #94a3b8;
 }
 
 .conversionFlowCard {
@@ -748,6 +1272,72 @@
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sgpStageBox {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.sgpStageBoxActive {
+  border-color: #86efac;
+  background: #ecfdf5;
+}
+
+.sgpStageBoxError {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.sgpStageBox div {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sgpStageBox span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sgpStageBox strong {
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 10px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sgpStageBoxActive strong {
+  color: #166534;
+}
+
+.sgpStageBoxError strong {
+  color: #991b1b;
+}
+
+.sgpStageBox small {
+  margin-top: 0;
+  max-height: 34px;
+  color: #991b1b;
+  font-size: 10px;
+  line-height: 1.2;
 }
 
 .stageFooterDate {
@@ -2422,12 +3012,58 @@
   .summaryGrid,
   .conversionSummary,
   .conversionFlowOverview,
+  .conversionReportShell,
+  .conversionReportMetrics,
   .conversionMetaGrid,
   .visitorDataGrid,
   .conversionEditGrid,
   .clientDataList,
   .statsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .conversionReportFilters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .conversionReportTitleRow,
+  .conversionViewSwitcher {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .conversionReportFilters label {
+    min-width: 0;
+  }
+
+  .conversionObjectiveList {
+    max-height: none;
+  }
+
+  .conversionFlowList {
+    max-height: none;
+    padding: 10px;
+  }
+
+  .conversionObjectiveCard {
+    grid-template-columns: 1fr;
+  }
+
+  .objectiveInfographic {
+    grid-template-columns: repeat(4, auto);
+  }
+
+  .objectiveInfographic::before {
+    right: 34px;
+  }
+
+  .objectiveStatusText {
+    grid-column: 1 / -1;
+  }
+
+  .objectiveActions {
+    grid-template-columns: repeat(2, 32px);
   }
 
   .searchBar {
