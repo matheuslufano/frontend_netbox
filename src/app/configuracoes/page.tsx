@@ -140,7 +140,7 @@ const settingsSections: {
     label: "Webhooks Chatmix",
     helper: "Monitorar requisicoes",
   },
-  { id: "banco", label: "Banco de dado", helper: "Acessar banco e Prisma" },
+  { id: "banco", label: "Banco de dados", helper: "Acessar banco e Prisma" },
   {
     id: "sistema",
     label: "parametros do sistema",
@@ -1405,12 +1405,12 @@ export default function Configuracoes() {
                   <span>Banco de dados</span>
                   <strong>Prisma Studio</strong>
                   <p>
-                    Abre o visualizador do banco quando o tunel SSH estiver
-                    ativo nesta maquina.
+                    Abre o visualizador online do banco conectado ao backend
+                    deste projeto.
                   </p>
                   <a
                     className={styles.databaseButton}
-                    href="http://localhost:5555"
+                    href="/prisma-studio"
                     target="_blank"
                     rel="noreferrer"
                   >

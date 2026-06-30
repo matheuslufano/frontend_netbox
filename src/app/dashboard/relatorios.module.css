@@ -104,8 +104,39 @@
   }
 
   .summaryGrid,
-  .summaryStats {
+  .summaryStats,
+  .coverageGrid,
+  .coverageTotals {
     grid-template-columns: 1fr;
+  }
+
+  .coverageHeader,
+  .coverageCityCard > div:first-child,
+  .coverageRankingHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .coverageTotals {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .tocantinsMapCard {
+    min-height: 430px;
+    padding: 12px;
+  }
+
+  .tocantinsMapCard {
+    min-height: 520px;
+  }
+
+  .tocantinsMapFrame {
+    width: min(100%, 270px);
+  }
+
+  .coverageCityCard dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -240,6 +271,268 @@
 
 .noMarginBottom {
   margin-bottom: 0;
+}
+
+/* =========================
+   MAPA DE COBERTURA
+========================= */
+
+.coveragePanel {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 22px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.coverageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.coverageHeader span {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.coverageHeader h2 {
+  margin: 4px 0 0;
+  color: #111827;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.coverageHeader p {
+  max-width: 560px;
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.coverageTotals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(92px, 1fr));
+  gap: 10px;
+  min-width: 330px;
+}
+
+.coverageTotals div {
+  min-height: 76px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.coverageTotals span {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.coverageTotals strong {
+  display: block;
+  margin-top: 7px;
+  color: #0f172a;
+  font-size: 24px;
+}
+
+.coverageGrid {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(360px, 1.1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.tocantinsMapCard {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.tocantinsMapFrame {
+  position: relative;
+  width: min(100%, 340px);
+  aspect-ratio: 306 / 500;
+  margin: 26px auto;
+}
+
+.tocantinsMapImage {
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.mapCityPoint,
+.mapCityPointEmpty {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mapCityPoint {
+  background: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.11);
+}
+
+.mapCityPointEmpty {
+  background: rgba(100, 116, 139, 0.18);
+  box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1);
+}
+
+.mapCityPoint span,
+.mapCityPointEmpty span {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.24);
+}
+
+.mapCityPointEmpty span {
+  background: #64748b;
+}
+
+.mapCityPoint:hover,
+.mapCityPoint:focus-visible,
+.mapCityPointEmpty:hover,
+.mapCityPointEmpty:focus-visible {
+  outline: 0;
+  transform: translate(-50%, -50%) scale(1.16);
+}
+
+.mapCityTooltip {
+  position: absolute;
+  z-index: 3;
+  max-width: 180px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+  text-align: center;
+  transform: translate(-50%, calc(-100% - 12px));
+  white-space: nowrap;
+}
+
+.coverageRanking {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  background: #f8fafc;
+}
+
+.coverageRankingHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.coverageRankingHeader strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.coverageRankingHeader span {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.coverageCityList {
+  display: grid;
+  gap: 12px;
+}
+
+.coverageCityCard {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+}
+
+.coverageCityCard > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.coverageCityCard span {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.coverageCityCard strong {
+  color: #16a34a;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.coverageCityCard dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.coverageCityCard dl div {
+  min-width: 0;
+  border-radius: 10px;
+  padding: 9px;
+  background: #f8fafc;
+}
+
+.coverageCityCard dt {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.coverageCityCard dd {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 /* =========================
@@ -459,7 +752,7 @@
 
 .breakWord {
   color: #535353;
-  font-size: 15;
+  font-size: 15px;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
@@ -505,7 +798,9 @@
 
 @media (max-width: 768px) {
   .summaryGrid,
-  .statsGrid {
+  .statsGrid,
+  .coverageGrid,
+  .coverageTotals {
     grid-template-columns: 1fr;
   }
 
@@ -553,5 +848,394 @@
   .copyButton {
     padding: 10px;
     font-size: 13px;
+  }
+
+  .coveragePanel {
+    padding: 16px;
+  }
+
+  .coverageHeader {
+    flex-direction: column;
+  }
+
+  .coverageHeader h2 {
+    font-size: 21px;
+  }
+
+  .tocantinsMapCard {
+    min-height: 500px;
+  }
+
+  .tocantinsMapFrame {
+    width: min(100%, 250px);
+  }
+
+  .coverageCityCard dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   MAPA INTERATIVO POR CIDADE - NETBOX
+========================= */
+.coveragePanel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 26px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 108, 76, 0.16), transparent 34%),
+    radial-gradient(circle at 98% 8%, rgba(37, 99, 235, 0.1), transparent 26%),
+    rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+}
+
+.coverageHeader h2 {
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.coverageHeader span {
+  color: #ff5336;
+}
+
+.coverageTotals {
+  grid-template-columns: repeat(4, minmax(82px, 1fr));
+  min-width: 430px;
+}
+
+.coverageTotals div {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.74));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.coverageTotals strong {
+  color: #111827;
+  font-size: 25px;
+}
+
+.coverageGrid {
+  grid-template-columns: minmax(360px, 0.95fr) minmax(390px, 1.05fr);
+}
+
+.tocantinsMapCard {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 610px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255, 83, 54, 0.09), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.78));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.mapLegend {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 14px 12px 0;
+}
+
+.mapLegend span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #475569;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9);
+}
+
+.mapLegend span::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.mapLegendActive::before {
+  background: #ff5336;
+  box-shadow: 0 0 0 5px rgba(255, 83, 54, 0.12);
+}
+
+.mapLegendEmpty::before {
+  background: #94a3b8;
+  box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.12);
+}
+
+.tocantinsMapFrame {
+  width: min(100%, 360px);
+  margin-top: 8px;
+}
+
+.tocantinsMapImage {
+  filter: drop-shadow(0 18px 25px rgba(15, 23, 42, 0.1));
+}
+
+.mapCityPoint,
+.mapCityPointEmpty {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 5px rgba(255, 83, 54, 0.12),
+    0 10px 20px rgba(15, 23, 42, 0.18);
+}
+
+.mapCityPoint {
+  background: rgba(255, 83, 54, 0.25);
+}
+
+.mapCityPoint span {
+  width: 45%;
+  height: 45%;
+  border: 2px solid #fff;
+  background: #ff5336;
+}
+
+.mapCityPointEmpty {
+  background: rgba(100, 116, 139, 0.2);
+  box-shadow:
+    0 0 0 5px rgba(100, 116, 139, 0.11),
+    0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.mapCityPointEmpty span {
+  width: 45%;
+  height: 45%;
+  border: 2px solid #fff;
+  background: #94a3b8;
+}
+
+.mapCityPointSelected,
+.mapCityPointHovered {
+  z-index: 4;
+  outline: 0;
+  transform: translate(-50%, -50%) scale(1.24);
+}
+
+.mapCityPointSelected {
+  box-shadow:
+    0 0 0 7px rgba(255, 83, 54, 0.18),
+    0 0 0 13px rgba(255, 83, 54, 0.09),
+    0 16px 30px rgba(255, 83, 54, 0.24);
+}
+
+.mapCityTooltip {
+  min-width: 184px;
+  max-width: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 22px 46px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(12px);
+  text-align: left;
+  white-space: normal;
+}
+
+.mapCityTooltip strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.mapCityTooltip dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.mapCityTooltip div {
+  min-width: 0;
+  border-radius: 12px;
+  padding: 8px;
+  background: #f8fafc;
+}
+
+.mapCityTooltip dt {
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mapCityTooltip dd {
+  margin: 3px 0 0;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.coverageRanking {
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.76));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.coverageRankingHeader strong {
+  display: block;
+}
+
+.coverageRankingHeader small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.coverageTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 999px;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.coverageTab {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.coverageTab:hover:not(:disabled) {
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.coverageTabActive {
+  background: linear-gradient(135deg, #ff5336, #e23a1b);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(255, 83, 54, 0.2);
+}
+
+.coverageTab:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.coverageCityList {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #ff5336 rgba(226, 232, 240, 0.9);
+}
+
+.coverageCityCard {
+  width: 100%;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  background: rgba(255, 255, 255, 0.92);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.coverageCityCard:hover,
+.coverageCityCardSelected {
+  border-color: rgba(255, 83, 54, 0.42);
+  background: #fff7f4;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.coverageCityCard strong {
+  color: #ff5336;
+}
+
+.coverageCityCard dl {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.coverageCityCard dl div {
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.coverageEmptyState {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  border: 1px dashed rgba(148, 163, 184, 0.8);
+  border-radius: 18px;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #475569;
+  text-align: center;
+}
+
+.coverageEmptyState strong {
+  color: #111827;
+  font-size: 16px;
+}
+
+.coverageEmptyState span {
+  max-width: 360px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .coverageTotals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .coverageGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .coverageTabs {
+    grid-template-columns: 1fr;
+    border-radius: 18px;
+  }
+
+  .coverageCityCard dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mapCityTooltip {
+    min-width: 170px;
+  }
+}
+
+@media (max-width: 420px) {
+  .coverageTotals,
+  .coverageCityCard dl,
+  .mapCityTooltip dl {
+    grid-template-columns: 1fr;
   }
 }

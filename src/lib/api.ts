@@ -297,6 +297,8 @@ export type SgpCustomersResponse = {
   result: unknown;
 };
 
+type SgpRawRecord = Record<string, unknown>;
+
 export type HealthStatus = {
   status: string;
   database: string;
@@ -604,10 +606,264 @@ export async function consultarClienteSgp(query: string) {
   return data;
 }
 
+const SGP_CUSTOMER_LIST_QUERIES = [
+  "paraiso",
+  "colinas",
+  "guarai",
+  "barrolandia",
+  "miranorte",
+  "miracema",
+  "tocantinia",
+  "goianorte",
+  "colmeia",
+  "brasilandia",
+  "rio dos bois",
+  "presidente kenedy",
+  "tabocao",
+  "lajeado",
+  "pedro afonso",
+  "santa maria",
+  "itacaja",
+];
+
+function readString(record: SgpRawRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+  }
+
+  return "";
+}
+
+function readRawArray(value: unknown, key: string) {
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  const record = value as SgpRawRecord;
+  const list = record[key];
+
+  return Array.isArray(list)
+    ? list.filter(
+        (item): item is SgpRawRecord =>
+          Boolean(item) && typeof item === "object" && !Array.isArray(item)
+      )
+    : [];
+}
+
+function readFirstStringArrayValue(value: unknown) {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const first = value.find((item) => typeof item === "string" && item.trim());
+
+  return typeof first === "string" ? first.trim() : null;
+}
+
+function normalizeSgpActiveStatus(status: string, rawStatus: unknown) {
+  if (typeof rawStatus === "number") {
+    if (rawStatus === 1) {
+      return true;
+    }
+
+    if ([2, 3, 4, 5, 6].includes(rawStatus)) {
+      return false;
+    }
+  }
+
+  const normalized = status
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.includes("ativo") && !normalized.includes("inativo")) {
+    return true;
+  }
+
+  if (
+    normalized.includes("cancel") ||
+    normalized.includes("inativo") ||
+    normalized.includes("suspens") ||
+    normalized.includes("bloque")
+  ) {
+    return false;
+  }
+
+  return null;
+}
+
+function buildSgpAddress(contract: SgpRawRecord) {
+  const parts = [
+    readString(contract, ["endereco_logradouro"]),
+    readString(contract, ["endereco_numero"]),
+    readString(contract, ["endereco_bairro"]),
+    readString(contract, ["endereco_cidade"]),
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function normalizeSgpContract(contract: SgpRawRecord): SgpContract {
+  const status =
+    readString(contract, ["contratoStatusDisplay", "status"]) ||
+    "Status nao identificado";
+
+  return {
+    id: readString(contract, ["contratoId", "id"]) || null,
+    plan:
+      readString(contract, [
+        "servico_plano",
+        "planointernet",
+        "plano",
+        "plan",
+      ]) || null,
+    status,
+    active: normalizeSgpActiveStatus(status, contract.contratoStatus),
+    address: buildSgpAddress(contract),
+    raw: contract,
+  };
+}
+
+function summarizeSgpCustomers(customers: SgpCustomer[]): SgpCustomersSummary {
+  const cityMap = new Map<string, { city: string; total: number; active: number }>();
+
+  customers.forEach((customer) => {
+    const city = customer.city || "Cidade nao informada";
+    const current = cityMap.get(city) ?? { city, total: 0, active: 0 };
+
+    current.total += 1;
+    if (customer.active) {
+      current.active += 1;
+    }
+
+    cityMap.set(city, current);
+  });
+
+  return {
+    total: customers.length,
+    active: customers.filter((customer) => customer.active === true).length,
+    inactive: customers.filter((customer) => customer.active === false).length,
+    unknown: customers.filter((customer) => customer.active === null).length,
+    byCity: Array.from(cityMap.values()).sort(
+      (first, second) => second.total - first.total
+    ),
+  };
+}
+
+function buildSgpCustomersFromContracts(contracts: SgpRawRecord[]) {
+  const customersByKey = new Map<
+    string,
+    SgpCustomer & { contracts: SgpContract[] }
+  >();
+  const contractIdsByCustomer = new Map<string, Set<string>>();
+
+  contracts.forEach((contract, index) => {
+    const id = readString(contract, ["clienteId", "cliente_id"]);
+    const document = readString(contract, ["cpfCnpj", "documento", "document"]);
+    const name = readString(contract, ["razaoSocial", "cliente", "nome"]);
+    const key = id || document || name || `cliente-${index}`;
+    const phone =
+      readFirstStringArrayValue(contract.telefones) ||
+      readString(contract, ["telefone", "celular"]) ||
+      null;
+    const city = readString(contract, ["endereco_cidade", "cidade"]) || null;
+    const normalizedContract = normalizeSgpContract(contract);
+    const current =
+      customersByKey.get(key) ??
+      ({
+        id: id || null,
+        name: name || null,
+        document,
+        phone,
+        city,
+        status: "Status nao identificado",
+        active: null,
+        contracts: [],
+        raw: contract,
+      } satisfies SgpCustomer);
+    const contractIds = contractIdsByCustomer.get(key) ?? new Set<string>();
+    const contractKey = normalizedContract.id || `contrato-${index}`;
+
+    if (!contractIds.has(contractKey)) {
+      current.contracts.push(normalizedContract);
+      contractIds.add(contractKey);
+    }
+
+    current.active = current.contracts.some((item) => item.active === true)
+      ? true
+      : current.contracts.every((item) => item.active === false)
+        ? false
+        : null;
+    current.status = current.active
+      ? "Ativo"
+      : current.active === false
+        ? "Inativo"
+        : "Status nao identificado";
+    current.phone = current.phone || phone;
+    current.city = current.city || city;
+
+    customersByKey.set(key, current);
+    contractIdsByCustomer.set(key, contractIds);
+  });
+
+  return Array.from(customersByKey.values()).sort((first, second) =>
+    String(first.name || "").localeCompare(String(second.name || ""), "pt-BR")
+  );
+}
+
+async function listarClientesSgpPorCidades() {
+  const results = await Promise.allSettled(
+    SGP_CUSTOMER_LIST_QUERIES.map((query) => consultarClienteSgp(query))
+  );
+  const contracts = results.flatMap((result) =>
+    result.status === "fulfilled"
+      ? readRawArray(result.value.result, "contratos")
+      : []
+  );
+  const customers = buildSgpCustomersFromContracts(contracts);
+
+  return {
+    provider: "sgp" as const,
+    customers,
+    summary: summarizeSgpCustomers(customers),
+    result: {
+      source: "city-search-fallback",
+      queries: SGP_CUSTOMER_LIST_QUERIES,
+      contracts: contracts.length,
+    },
+  };
+}
+
 export async function listarClientesSgp() {
   const { data } = await api.get<SgpCustomersResponse>(
     "/integrations/sgp/clientes/list"
   );
+
+  if (data.customers.length > 0) {
+    return data;
+  }
+
+  const listMessage =
+    data.result && typeof data.result === "object"
+      ? String((data.result as SgpRawRecord).msg || "")
+      : "";
+
+  if (listMessage.includes("CPF/CNPJ") || listMessage.includes("Contrato ID")) {
+    return listarClientesSgpPorCidades();
+  }
 
   return data;
 }
