@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FiMapPin, FiServer } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import { FiArrowLeft, FiMapPin, FiServer } from "react-icons/fi";
 import { consultarSaudeSistema } from "@/lib/api";
 import {
   systemVersion,
@@ -14,6 +15,7 @@ type ConnectionState = "checking" | "online" | "offline";
 const HEALTH_REFRESH_MS = 30000;
 
 export default function Header() {
+  const router = useRouter();
   const [backendState, setBackendState] =
     useState<ConnectionState>("checking");
   const [databaseState, setDatabaseState] =
@@ -69,6 +71,16 @@ export default function Header() {
 
   return (
     <header className={styles.header}>
+      <button
+        type="button"
+        className={styles.headerBackButton}
+        onClick={() => router.back()}
+        aria-label="Voltar para a pagina anterior"
+        title="Voltar"
+      >
+        <FiArrowLeft aria-hidden="true" />
+      </button>
+
       <div className={styles.brandBlock}>
         <span className={styles.eyebrow}>Painel Netbox</span>
         <strong>Internet de Verdade</strong>

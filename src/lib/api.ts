@@ -283,10 +283,16 @@ export type SgpCustomersSummary = {
   active: number;
   inactive: number;
   unknown: number;
+  totalContracts: number;
+  activeContracts: number;
+  inactiveContracts: number;
+  unknownContracts: number;
   byCity: {
     city: string;
     total: number;
     active: number;
+    contracts: number;
+    activeContracts: number;
   }[];
 };
 
@@ -606,6 +612,20 @@ export async function consultarClienteSgp(query: string) {
   return data;
 }
 
+async function consultarClienteSgpParaLista(query: string) {
+  const { data } = await api.get<SgpCustomerResponse>(
+    "/integrations/sgp/clientes",
+    {
+      params: {
+        query,
+      },
+      timeout: 12000,
+    }
+  );
+
+  return data;
+}
+
 const SGP_CUSTOMER_LIST_QUERIES = [
   "paraiso",
   "colinas",
@@ -738,16 +758,36 @@ function normalizeSgpContract(contract: SgpRawRecord): SgpContract {
 }
 
 function summarizeSgpCustomers(customers: SgpCustomer[]): SgpCustomersSummary {
-  const cityMap = new Map<string, { city: string; total: number; active: number }>();
+  const cityMap = new Map<
+    string,
+    {
+      city: string;
+      total: number;
+      active: number;
+      contracts: number;
+      activeContracts: number;
+    }
+  >();
+  const allContracts = customers.flatMap((customer) => customer.contracts);
 
   customers.forEach((customer) => {
     const city = customer.city || "Cidade nao informada";
-    const current = cityMap.get(city) ?? { city, total: 0, active: 0 };
+    const current = cityMap.get(city) ?? {
+      city,
+      total: 0,
+      active: 0,
+      contracts: 0,
+      activeContracts: 0,
+    };
 
     current.total += 1;
     if (customer.active) {
       current.active += 1;
     }
+    current.contracts += customer.contracts.length;
+    current.activeContracts += customer.contracts.filter(
+      (contract) => contract.active === true
+    ).length;
 
     cityMap.set(city, current);
   });
@@ -757,6 +797,10 @@ function summarizeSgpCustomers(customers: SgpCustomer[]): SgpCustomersSummary {
     active: customers.filter((customer) => customer.active === true).length,
     inactive: customers.filter((customer) => customer.active === false).length,
     unknown: customers.filter((customer) => customer.active === null).length,
+    totalContracts: allContracts.length,
+    activeContracts: allContracts.filter((contract) => contract.active === true).length,
+    inactiveContracts: allContracts.filter((contract) => contract.active === false).length,
+    unknownContracts: allContracts.filter((contract) => contract.active === null).length,
     byCity: Array.from(cityMap.values()).sort(
       (first, second) => second.total - first.total
     ),
@@ -826,7 +870,7 @@ function buildSgpCustomersFromContracts(contracts: SgpRawRecord[]) {
 
 async function listarClientesSgpPorCidades() {
   const results = await Promise.allSettled(
-    SGP_CUSTOMER_LIST_QUERIES.map((query) => consultarClienteSgp(query))
+    SGP_CUSTOMER_LIST_QUERIES.map((query) => consultarClienteSgpParaLista(query))
   );
   const contracts = results.flatMap((result) =>
     result.status === "fulfilled"
@@ -848,11 +892,21 @@ async function listarClientesSgpPorCidades() {
 }
 
 export async function listarClientesSgp() {
-  const { data } = await api.get<SgpCustomersResponse>(
-    "/integrations/sgp/clientes/list"
-  );
+  let data: SgpCustomersResponse;
 
-  if (data.customers.length > 0) {
+  try {
+    const response = await api.get<SgpCustomersResponse>(
+      "/integrations/sgp/clientes/list",
+      {
+        timeout: 10000,
+      }
+    );
+    data = response.data;
+  } catch {
+    return listarClientesSgpPorCidades();
+  }
+
+  if (Array.isArray(data.customers) && data.customers.length > 0) {
     return data;
   }
 
@@ -861,7 +915,12 @@ export async function listarClientesSgp() {
       ? String((data.result as SgpRawRecord).msg || "")
       : "";
 
-  if (listMessage.includes("CPF/CNPJ") || listMessage.includes("Contrato ID")) {
+  if (
+    !Array.isArray(data.customers) ||
+    data.customers.length === 0 ||
+    listMessage.includes("CPF/CNPJ") ||
+    listMessage.includes("Contrato ID")
+  ) {
     return listarClientesSgpPorCidades();
   }
 

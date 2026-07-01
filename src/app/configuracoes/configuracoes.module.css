@@ -1726,21 +1726,50 @@
 
 .photoCropPreview {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: min(100%, 430px);
+  height: 320px;
   justify-self: center;
   overflow: hidden;
-  border: 8px solid rgba(255, 255, 255, 0.88);
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: inset 0 0 0 2px rgba(255, 83, 54, 0.2);
+  border: 1px solid rgba(255, 83, 54, 0.22);
+  border-radius: 18px;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.84) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.84) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.84) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.84) 75%),
+    #ffece7;
+  background-position:
+    0 0,
+    0 12px,
+    12px -12px,
+    -12px 0;
+  background-size: 24px 24px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.62),
+    0 16px 34px rgba(70, 25, 12, 0.13);
 }
 
 .photoCropPreview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: block;
+  object-fit: contain;
   transform-origin: center;
+}
+
+.photoCropGuide {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(72%, 250px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  border: 2px dashed rgba(214, 56, 25, 0.85);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.72),
+    0 12px 28px rgba(52, 18, 8, 0.14);
+  transform: translate(-50%, -50%);
 }
 
 .photoCropControls {
@@ -1780,8 +1809,8 @@
   }
 
   .photoCropPreview {
-    width: 230px;
-    height: 230px;
+    width: 100%;
+    height: 260px;
   }
 }
 

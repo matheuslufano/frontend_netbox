@@ -251,7 +251,6 @@
 }
 
 @media (width < 768px) {
-
   .row {
     flex-direction: column;
     gap: 10px;

@@ -76,6 +76,8 @@ type PhotoCropState = {
   offsetX: number;
   offsetY: number;
 } | null;
+type PhotoCropDraft = NonNullable<PhotoCropState>;
+type PendingPhotoCrops = Partial<Record<PhotoCropTarget, PhotoCropDraft>>;
 type SettingsSection =
   | "inicio"
   | "usuarios"
@@ -176,6 +178,8 @@ export default function Configuracoes() {
   const [profileSearchTerm, setProfileSearchTerm] = useState("");
   const [showAllProfileResults, setShowAllProfileResults] = useState(false);
   const [photoCrop, setPhotoCrop] = useState<PhotoCropState>(null);
+  const [pendingPhotoCrops, setPendingPhotoCrops] =
+    useState<PendingPhotoCrops>({});
 
   const activeAffiliates = useMemo(
     () => affiliates.filter((affiliate) => affiliate.active).length,
@@ -369,12 +373,15 @@ export default function Configuracoes() {
   }
 
   function backToProfileSearch() {
+    clearPendingPhotoCrop("editUser");
+    clearPendingPhotoCrop("editAffiliate");
     setEditingUserId(null);
     setEditingAffiliateId(null);
   }
 
   function startUserEdit(user: User) {
     resetStatus();
+    clearPendingPhotoCrop("editUser");
     setEditingUserId(user.id);
     setUserForm({
       name: user.name,
@@ -387,6 +394,7 @@ export default function Configuracoes() {
 
   function startAffiliateEdit(affiliate: Affiliate) {
     resetStatus();
+    clearPendingPhotoCrop("editAffiliate");
     setEditingAffiliateId(affiliate.id);
     setAffiliateForm({
       name: affiliate.name,
@@ -421,6 +429,12 @@ export default function Configuracoes() {
   }
 
   function removeProfilePhoto(target: PhotoCropTarget) {
+    setPendingPhotoCrops((current) => {
+      const next = { ...current };
+      delete next[target];
+      return next;
+    });
+
     if (target === "newUser") {
       setNewUser((current) => ({ ...current, photoUrl: "" }));
     }
@@ -438,45 +452,65 @@ export default function Configuracoes() {
     }
   }
 
-  async function confirmPhotoCrop() {
+  function confirmPhotoCrop() {
     if (!photoCrop) {
       return;
     }
 
-    try {
-      const croppedPhotoUrl = await cropImageToDataUrl(
-        photoCrop.source,
-        photoCrop.zoom,
-        photoCrop.offsetX,
-        photoCrop.offsetY,
-      );
+    setPendingPhotoCrops((current) => ({
+      ...current,
+      [photoCrop.target]: photoCrop,
+    }));
 
-      if (photoCrop.target === "newUser") {
-        setNewUser((current) => ({ ...current, photoUrl: croppedPhotoUrl }));
-      }
-
-      if (photoCrop.target === "newAffiliate") {
-        setNewAffiliate((current) => ({
-          ...current,
-          photoUrl: croppedPhotoUrl,
-        }));
-      }
-
-      if (photoCrop.target === "editUser") {
-        setUserForm((current) => ({ ...current, photoUrl: croppedPhotoUrl }));
-      }
-
-      if (photoCrop.target === "editAffiliate") {
-        setAffiliateForm((current) => ({
-          ...current,
-          photoUrl: croppedPhotoUrl,
-        }));
-      }
-
-      setPhotoCrop(null);
-    } catch {
-      setError("Nao foi possivel cortar a imagem. Tente outra foto.");
+    if (photoCrop.target === "newUser") {
+      setNewUser((current) => ({ ...current, photoUrl: photoCrop.source }));
     }
+
+    if (photoCrop.target === "newAffiliate") {
+      setNewAffiliate((current) => ({
+        ...current,
+        photoUrl: photoCrop.source,
+      }));
+    }
+
+    if (photoCrop.target === "editUser") {
+      setUserForm((current) => ({ ...current, photoUrl: photoCrop.source }));
+    }
+
+    if (photoCrop.target === "editAffiliate") {
+      setAffiliateForm((current) => ({
+        ...current,
+        photoUrl: photoCrop.source,
+      }));
+    }
+
+    setPhotoCrop(null);
+  }
+
+  async function getProfilePhotoForSave(
+    target: PhotoCropTarget,
+    currentPhotoUrl: string,
+  ) {
+    const pendingCrop = pendingPhotoCrops[target];
+
+    if (!pendingCrop) {
+      return currentPhotoUrl;
+    }
+
+    return cropImageToDataUrl(
+      pendingCrop.source,
+      pendingCrop.zoom,
+      pendingCrop.offsetX,
+      pendingCrop.offsetY,
+    );
+  }
+
+  function clearPendingPhotoCrop(target: PhotoCropTarget) {
+    setPendingPhotoCrops((current) => {
+      const next = { ...current };
+      delete next[target];
+      return next;
+    });
   }
 
   async function handleCreateUser(event: FormEvent<HTMLFormElement>) {
@@ -507,22 +541,27 @@ export default function Configuracoes() {
 
     setSaving(true);
     try {
+      const photoUrl = await getProfilePhotoForSave(
+        "newUser",
+        newUser.photoUrl,
+      );
       const created = await criarUsuario({
         name: newUser.name.trim(),
         email: normalizedEmail,
         password,
         city: newUser.city || undefined,
-        photoUrl: newUser.photoUrl || undefined,
+        photoUrl: photoUrl || undefined,
       });
 
       setUsers((current) => [
-        preserveProfilePhoto(created, newUser.photoUrl),
+        preserveProfilePhoto(created, photoUrl),
         ...current,
       ]);
       setNewUser({
         ...emptyUserForm,
         city: cities[0]?.name ?? "",
       });
+      clearPendingPhotoCrop("newUser");
       setMessage("Usuario cadastrado com sucesso.");
     } catch (err) {
       setError(getApiErrorMessage(err, "Nao foi possivel criar o usuario."));
@@ -558,22 +597,27 @@ export default function Configuracoes() {
 
     setSaving(true);
     try {
+      const photoUrl = await getProfilePhotoForSave(
+        "editUser",
+        userForm.photoUrl,
+      );
       const updated = await editarUsuario(id, {
         name: userForm.name.trim(),
         email: normalizedEmail,
         city: userForm.city || undefined,
         password: password || undefined,
-        photoUrl: userForm.photoUrl || undefined,
+        photoUrl: photoUrl || undefined,
       });
 
       setUsers((current) =>
         current.map((user) =>
           user.id === id
-            ? preserveProfilePhoto(updated, userForm.photoUrl)
+            ? preserveProfilePhoto(updated, photoUrl)
             : user,
         ),
       );
       setEditingUserId(null);
+      clearPendingPhotoCrop("editUser");
       setMessage("Usuario atualizado com sucesso.");
     } catch (err) {
       setError(
@@ -618,12 +662,16 @@ export default function Configuracoes() {
 
     setSaving(true);
     try {
+      const photoUrl = await getProfilePhotoForSave(
+        "newAffiliate",
+        newAffiliate.photoUrl,
+      );
       const created = await criarAfiliado({
         name: newAffiliate.name.trim(),
         email: newAffiliate.email.trim().toLowerCase(),
         phone: newAffiliate.phone.trim() || undefined,
         city: newAffiliate.city || undefined,
-        photoUrl: newAffiliate.photoUrl || undefined,
+        photoUrl: photoUrl || undefined,
       });
 
       if (!newAffiliate.active) {
@@ -631,12 +679,12 @@ export default function Configuracoes() {
           active: false,
         });
         setAffiliates((current) => [
-          preserveProfilePhoto(inactive, newAffiliate.photoUrl),
+          preserveProfilePhoto(inactive, photoUrl),
           ...current,
         ]);
       } else {
         setAffiliates((current) => [
-          preserveProfilePhoto(created, newAffiliate.photoUrl),
+          preserveProfilePhoto(created, photoUrl),
           ...current,
         ]);
       }
@@ -645,6 +693,7 @@ export default function Configuracoes() {
         ...emptyAffiliateForm,
         city: cities[0]?.name ?? "",
       });
+      clearPendingPhotoCrop("newAffiliate");
       setMessage("Afiliado cadastrado com sucesso.");
     } catch (err) {
       setError(getApiErrorMessage(err, "Nao foi possivel criar o afiliado."));
@@ -663,23 +712,28 @@ export default function Configuracoes() {
 
     setSaving(true);
     try {
+      const photoUrl = await getProfilePhotoForSave(
+        "editAffiliate",
+        affiliateForm.photoUrl,
+      );
       const updated = await editarAfiliado(id, {
         name: affiliateForm.name.trim(),
         email: affiliateForm.email.trim().toLowerCase(),
         phone: affiliateForm.phone.trim() || undefined,
         city: affiliateForm.city || undefined,
         active: affiliateForm.active,
-        photoUrl: affiliateForm.photoUrl || undefined,
+        photoUrl: photoUrl || undefined,
       });
 
       setAffiliates((current) =>
         current.map((affiliate) =>
           affiliate.id === id
-            ? preserveProfilePhoto(updated, affiliateForm.photoUrl)
+            ? preserveProfilePhoto(updated, photoUrl)
             : affiliate,
         ),
       );
       setEditingAffiliateId(null);
+      clearPendingPhotoCrop("editAffiliate");
       setMessage("Afiliado atualizado com sucesso.");
     } catch (err) {
       setError(
@@ -1086,7 +1140,10 @@ export default function Configuracoes() {
                               <button
                                 type="button"
                                 className={styles.secondaryButton}
-                                onClick={() => setEditingUserId(null)}
+                                onClick={() => {
+                                  clearPendingPhotoCrop("editUser");
+                                  setEditingUserId(null);
+                                }}
                                 disabled={saving}
                               >
                                 Cancelar
@@ -1206,7 +1263,10 @@ export default function Configuracoes() {
                               <button
                                 type="button"
                                 className={styles.secondaryButton}
-                                onClick={() => setEditingAffiliateId(null)}
+                                onClick={() => {
+                                  clearPendingPhotoCrop("editAffiliate");
+                                  setEditingAffiliateId(null);
+                                }}
                                 disabled={saving}
                               >
                                 Cancelar
@@ -1472,6 +1532,7 @@ export default function Configuracoes() {
                   transform: `translate(${photoCrop.offsetX}px, ${photoCrop.offsetY}px) scale(${photoCrop.zoom})`,
                 }}
               />
+              <span className={styles.photoCropGuide} aria-hidden="true" />
             </div>
 
             <div className={styles.photoCropControls}>
@@ -1541,7 +1602,7 @@ export default function Configuracoes() {
                 className={styles.primaryButton}
                 onClick={confirmPhotoCrop}
               >
-                Usar foto
+                Confirmar ajuste
               </button>
             </div>
           </div>
@@ -1579,19 +1640,9 @@ function WebhookMonitor({
   onClear: () => void;
 }) {
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!logs.length) {
-      setSelectedLogId(null);
-      return;
-    }
-
-    if (!selectedLogId || !logs.some((log) => log.id === selectedLogId)) {
-      setSelectedLogId(logs[0].id);
-    }
-  }, [logs, selectedLogId]);
-
-  const activeLog = logs.find((log) => log.id === selectedLogId) || logs[0];
+  const selectedLogExists = logs.some((log) => log.id === selectedLogId);
+  const activeLogId = selectedLogExists ? selectedLogId : logs[0]?.id ?? null;
+  const activeLog = logs.find((log) => log.id === activeLogId) || logs[0];
 
   return (
     <section className={styles.webhookMonitor}>

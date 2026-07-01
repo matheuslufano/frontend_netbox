@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
-import { FiChevronRight } from "react-icons/fi";
+import { usePathname, useRouter } from "next/navigation";
+import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import { consultarSaudeSistema } from "@/lib/api";
 import styles from "./header.module.css";
 
@@ -23,6 +23,7 @@ const routeLabels: Record<string, string> = {
 
 export default function CompactHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [backendState, setBackendState] =
     useState<ConnectionState>("checking");
 
@@ -69,10 +70,22 @@ export default function CompactHeader() {
 
   return (
     <header className={styles.compactHeader}>
-      <div className={styles.compactBrand}>
-        <span>Painel Netbox</span>
-        <FiChevronRight aria-hidden="true" />
-        <strong>{title}</strong>
+      <div className={styles.compactLeft}>
+        <button
+          type="button"
+          className={styles.headerBackButton}
+          onClick={() => router.back()}
+          aria-label="Voltar para a pagina anterior"
+          title="Voltar"
+        >
+          <FiArrowLeft aria-hidden="true" />
+        </button>
+
+        <div className={styles.compactBrand}>
+          <span>Painel Netbox</span>
+          <FiChevronRight aria-hidden="true" />
+          <strong>{title}</strong>
+        </div>
       </div>
 
       <div

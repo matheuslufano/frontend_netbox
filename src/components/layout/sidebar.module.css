@@ -1,140 +1,499 @@
 /* Sidebar - Barra lateral esquerda */
 
 .sidebar {
+  position: relative;
+  z-index: 1000;
+
   width: 230px;
   min-height: 100vh;
-  padding: 20px;
+
+  padding: 18px 14px;
+
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  overflow: hidden;
-  color: white;
-  background: linear-gradient(
-    180deg,
-    rgba(30, 30, 30, 0.7) 0%,
-    rgba(0, 0, 0, 1) 100%
-  );
-  transition: width 0.3s ease, padding 0.3s ease;
+
+  overflow: visible;
+
+  color: #ffffff;
+
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 95, 52, 0.28), transparent 32%),
+    radial-gradient(circle at 95% 22%, rgba(255, 255, 255, 0.1), transparent 28%),
+    linear-gradient(180deg, #33211c 0%, #15110f 48%, #050505 100%);
+
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.05),
+    16px 0 38px rgba(0, 0, 0, 0.24);
+
+  transition:
+    width 0.3s ease,
+    padding 0.3s ease;
+}
+
+.sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 26%),
+    linear-gradient(180deg, transparent 0%, rgba(255, 95, 52, 0.08) 100%);
+
+  opacity: 0.8;
+}
+
+.sidebar > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* =========================================
-   LOGO
+   LOGO / TOPO
 ========================================= */
 
 .sidebarHeader {
-  min-height: 36px;
+  min-height: 38px;
+
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+
+  margin-bottom: 14px;
 }
 
 .titulo {
   margin: 0;
+
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   flex: 1;
-  text-align: center;
-  font-size: 18px;
-  font-weight: bold;
-}
 
-.collapseButton {
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.08);
+  min-width: 0;
+
   color: #ffffff;
-  cursor: pointer;
-  font-size: 18px;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
 
-.collapseButton:hover {
-  background: rgba(255, 95, 52, 0.24);
-  border-color: rgba(255, 95, 52, 0.7);
-  transform: translateX(-1px);
-}
-
-.img {
-  display: block;
-  width: 100px;
-  height: 100px;
-  margin: 20px auto;
-  object-fit: contain;
-  border-radius: 50%;
-  transition: all 0.3s ease;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
 /* =========================================
-        MENU
+   FOTO DO USUÁRIO + BALÃO NETBOX
 ========================================= */
 
-.menuList {
-  display: flex;
-  flex-direction: column;
+.profileBox {
+  width: 100%;
+
+  display: grid;
+  justify-items: center;
   gap: 10px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
+
+  margin: 16px auto 22px;
+
+  flex-shrink: 0;
 }
 
-.button {
-  list-style: none;
-  background-color: #ff5f34;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
+.avatarFrame {
+  position: relative;
 
-.button:hover {
-  background-color: #892f09;
-}
+  width: 92px;
+  height: 92px;
 
-.menuItem {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  border: 0;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: transparent;
-  color: #e5e7eb;
-  font: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  justify-content: center;
 }
 
-.itemLabel {
-  min-width: 0;
+.userPhoto {
+  width: 88px;
+  height: 88px;
+
+  display: block;
+
+  object-fit: cover;
+
+  border: 3px solid rgba(255, 95, 52, 0.72);
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.26),
+    0 0 0 7px rgba(255, 255, 255, 0.05);
+
+  transition:
+    width 0.3s ease,
+    height 0.3s ease,
+    box-shadow 0.3s ease,
+    border-width 0.3s ease;
+}
+
+.brandBubble {
+  position: absolute;
+  right: 1px;
+  bottom: 5px;
+
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   overflow: hidden;
+
+  border: 3px solid #15110f;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.28),
+    0 0 0 2px rgba(255, 95, 52, 0.55);
+
+  transition:
+    width 0.3s ease,
+    height 0.3s ease,
+    right 0.3s ease,
+    bottom 0.3s ease,
+    border-width 0.3s ease;
+}
+
+.brandBubbleImg {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.userName {
+  max-width: 100%;
+
+  display: block;
+
+  overflow: hidden;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 /* =========================================
-            ÍCONES
+   MENU
+========================================= */
+
+.nav {
+  width: 100%;
+}
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 0;
+  margin: 0;
+
+  list-style: none;
+}
+
+.button {
+  position: relative;
+
+  list-style: none;
+
+  border-radius: 15px;
+  background: transparent;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.button:hover {
+  transform: translateX(2px);
+}
+
+.menuItem {
+  position: relative;
+
+  width: 100%;
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  overflow: hidden;
+
+  padding: 8px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.04);
+
+  color: rgba(255, 255, 255, 0.84);
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 18px rgba(0, 0, 0, 0.12);
+
+  backdrop-filter: blur(12px);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.menuItem::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(255, 95, 52, 0.18), transparent 62%);
+
+  opacity: 0;
+
+  transition: opacity 0.2s ease;
+}
+
+.menuItem:hover {
+  border-color: rgba(255, 95, 52, 0.46);
+
+  background:
+    linear-gradient(135deg, rgba(255, 95, 52, 0.22), rgba(255, 255, 255, 0.05)),
+    rgba(255, 255, 255, 0.06);
+
+  color: #ffffff;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 24px rgba(255, 95, 52, 0.12);
+}
+
+.menuItem:hover::before {
+  opacity: 1;
+}
+
+.menuItem:focus-visible,
+.collapseButton:focus-visible {
+  outline: 3px solid rgba(255, 95, 52, 0.34);
+  outline-offset: 2px;
+}
+
+.itemLabel {
+  position: relative;
+  z-index: 1;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: inherit;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================
+   ÍCONES
 ========================================= */
 
 .icon {
-  font-size: 22px;
-  min-width: 22px;
-  display: flex;
+  position: relative;
+  z-index: 1;
+
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+
+  padding: 7px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  color: #ffffff;
+
+  font-size: 22px;
+
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
+
+/* =========================================
+   BOTÃO DE RECOLHER
+========================================= */
+
+.collapseButton {
+  position: fixed;
+  top: 46vh;
+  left: 214px;
+  right: auto;
+  z-index: 99999;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+
+  background:
+    linear-gradient(180deg, rgba(48, 36, 32, 0.96), rgba(16, 12, 11, 0.98)),
+    rgba(20, 16, 15, 0.96);
+
+  color: rgba(255, 255, 255, 0.78);
+
+  cursor: pointer;
+
+  font-size: 16px;
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    -4px 0 12px rgba(0, 0, 0, 0.18);
+
+  opacity: 0.92;
+
+  transform: translateY(-50%);
+
+  transition:
+    left 0.3s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.collapseButton::before {
+  content: "";
+
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(180deg, rgba(50, 35, 31, 0.92), rgba(16, 12, 11, 0.96));
+
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset -1px 0 0 rgba(0, 0, 0, 0.36);
+}
+
+.collapseButton svg {
+  font-size: 16px;
+
+  transition: transform 0.25s ease;
+}
+
+.sidebar:not(.collapsed) .collapseButton svg {
+  transform: translateX(-1px);
+}
+
+.collapseButton:hover {
+  border-color: rgba(255, 95, 52, 0.42);
+
+  background:
+    linear-gradient(180deg, rgba(255, 95, 52, 0.18), rgba(30, 22, 19, 0.98)),
+    rgba(20, 16, 15, 0.98);
+
+  color: #ffffff;
+
+  opacity: 1;
+
+  transform: translateY(-50%) scale(1.05);
+
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(255, 95, 52, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+.sidebar:not(.collapsed) .collapseButton:hover svg {
+  animation: sidebarArrowLeftFixed 0.8s ease-in-out infinite;
+}
+
+.sidebar.collapsed .collapseButton:hover svg {
+  animation: sidebarArrowRightFixed 0.8s ease-in-out infinite;
+}
+
+@keyframes sidebarArrowLeftFixed {
+  0%,
+  100% {
+    transform: translateX(-1px);
+  }
+
+  50% {
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes sidebarArrowRightFixed {
+  0%,
+  100% {
+    transform: translateX(1px);
+  }
+
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+/* =========================================
+   DESKTOP RECOLHIDO
+========================================= */
 
 @media (width >= 920px) {
   .sidebar.collapsed {
     width: 78px;
-    padding: 16px 12px;
+    padding: 16px 10px;
   }
 
   .sidebar.collapsed .sidebarHeader {
@@ -143,13 +502,61 @@
 
   .sidebar.collapsed .titulo,
   .sidebar.collapsed .itemLabel {
-    display: none;
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+
+    clip: rect(0 0 0 0);
+
+    white-space: nowrap;
   }
 
-  .sidebar.collapsed .img {
+  .sidebar.collapsed .profileBox {
+    width: 50px;
+
+    margin: 18px auto 28px;
+  }
+
+  .sidebar.collapsed .avatarFrame {
     width: 50px;
     height: 50px;
-    margin: 20px auto 30px;
+  }
+
+  .sidebar.collapsed .userPhoto {
+    width: 46px;
+    height: 46px;
+
+    border-width: 2px;
+
+    box-shadow:
+      0 10px 20px rgba(0, 0, 0, 0.24),
+      0 0 0 5px rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar.collapsed .brandBubble {
+    right: -2px;
+    bottom: 1px;
+
+    width: 18px;
+    height: 18px;
+
+    border-width: 2px;
+  }
+
+  .sidebar.collapsed .userName {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+
+    clip: rect(0 0 0 0);
+
+    white-space: nowrap;
   }
 
   .sidebar.collapsed .button {
@@ -157,109 +564,232 @@
   }
 
   .sidebar.collapsed .menuItem {
+    min-height: 48px;
+
     justify-content: center;
+
     gap: 0;
-    padding: 14px 0;
+
+    padding: 7px;
+  }
+
+  .sidebar.collapsed .button:hover {
+    transform: translateY(-1px);
   }
 
   .sidebar.collapsed .icon {
     margin: 0;
-    min-width: auto;
+    min-width: 34px;
   }
 
   .sidebar.collapsed .collapseButton {
-    margin: 0;
+    left: 62px;
+  }
+
+  .sidebar.collapsed .collapseButton svg {
+    transform: translateX(1px);
   }
 }
 
 /* =========================================
-          RESPONSIVO
+   TABLET
 ========================================= */
 
 @media (width < 920px) {
-
   .sidebar {
-    width: 70px;
-    padding: 12px;
+    width: 72px;
+
+    padding: 12px 8px;
+
+    overflow: hidden;
+
+    z-index: 999;
   }
 
-  /* esconde título */
   .sidebarHeader {
     display: none;
   }
 
+  .profileBox {
+    width: 50px;
 
-  /* logo menor */
-  .img {
+    margin: 12px auto 28px;
+  }
+
+  .avatarFrame {
     width: 50px;
     height: 50px;
-    margin-bottom: 30px;
   }
-  /* remove texto dos botões */
+
+  .userPhoto {
+    width: 46px;
+    height: 46px;
+
+    border-width: 2px;
+
+    box-shadow:
+      0 10px 20px rgba(0, 0, 0, 0.24),
+      0 0 0 5px rgba(255, 255, 255, 0.05);
+  }
+
+  .brandBubble {
+    right: -2px;
+    bottom: 1px;
+
+    width: 18px;
+    height: 18px;
+
+    border-width: 2px;
+  }
+
+  .userName {
+    display: none;
+  }
+
   .itemLabel {
     display: none;
   }
 
-  /* remove padding extra */
   .button {
     padding: 0;
   }
 
-  /* centraliza conteúdo */
   .menuItem {
+    min-height: 48px;
+
     justify-content: center;
     align-items: center;
-    padding: 14px 0;
+
+    gap: 0;
+
+    padding: 7px;
   }
 
-  /* ícones perfeitamente centralizados */
+  .button:hover {
+    transform: translateY(-1px);
+  }
+
   .icon {
     margin: 0;
-    min-width: auto;
+    min-width: 34px;
+  }
+
+  .collapseButton {
+    display: none;
   }
 }
 
-
 /* =========================================
-   MOBILE - ESTILO INSTAGRAM
+   MOBILE - SIDEBAR INFERIOR ESTILO INSTAGRAM
 ========================================= */
 
 @media (width < 768px) {
-
   .sidebar {
     position: fixed;
-    bottom: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+
+    z-index: 9999;
+
     width: 100%;
-    height: 76px;
-    min-height: auto;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    height: 72px;
+    min-height: 72px;
+
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+
+    display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    z-index: 999;
-    background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255,255,255,0.1);
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+    background:
+      linear-gradient(180deg, rgba(33, 25, 22, 0.94), rgba(5, 5, 5, 0.98)),
+      rgba(0, 0, 0, 0.96);
+
+    box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.28);
+
+    backdrop-filter: blur(18px);
   }
 
-  /* esconde logo e título */
-  .titulo,
-  .img {
+  .sidebar::before {
     display: none;
   }
 
+  .sidebarHeader,
+  .titulo,
+  .collapseButton {
+    display: none !important;
+  }
+
+.profileBox {
+  display: none !important;
+}
+
+.nav {
+  width: 100%;
+  height: 100%;
+
+  flex: 1 1 auto;
+
+  min-width: 0;
+}
+  .userPhoto {
+    width: 30px;
+    height: 30px;
+
+    border-width: 2px;
+
+    box-shadow: none;
+  }
+
+  .brandBubble {
+    right: calc(50% - 24px);
+    bottom: 11px;
+
+    width: 14px;
+    height: 14px;
+
+    border-width: 2px;
+    border-color: #050505;
+
+    box-shadow: 0 0 0 1px rgba(255, 95, 52, 0.65);
+  }
+
+  .brandBubbleImg {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+  }
 
   .menuList {
     width: 100%;
     height: 100%;
+
+    display: flex;
     flex-direction: row;
-    justify-content: flex-start;
     align-items: center;
-    gap: 6px;
+    justify-content: space-around;
+
+    gap: 0;
+
+    padding: 0;
+    margin: 0;
+
     overflow-x: auto;
     overflow-y: hidden;
+
+    list-style: none;
+
     scrollbar-width: none;
+
     -webkit-overflow-scrolling: touch;
   }
 
@@ -268,40 +798,107 @@
   }
 
   .button {
-    flex: 0 0 72px;
-    background: transparent;
+    flex: 1 1 0;
+
+    min-width: 58px;
+    max-width: 90px;
+
+    padding: 0;
+    margin: 0;
+
     border-radius: 0;
+
+    background: transparent;
   }
 
   .button:hover {
     transform: none;
+
     background: transparent;
   }
 
   .menuItem {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
+    width: 100%;
     min-height: 58px;
-    padding: 7px 4px;
-    font-size: 11px;
-    color: #d1d5db;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 3px;
+
+    padding: 6px 2px;
+
+    border: none;
+    border-radius: 14px;
+
+    background: transparent;
+
+    box-shadow: none;
+
+    backdrop-filter: none;
+
+    color: rgba(255, 255, 255, 0.78);
+
     text-align: center;
+    text-decoration: none;
+
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .menuItem::before {
+    display: none;
   }
 
   .menuItem:hover {
-    color: #ff5f34;
+    border-color: transparent;
+
+    background: rgba(255, 95, 52, 0.12);
+
+    color: #ff8a65;
+
+    box-shadow: none;
   }
 
   .icon {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+
+    padding: 4px;
+    margin: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    box-shadow: none;
+
+    color: inherit;
+
     font-size: 22px;
   }
 
-  /* botão sair */
-  .logout {
-    width: auto;
-    margin-top: 0;
-  }
+  .itemLabel {
+    display: block;
 
+    max-width: 70px;
+
+    overflow: hidden;
+
+    color: inherit;
+
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.1;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

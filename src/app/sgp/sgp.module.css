@@ -1,35 +1,85 @@
 .page {
   width: 100%;
-  padding: 24px;
+  padding: 28px;
+  color: #111827;
 }
 
+/* =========================================
+   HEADER
+========================================= */
+
 .header {
+  position: relative;
   margin-bottom: 22px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 95, 52, 0.18), transparent 32%),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(37, 99, 235, 0.12),
+      transparent 34%
+    ),
+    linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  bottom: -80px;
+  width: 190px;
+  height: 190px;
+  border-radius: 999px;
+  background: rgba(255, 95, 52, 0.08);
 }
 
 .badge,
 .cardKicker {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
   margin-bottom: 8px;
-  padding: 6px 10px;
+  padding: 6px 11px;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 800;
+  background: rgba(255, 95, 52, 0.1);
+  color: #ea580c;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .header h1 {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: #111827;
-  font-size: 32px;
+  font-size: clamp(27px, 3vw, 38px);
+  font-weight: 950;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
 }
 
 .header p {
-  margin: 8px 0 0;
-  color: #ffffff;
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.6;
 }
+
+/* =========================================
+   CARDS BASE
+========================================= */
 
 .statusCard,
 .searchCard,
@@ -37,11 +87,17 @@
 .contractsCard,
 .rawCard,
 .listCard {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
+
+/* =========================================
+   STATUS SGP
+========================================= */
 
 .statusCard {
   display: flex;
@@ -53,15 +109,16 @@
 
 .statusIcon {
   display: inline-flex;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #fee2e2;
   color: #b91c1c;
-  font-size: 22px;
+  font-size: 23px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .statusIcon.connected {
@@ -71,62 +128,95 @@
 
 .statusCard strong {
   display: block;
-  color: #111827;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 900;
 }
 
 .statusCard span {
   display: block;
   margin-top: 4px;
-  color: #6b7280;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
+
+/* =========================================
+   ABAS
+========================================= */
 
 .sgpTabs {
   display: inline-flex;
   gap: 5px;
   margin-bottom: 16px;
   padding: 5px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 999px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(10px);
 }
 
 .sgpTab {
-  min-height: 38px;
+  min-height: 39px;
   border: 0;
   border-radius: 999px;
-  padding: 0 14px;
+  padding: 0 15px;
   background: transparent;
-  color: #55627a;
+  color: #64748b;
   font-size: 13px;
   font-weight: 900;
   cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sgpTab:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .sgpTabActive {
-  background: #111827;
-  color: #fff;
+  background: linear-gradient(135deg, #ff5f34 0%, #f97316 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 18px rgba(249, 115, 22, 0.22);
 }
 
+.sgpTabActive:hover {
+  background: linear-gradient(135deg, #ff5f34 0%, #f97316 100%);
+  color: #ffffff;
+}
+
+/* =========================================
+   BUSCA
+========================================= */
+
 .searchCard {
-  margin-bottom: 16px;
-  padding: 18px;
+  margin-bottom: 18px;
+  padding: 20px;
 }
 
 .preCadastroCard {
   display: grid;
   gap: 14px;
   margin-bottom: 16px;
-  padding: 14px;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-  background: #eff6ff;
+  padding: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.12), transparent 35%),
+    linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
 }
 
 .preCadastroCard strong {
   display: block;
-  color: #111827;
+  color: #0f172a;
   font-size: 20px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
 }
 
 .preCadastroGrid {
@@ -148,26 +238,100 @@
 }
 
 .field span {
-  color: #374151;
+  color: #334155;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .field input {
   width: 100%;
   box-sizing: border-box;
-  min-height: 46px;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  min-height: 50px;
+  padding: 12px 14px;
+  border: 1px solid #d7dee8;
+  border-radius: 14px;
   outline: none;
+  background: #ffffff;
   color: #111827;
   font-size: 15px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 8px 18px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.field input::placeholder {
+  color: #94a3b8;
 }
 
 .field input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: #ff5f34;
+  box-shadow:
+    0 0 0 4px rgba(255, 95, 52, 0.12),
+    0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================================
+   BOTÕES
+========================================= */
+
+.searchInputWrap {
+  position: relative;
+}
+
+.searchSuggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #fed7aa;
+  border-radius: 16px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 18px 36px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  scrollbar-width: thin;
+  scrollbar-color: #fb923c #fff7ed;
+}
+
+.searchSuggestion {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.searchSuggestion:hover,
+.searchSuggestion:focus-visible {
+  background: #fff7ed;
+  outline: none;
+}
+
+.searchSuggestion strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.searchSuggestion span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .primaryButton,
@@ -176,21 +340,28 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 46px;
+  min-height: 50px;
   border: 0;
-  border-radius: 10px;
-  padding: 0 16px;
-  font-weight: 800;
+  border-radius: 14px;
+  padding: 0 18px;
+  font-weight: 900;
   cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .primaryButton {
-  background: #2563eb;
-  color: #fff;
+  background: linear-gradient(135deg, #ff5f34 0%, #f97316 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(249, 115, 22, 0.24);
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: #1d4ed8;
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #f04f24 0%, #ea580c 100%);
+  box-shadow: 0 16px 28px rgba(249, 115, 22, 0.3);
 }
 
 .primaryButton:disabled,
@@ -200,34 +371,44 @@
 }
 
 .secondaryButton {
-  background: #eef4ff;
-  color: #1d4ed8;
+  background: #fff7ed;
+  color: #ea580c;
 }
 
 .secondaryButton:hover {
-  background: #dbeafe;
+  background: #ffedd5;
 }
+
+/* =========================================
+   ALERTAS
+========================================= */
 
 .error {
   margin: 14px 0 0;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 13px 15px;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
   background: #fef2f2;
   color: #b91c1c;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 850;
 }
+
+/* =========================================
+   RESULTADO ANTIGO / FALLBACK
+========================================= */
 
 .resultGrid {
   display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
-  gap: 16px;
+  grid-template-columns: minmax(290px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
 }
 
 .customerCard,
 .contractsCard,
 .rawCard,
 .listCard {
-  padding: 18px;
+  padding: 20px;
 }
 
 .rawCard {
@@ -244,74 +425,482 @@
 
 .cardHeader h2 {
   margin: 0;
-  color: #111827;
-  font-size: 22px;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
 }
 
 .cardHeader svg {
-  color: #2563eb;
-  font-size: 22px;
+  color: #ff5f34;
+  font-size: 24px;
 }
 
 .infoGrid {
   display: grid;
-  gap: 12px;
+  gap: 11px;
 }
 
 .infoItem {
-  padding: 12px;
-  border: 1px solid #eef1f5;
-  border-radius: 10px;
-  background: #fafbff;
+  position: relative;
+  overflow: hidden;
+  padding: 13px;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.infoItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 999px;
+  background: #ff5f34;
+  opacity: 0.75;
 }
 
 .infoItem span {
   display: block;
   margin-bottom: 5px;
-  color: #6b7280;
-  font-size: 13px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .infoItem strong {
-  color: #111827;
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 900;
   overflow-wrap: anywhere;
 }
+
+/* =========================================
+   TELA DO CLIENTE - ESTILO SGP / APP
+========================================= */
+
+.customerSgpScreen {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(236, 72, 153, 0.38);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(255, 255, 255, 0.14),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #f7197d 0%, #7c104a 45%, #080816 100%);
+  box-shadow:
+    0 20px 42px rgba(15, 23, 42, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.customerSgpScreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 14% 18%,
+      rgba(255, 255, 255, 0.08),
+      transparent 26%
+    ),
+    radial-gradient(circle at 92% 86%, rgba(255, 95, 52, 0.1), transparent 28%);
+  opacity: 0.9;
+}
+
+.customerSgpScreen > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* TOPO DA TELA DO CLIENTE */
+
+.customerSgpTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 4px 2px 8px;
+}
+
+.customerSgpKicker {
+  display: inline-flex;
+  margin-bottom: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.customerSgpTop h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.customerSgpTop p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.customerSgpTop p strong {
+  color: #ffffff;
+}
+
+/* AVATAR / ÍCONE */
+
+.customerAvatar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 4px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 30px;
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.customerAvatar span {
+  position: absolute;
+  right: -4px;
+  top: 2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: #ff5f34;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* BLOCOS INTERNOS */
+
+.customerSgpSection {
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid rgba(217, 70, 239, 0.48);
+  border-radius: 15px;
+  background: rgba(30, 10, 35, 0.23);
+  backdrop-filter: blur(8px);
+}
+
+.customerSgpSectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+}
+
+.customerSgpSectionTitle strong {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+}
+
+.contractCounter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+/* GRID PADRONIZADO */
+
+.customerSgpGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* CAMPOS DA TELA DO CLIENTE */
+
+.customerSgpScreen .infoItem {
+  min-width: 0;
+  padding: 0;
+  display: grid;
+  align-content: start;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.customerSgpScreen .infoItem::before {
+  display: none;
+}
+
+.customerSgpScreen .infoItem span {
+  display: block;
+  margin: 0 0 5px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.customerSgpScreen .infoItem strong {
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow:
+    0 7px 14px rgba(0, 0, 0, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* CONTRATOS */
+
+.customerContractList {
+  display: grid;
+  gap: 10px;
+}
+
+.customerContractBox {
+  display: grid;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.customerContractHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.customerContractHeader span {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.customerContractHeader strong {
+  display: block;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.customerContractGrid,
+.jsonDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.customerContractGrid .infoItem,
+.jsonDetailsGrid .infoItem {
+  min-width: 0;
+}
+
+.customerContractGrid .infoItem strong,
+.jsonDetailsGrid .infoItem strong {
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customerContractGrid .infoItem:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+.customerContractGrid .infoItem:nth-child(5) strong {
+  height: auto;
+  min-height: 36px;
+  white-space: normal;
+}
+
+.emptySgpContract {
+  padding: 13px;
+  border: 1px dashed rgba(255, 255, 255, 0.26);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* =========================================
+   STATUS
+========================================= */
 
 .statusPill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 34px;
+  min-height: 36px;
   border-radius: 999px;
-  padding: 0 12px;
-  background: #fee2e2;
+  padding: 0 13px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
   color: #b91c1c;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 950;
   white-space: nowrap;
 }
 
 .statusPill.active {
-  background: #dcfce7;
+  border-color: #bbf7d0;
+  background: #ecfdf5;
   color: #166534;
 }
 
 .statusPill.inactive {
-  background: #fee2e2;
+  border-color: #fecaca;
+  background: #fef2f2;
   color: #b91c1c;
 }
 
+.customerSgpScreen .statusPill {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: rgba(254, 226, 226, 0.96);
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 850;
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.14);
+}
+
+.customerSgpScreen .statusPill svg {
+  font-size: 14px;
+}
+
+.customerSgpScreen .statusPill.active {
+  background: rgba(220, 252, 231, 0.96);
+  color: #166534;
+}
+
+.customerSgpScreen .statusPill.inactive {
+  background: rgba(254, 226, 226, 0.96);
+  color: #b91c1c;
+}
+
+/* =========================================
+   RESPOSTA TÉCNICA
+========================================= */
+
+.customerSgpTechnical {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.customerSgpTechnical .secondaryButton {
+  justify-self: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.customerSgpTechnical .secondaryButton:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.rawJson {
+  max-height: 360px;
+  overflow: auto;
+  margin: 14px 0 0;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  color: #e5e7eb;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.customerSgpScreen .rawJson {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(3, 7, 18, 0.76);
+}
+
+/* =========================================
+   CONTRATOS / LISTAS ANTIGAS
+========================================= */
+
 .emptyState {
   padding: 16px;
-  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
   background: #f8fafc;
-  color: #6b7280;
+  color: #64748b;
+  font-weight: 750;
 }
 
 .contractList {
   display: grid;
-  gap: 10px;
+  gap: 11px;
 }
 
 .contractItem {
@@ -319,43 +908,50 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
-  padding: 12px;
-  border: 1px solid #eef1f5;
-  border-radius: 10px;
-  background: #fafbff;
+  padding: 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.contractItem:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 95, 52, 0.28);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.07);
 }
 
 .contractItem strong {
   display: block;
-  color: #111827;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 950;
 }
 
 .contractItem small {
   display: block;
-  margin-top: 4px;
-  color: #374151;
+  margin-top: 5px;
+  color: #334155;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .contractItem span {
   display: block;
-  margin-top: 4px;
-  color: #6b7280;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
-.rawJson {
-  max-height: 360px;
-  overflow: auto;
-  margin: 14px 0 0;
-  padding: 14px;
-  border-radius: 10px;
-  background: #111827;
-  color: #e5e7eb;
-  font-size: 12px;
-  line-height: 1.5;
-}
+/* =========================================
+   LISTAS
+========================================= */
 
 .listHeader {
   display: flex;
@@ -367,14 +963,45 @@
 
 .listHeader h2 {
   margin: 0;
-  color: #111827;
-  font-size: 22px;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.listMeta {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .customerList,
 .cityList {
   display: grid;
   gap: 10px;
+  max-height: min(620px, calc(100vh - 320px));
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #eef2f7;
+}
+
+.customerList::-webkit-scrollbar,
+.cityList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.customerList::-webkit-scrollbar-track,
+.cityList::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #eef2f7;
+}
+
+.customerList::-webkit-scrollbar-thumb,
+.cityList::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #94a3b8;
 }
 
 .customerRow {
@@ -382,41 +1009,67 @@
   grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr) auto;
   gap: 12px;
   align-items: center;
-  padding: 12px;
-  border: 1px solid #eef1f5;
-  border-radius: 10px;
-  background: #fafbff;
+  padding: 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.customerRow:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 95, 52, 0.28);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.07);
 }
 
 .customerRow strong,
 .cityItem strong {
   display: block;
-  color: #111827;
+  color: #0f172a;
+  font-weight: 950;
 }
 
 .customerRow span,
 .cityItem span {
   display: block;
   margin-top: 4px;
-  color: #6b7280;
+  color: #64748b;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
+
+.cityItem small {
+  display: block;
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* =========================================
+   GRÁFICO ATIVOS
+========================================= */
 
 .activeChart {
   display: grid;
   grid-template-columns: auto auto;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 12px;
+  padding: 9px 11px;
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
   background: #ecfdf5;
   color: #166534;
 }
 
 .activeChartRing {
   display: inline-flex;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -424,33 +1077,171 @@
     radial-gradient(circle at center, #ecfdf5 54%, transparent 55%),
     conic-gradient(#16a34a 0 72%, #bbf7d0 72% 100%);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 950;
 }
 
 .activeChart strong {
   display: block;
   font-size: 18px;
+  font-weight: 950;
 }
 
 .activeChart span {
   display: block;
   font-size: 12px;
+  font-weight: 850;
+}
+
+/* =========================================
+   MAPA CLIENTES POR CIDADE
+========================================= */
+
+.tocantinsCityMapCard {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 20px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(249, 115, 22, 0.16), transparent 28%),
+    linear-gradient(135deg, #fff7ed 0%, #ffffff 62%);
+}
+
+.tocantinsCityMapInfo {
+  display: grid;
+  gap: 8px;
+}
+
+.tocantinsCityMapInfo h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.tocantinsCityMapInfo p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.tocantinsCityMapStats {
+  display: grid;
+  gap: 3px;
+  width: fit-content;
+  margin-top: 8px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #111827;
+  color: #fff;
+}
+
+.tocantinsCityMapStats strong,
+.tocantinsCityMapStats span {
+  display: block;
+}
+
+.tocantinsCityMapStats span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
   font-weight: 800;
 }
+
+.tocantinsCityMapFrame {
+  position: relative;
+  width: min(100%, 300px);
+  aspect-ratio: 2 / 3;
+  justify-self: center;
+}
+
+.tocantinsCityMapImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 24px rgba(124, 45, 18, 0.18));
+}
+
+.tocantinsCityMapPoint {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  padding: 0;
+  background: #f97316;
+  box-shadow:
+    0 8px 16px rgba(194, 65, 12, 0.24),
+    0 0 0 4px rgba(249, 115, 22, 0.16);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tocantinsCityMapPoint span {
+  width: 34%;
+  height: 34%;
+  border-radius: inherit;
+  background: #fff7ed;
+}
+
+.tocantinsCityMapPoint:hover,
+.tocantinsCityMapPoint:focus-visible,
+.tocantinsCityMapPointActive {
+  box-shadow:
+    0 10px 20px rgba(194, 65, 12, 0.3),
+    0 0 0 6px rgba(249, 115, 22, 0.2);
+  outline: none;
+  transform: translate(-50%, -50%) scale(1.14);
+}
+
+/* =========================================
+   CIDADES
+========================================= */
 
 .cityItem {
   display: grid;
   grid-template-columns: minmax(180px, 0.45fr) minmax(0, 1fr);
   gap: 14px;
   align-items: center;
-  padding: 12px;
-  border: 1px solid #eef1f5;
-  border-radius: 10px;
-  background: #fafbff;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cityItem:hover,
+.cityItem:focus-visible,
+.cityItemActive {
+  border-color: rgba(249, 115, 22, 0.5);
+  box-shadow:
+    0 12px 24px rgba(194, 65, 12, 0.1),
+    inset 0 0 0 1px rgba(249, 115, 22, 0.12);
+  outline: none;
+  transform: translateY(-1px);
 }
 
 .cityBarTrack {
-  height: 14px;
+  height: 15px;
   overflow: hidden;
   border-radius: 999px;
   background: #e5e7eb;
@@ -460,7 +1251,23 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #2563eb;
+  background: linear-gradient(90deg, #ff5f34 0%, #f97316 100%);
+}
+
+/* =========================================
+   RESPONSIVO
+========================================= */
+
+@media (max-width: 1100px) {
+  .customerSgpGrid,
+  .customerContractGrid,
+  .jsonDetailsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .customerContractGrid .infoItem:nth-child(5) {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 900px) {
@@ -468,13 +1275,81 @@
   .preCadastroGrid,
   .searchForm,
   .customerRow,
+  .tocantinsCityMapCard,
   .cityItem {
     grid-template-columns: 1fr;
+  }
+
+  .tocantinsCityMapInfo {
+    justify-items: center;
+    text-align: center;
   }
 
   .listHeader {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .sgpTabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    border-radius: 18px;
+  }
+
+  .sgpTab {
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  .customerSgpScreen {
+    padding: 15px;
+    border-radius: 22px;
+  }
+
+  .customerSgpTop {
+    align-items: flex-start;
+  }
+
+  .customerSgpTop h2 {
+    font-size: 21px;
+  }
+
+  .customerAvatar {
+    width: 54px;
+    height: 54px;
+    border-width: 4px;
+    font-size: 27px;
+  }
+
+  .customerSgpGrid,
+  .customerContractGrid,
+  .jsonDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .customerContractGrid .infoItem:nth-child(5) {
+    grid-column: auto;
+  }
+
+  .jsonDetailsGrid .infoItem strong,
+  .customerContractGrid .infoItem strong {
+    height: auto;
+    min-height: 36px;
+    white-space: normal;
+  }
+
+  .customerSgpSectionTitle,
+  .customerContractHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .customerSgpScreen .infoItem strong {
+    height: auto;
+    min-height: 36px;
+    white-space: normal;
   }
 }
 
@@ -483,8 +1358,13 @@
     padding: 14px;
   }
 
+  .header {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
   .header h1 {
-    font-size: 26px;
+    font-size: 27px;
   }
 
   .statusCard,
@@ -499,6 +1379,15 @@
     flex-direction: column;
   }
 
+  .customerCard,
+  .contractsCard,
+  .rawCard,
+  .listCard,
+  .searchCard {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
   .primaryButton,
   .secondaryButton,
   .statusPill {
@@ -506,9 +1395,625 @@
   }
 
   .sgpTabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 16px;
+  }
+
+  .menuItem,
+  .contractItem,
+  .customerRow,
+  .infoItem,
+  .cityItem {
+    border-radius: 14px;
+  }
+}
+/* =========================================
+   TABELAS DO CLIENTE / CONTRATO / JSON
+========================================= */
+
+.minimizeButton {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.minimizeButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.detailsTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detailsTable {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.detailsTable tr + tr {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.detailsTable th,
+.detailsTable td {
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.detailsTable th {
+  width: 210px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 900;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detailsTable td {
+  color: #4b5563;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.contractDetailsTable {
+  min-width: 560px;
+}
+
+.contractDetailsTable th {
+  width: 170px;
+}
+
+@media (max-width: 620px) {
+  .customerSgpSectionTitle {
+    align-items: stretch;
+  }
+
+  .minimizeButton {
+    width: 100%;
+  }
+
+  .detailsTable {
+    min-width: 560px;
+  }
+
+  .detailsTable th {
+    width: 170px;
+  }
+}
+
+/* =========================================
+   AJUSTE FINAL - CONTRATOS ORGANIZADOS E JSON COM SCROLL
+========================================= */
+
+.contractSwitcher {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.36) rgba(255, 255, 255, 0.08);
+}
+
+.contractSwitcher::-webkit-scrollbar {
+  height: 7px;
+}
+
+.contractSwitcher::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.contractSwitcher::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.contractSwitchButton {
+  flex: 0 0 auto;
+  min-width: 118px;
+  min-height: 42px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.contractSwitchButton span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.contractSwitchButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.contractSwitchButtonActive {
+  border-color: rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
+}
+
+.jsonDetailsContent {
+  display: grid;
+  gap: 14px;
+}
+
+.jsonDetailsBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.jsonDetailsSubheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jsonDetailsSubheader strong {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.jsonDetailsSubheader span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.detailsTableWrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detailsTableWrapScrollable {
+  max-height: 340px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.34) rgba(255, 255, 255, 0.08);
+}
+
+.detailsTableWrapScrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.detailsTableWrapScrollable::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detailsTableWrapScrollable::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.detailsTable {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.detailsTable tr + tr {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.detailsTable th,
+.detailsTable td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.detailsTable th {
+  width: 145px;
+  max-width: 145px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detailsTable td {
+  color: #4b5563;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.customerDetailsTable {
+  min-width: 520px;
+}
+
+.customerDetailsTable th {
+  width: 120px;
+  max-width: 120px;
+}
+
+.contractDetailsTable {
+  min-width: 520px;
+}
+
+.contractDetailsTable th {
+  width: 120px;
+  max-width: 120px;
+}
+
+.jsonDetailsTable {
+  min-width: 620px;
+}
+
+.jsonDetailsTable th {
+  width: 175px;
+  max-width: 175px;
+}
+
+.jsonDetailsTable td {
+  max-width: 0;
+}
+
+@media (max-width: 620px) {
+  .contractSwitchButton {
+    min-width: 108px;
+  }
+
+  .jsonDetailsSubheader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .detailsTable {
+    min-width: 520px;
+  }
+
+  .contractDetailsTable th {
+    width: 112px;
+    max-width: 112px;
+  }
+
+  .jsonDetailsTable th {
+    width: 150px;
+    max-width: 150px;
+  }
+}
+
+/* =========================================
+   AJUSTES DAS GUIAS TODOS / ATIVOS / DESATIVADOS / CIDADES
+========================================= */
+
+.sgpTabs {
+  width: 100%;
+  max-width: 680px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  border-radius: 18px;
+}
+
+.sgpTab {
+  min-height: 36px;
+  padding: 0 10px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listCard {
+  padding: 16px;
+}
+
+.listHeader {
+  margin-bottom: 12px;
+}
+
+.listHeader h2 {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.listHeader .cardKicker,
+.cardKicker {
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.customerList,
+.cityList {
+  gap: 8px;
+}
+
+.customerRow {
+  grid-template-columns: minmax(180px, 1.35fr) minmax(150px, 0.9fr) auto;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 14px;
+}
+
+.customerRowMain,
+.customerRowMeta {
+  min-width: 0;
+}
+
+.customerNameButton {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.2;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customerNameButton:hover {
+  color: #ea580c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.customerRow span,
+.customerRowMeta span,
+.cityItem span {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customerRow .statusPill {
+  width: auto !important;
+  min-width: 88px;
+  min-height: 30px;
+  justify-self: end;
+  padding: 0 10px;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.customerRow .statusPill svg {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.activeChart {
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 14px;
+}
+
+.activeChartRing {
+  width: 44px;
+  height: 44px;
+  font-size: 12px;
+}
+
+.activeChart strong {
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.activeChart span {
+  font-size: 11px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.cityItem {
+  grid-template-columns: minmax(150px, 0.48fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 14px;
+}
+
+.cityItem strong {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cityBarTrack {
+  height: 12px;
+}
+
+/* =========================================
+   LOADING SGP
+========================================= */
+
+.loadingCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 95, 52, 0.12), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.loadingSpinner {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 4px solid #ffedd5;
+  border-top-color: #ff5f34;
+  border-radius: 999px;
+  animation: sgpSpin 0.8s linear infinite;
+}
+
+.loadingCard strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.loadingCard span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@keyframes sgpSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .sgpTabs {
+    max-width: none;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .customerRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .customerRowMeta {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-    border-radius: 14px;
+    gap: 8px;
+  }
+
+  .customerRow .statusPill {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+}
+
+@media (max-width: 620px) {
+  .sgpTabs {
+    display: flex;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 5px;
+    scrollbar-width: none;
+  }
+
+  .sgpTabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sgpTab {
+    flex: 0 0 auto;
+    min-width: 92px;
+  }
+
+  .customerRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .customerRow .statusPill {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .customerRowMeta {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .cityItem {
+    grid-template-columns: 1fr;
+  }
+
+  .tocantinsCityMapCard {
+    padding: 14px;
+  }
+
+  .tocantinsCityMapFrame {
+    width: min(100%, 240px);
+  }
+
+  .loadingCard {
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .loadingSpinner {
+    width: 34px;
+    height: 34px;
+    border-width: 3px;
   }
 }
