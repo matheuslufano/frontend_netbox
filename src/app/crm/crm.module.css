@@ -33,6 +33,8 @@
 .filterButton,
 .columnTools button,
 .cardMainButton,
+.cardStatus,
+.dealNameButton,
 .cardMenuButton,
 .generalMenu button,
 .periodMenu button,
@@ -283,11 +285,13 @@
 
 .board {
   display: grid;
-  grid-auto-columns: minmax(286px, 1fr);
+  grid-auto-columns: 286px;
   grid-auto-flow: column;
   gap: 12px;
-  min-height: calc(100vh - 306px);
+  height: calc(100vh - 306px);
+  min-height: 360px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 0 14px 18px;
   scrollbar-width: thin;
   scrollbar-color: #8aa6b9 #e8edf1;
@@ -296,7 +300,11 @@
 .column {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  min-width: 286px;
+  width: 286px;
+  min-width: 0;
+  max-width: 286px;
+  min-height: 0;
+  align-self: stretch;
   overflow: hidden;
   border: 1px solid #cbd5dd;
   border-radius: 6px;
@@ -395,8 +403,11 @@
 .cards {
   display: grid;
   align-content: start;
+  min-width: 0;
+  min-height: 0;
   gap: 8px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0 8px 10px;
   scrollbar-width: thin;
   scrollbar-color: #91a7b5 transparent;
@@ -415,6 +426,10 @@
 .dealCard {
   position: relative;
   display: grid;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   gap: 8px;
   border: 1px solid #d4dde4;
   border-radius: 6px;
@@ -443,20 +458,44 @@
   justify-content: stretch;
   gap: 7px;
   width: 100%;
+  min-width: 0;
   padding: 0;
   background: transparent;
   color: inherit;
   text-align: left;
 }
 
+.cardStatusWrap {
+  position: relative;
+  width: max-content;
+  max-width: calc(100% - 28px);
+  min-width: 0;
+}
+
 .cardStatus {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr);
+  display: inline-grid;
+  grid-template-columns: 8px minmax(0, 1fr) 12px;
   align-items: center;
   gap: 6px;
+  min-height: 22px;
+  max-width: 100%;
+  min-width: 0;
+  border-radius: 5px;
+  padding: 0 7px;
+  background: rgba(255, 255, 255, 0.68);
   color: #33556b;
   font-size: 11px;
   font-weight: 800;
+}
+
+.cardStatus span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardStatus:hover {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .statusDot {
@@ -465,22 +504,85 @@
   border-radius: 2px;
 }
 
+.statusMiniMenu {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  z-index: 9;
+  display: grid;
+  width: min(190px, calc(100vw - 48px));
+  max-width: 230px;
+  overflow: hidden;
+  border: 1px solid #cbd5dd;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.18);
+}
+
+.statusMiniMenu button {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 0;
+  padding: 8px 10px;
+  background: #fff;
+  color: #20394a;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.statusMiniMenu button span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusMiniMenu button:hover,
+.statusMiniActive {
+  background: #edf7fb !important;
+}
+
+.statusColorSwatch {
+  width: 20px;
+  height: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 5px;
+}
+
+.dealNameButton {
+  justify-content: start;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
 .dealName {
+  display: -webkit-box;
+  max-width: calc(100% - 28px);
   overflow: hidden;
   color: #08283b;
   font-size: 11px;
   font-weight: 900;
-  line-height: 1.25;
-  text-overflow: ellipsis;
+  line-height: 1.3;
   text-transform: uppercase;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .cardMeta {
   display: grid;
-  grid-template-columns: minmax(80px, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 88px) minmax(0, 1fr);
   align-items: center;
   gap: 10px;
+  min-width: 0;
   color: #4e6a7d;
   font-size: 10px;
   font-weight: 800;
@@ -495,7 +597,8 @@
 }
 
 .prioritySelect select {
-  max-width: 80px;
+  max-width: 58px;
+  min-width: 0;
   border: 0;
   background: transparent;
   color: #4e6a7d;
@@ -510,10 +613,11 @@
 }
 
 .cardValueRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
+  min-width: 0;
   color: #486377;
   font-size: 10px;
   font-weight: 800;
@@ -526,15 +630,18 @@
 }
 
 .cardValueRow strong {
-  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
   color: #0f5132;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activity {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   min-height: 22px;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   overflow: hidden;
   border-radius: 4px;
@@ -689,6 +796,8 @@
 .modal header,
 .stageModal header,
 .cardEditModal header,
+.archiveModal header,
+.optionModal header,
 .syncModal header {
   display: flex;
   align-items: center;
@@ -703,6 +812,8 @@
 .modal h2,
 .stageModal h2,
 .cardEditModal h2,
+.archiveModal h2,
+.optionModal h2,
 .syncModal h2 {
   margin: 0;
   color: #123247;
@@ -722,6 +833,8 @@
 .modal header button,
 .stageModal header button,
 .cardEditModal header button,
+.archiveModal header button,
+.optionModal header button,
 .syncModal header button {
   width: 30px;
   height: 30px;
@@ -790,7 +903,9 @@
 .sidePanel footer,
 .modal footer,
 .stageModal footer,
-.cardEditModal footer {
+.cardEditModal footer,
+.archiveModal footer,
+.optionModal footer {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -800,7 +915,8 @@
 
 .primaryAction,
 .secondaryAction,
-.ghostAction {
+.ghostAction,
+.deleteAction {
   min-height: 34px;
   border: 0;
   border-radius: 8px;
@@ -825,6 +941,17 @@
   color: #36566b;
 }
 
+.deleteAction {
+  margin-right: auto;
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.deleteAction:hover {
+  background: #fecaca;
+}
+
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -838,6 +965,8 @@
 .modal,
 .stageModal,
 .cardEditModal,
+.archiveModal,
+.optionModal,
 .syncModal {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -861,6 +990,162 @@
 
 .cardEditModal {
   width: min(680px, 96vw);
+}
+
+.archiveModal {
+  width: min(880px, 96vw);
+}
+
+.archiveModal header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.archiveModal header span {
+  color: #60768a;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.archiveList {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.archiveList article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  border: 1px solid #d9e3ea;
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fbfc;
+}
+
+.archiveList article > div:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.archiveList strong {
+  overflow: hidden;
+  color: #123247;
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.archiveList span,
+.archiveList small {
+  overflow: hidden;
+  color: #60768a;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archiveActions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.archiveActions .deleteAction {
+  margin-right: 0;
+}
+
+.optionModal {
+  width: min(620px, 96vw);
+}
+
+.optionBody {
+  display: grid;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.optionBody label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: #20394a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.optionBody span {
+  color: #496477;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.optionBody select,
+.optionBody textarea {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #b7c8d6;
+  border-radius: 7px;
+  padding: 0 9px;
+  color: #123247;
+  font: inherit;
+  font-size: 12px;
+}
+
+.optionBody textarea {
+  min-height: 150px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.optionBody .checkRow {
+  padding: 0;
+}
+
+.optionList {
+  display: grid;
+  gap: 8px;
+}
+
+.optionList article {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d9e3ea;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f8fbfc;
+}
+
+.optionList article > span {
+  width: 14px;
+  height: 22px;
+  border-radius: 4px;
+}
+
+.optionList strong {
+  overflow: hidden;
+  color: #123247;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionList small {
+  color: #60768a;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .syncModal article {
@@ -1065,7 +1350,13 @@
 
   .board {
     grid-auto-columns: minmax(270px, 88vw);
-    min-height: calc(100vh - 404px);
+    height: calc(100vh - 404px);
+    min-height: 330px;
+  }
+
+  .column {
+    width: 88vw;
+    max-width: 286px;
   }
 
   .detailContent dl {

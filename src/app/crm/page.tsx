@@ -26,6 +26,8 @@ import {
   atualizarCrmDeal,
   atualizarCrmStage,
   criarCrmStage,
+  listarChatmixWebhookLogs,
+  listarClientesSgp,
   listarCrmDeals,
   type CrmDeal as BackendCrmDeal,
 } from "@/lib/api";
@@ -77,6 +79,7 @@ type DetailTab =
   | "history"
   | "sale"
   | "integrations";
+type OptionsModal = "import" | "funnel" | "stages" | "permissions";
 
 type Deal = {
   id: string;
@@ -571,6 +574,68 @@ const detailTabs: Array<{ id: DetailTab; name: string }> = [
   { id: "integrations", name: "Integracoes" },
 ];
 
+const quickStatusOptions: Array<{
+  id: DealStatus;
+  name: string;
+  cardColor: string;
+  dotColor: string;
+}> = [
+  {
+    id: "new",
+    name: "Nova",
+    cardColor: "#dbeafe",
+    dotColor: "#2563eb",
+  },
+  {
+    id: "ongoing",
+    name: "Em andamento",
+    cardColor: "#cffafe",
+    dotColor: "#0891b2",
+  },
+  {
+    id: "no_contact",
+    name: "Sem contato",
+    cardColor: "#fee2e2",
+    dotColor: "#f87171",
+  },
+  {
+    id: "waiting",
+    name: "Aguardando retorno",
+    cardColor: "#fef3c7",
+    dotColor: "#ca8a04",
+  },
+  {
+    id: "presentation",
+    name: "Apresentacao enviada",
+    cardColor: "#ede9fe",
+    dotColor: "#7c3aed",
+  },
+  {
+    id: "negotiation",
+    name: "Em negociacao",
+    cardColor: "#fce7f3",
+    dotColor: "#db2777",
+  },
+  {
+    id: "won",
+    name: "Venda concluida",
+    cardColor: "#dcfce7",
+    dotColor: "#16a34a",
+  },
+  {
+    id: "lost",
+    name: "Venda perdida",
+    cardColor: "#f3f4f6",
+    dotColor: "#6b7280",
+  },
+  {
+    id: "canceled",
+    name: "Cancelada",
+    cardColor: "#ffe4e6",
+    dotColor: "#991b1b",
+  },
+];
+
 const newDealDefaults = {
   customerName: "",
   phone: "",
@@ -851,9 +916,12 @@ export default function Crm() {
   const [stageModalOpen, setStageModalOpen] = useState(false);
   const [cardEditOpen, setCardEditOpen] = useState(false);
   const [syncDetailsOpen, setSyncDetailsOpen] = useState(false);
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const [optionsModal, setOptionsModal] = useState<OptionsModal | null>(null);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("lead");
   const [activeCardMenuId, setActiveCardMenuId] = useState<string | null>(null);
+  const [activeStatusMenuId, setActiveStatusMenuId] = useState<string | null>(null);
   const [loadingRd, setLoadingRd] = useState(false);
   const [syncMessage, setSyncMessage] = useState(
     "Kanban demonstrativo. Configure o token do RD para sincronizar."
@@ -876,6 +944,12 @@ export default function Crm() {
   const [newDeal, setNewDeal] = useState(newDealDefaults);
   const [stageForm, setStageForm] = useState<StageForm>(defaultStageForm);
   const [cardEditForm, setCardEditForm] = useState<CardEditForm | null>(null);
+  const [importLeadsText, setImportLeadsText] = useState("");
+  const [permissionSettings, setPermissionSettings] = useState({
+    teamCanMoveCards: true,
+    teamCanEditCards: true,
+    teamCanDeleteColumns: false,
+  });
   const [boardScrollWidth, setBoardScrollWidth] = useState(0);
 
   const loadRdCrm = useCallback(async () => {
@@ -1005,6 +1079,10 @@ export default function Crm() {
   const filteredDeals = useMemo(() => {
     const currentUser = "Mateus";
     const filtered = deals.filter((deal) => {
+      if (deal.status === "canceled" && statusFilter !== "canceled") {
+        return false;
+      }
+
       if (statusFilter !== "all" && deal.status !== statusFilter) {
         return false;
       }
@@ -1142,6 +1220,11 @@ export default function Crm() {
     [filteredDeals]
   );
 
+  const archivedDeals = useMemo(
+    () => deals.filter((deal) => deal.status === "canceled"),
+    [deals]
+  );
+
   useEffect(() => {
     function measureBoardScroll() {
       const board = boardRef.current;
@@ -1203,6 +1286,38 @@ export default function Crm() {
           : deal
       )
     );
+  }
+
+  function createTaskForDeal(dealId: string) {
+    const taskCreatedAt = new Date();
+    const newTask = {
+      id: `task-${taskCreatedAt.getTime()}`,
+      title: "Retorno ao cliente",
+      status: "pending" as const,
+      dueAt: taskCreatedAt.toISOString(),
+    };
+
+    setDeals((current) =>
+      current.map((deal) =>
+        deal.id === dealId
+          ? {
+              ...deal,
+              activity: "Nova tarefa criada",
+              updatedAt: taskCreatedAt.toISOString(),
+              nextFollowUpAt: taskCreatedAt.toISOString(),
+              tasks: [newTask, ...deal.tasks],
+              history: [
+                `${formatDateTime(taskCreatedAt.toISOString())} - Tarefa criada: ${newTask.title}`,
+                ...deal.history,
+              ],
+            }
+          : deal
+      )
+    );
+    setSelectedDealId(dealId);
+    setActiveDetailTab("tasks");
+    setSyncStatus("success");
+    setSyncMessage("Tarefa criada e adicionada ao cartao.");
   }
 
   async function moveDeal(dealId: string, targetStageId: string) {
@@ -1408,20 +1523,7 @@ export default function Crm() {
     }
 
     if (action === "task") {
-      const taskCreatedAt = new Date();
-
-      updateDeal(deal.id, {
-        activity: "Nova tarefa criada",
-        tasks: [
-          {
-            id: `task-${taskCreatedAt.getTime()}`,
-            title: "Retorno ao cliente",
-            status: "pending",
-            dueAt: taskCreatedAt.toISOString(),
-          },
-          ...deal.tasks,
-        ],
-      });
+      createTaskForDeal(deal.id);
       return;
     }
 
@@ -1430,6 +1532,8 @@ export default function Crm() {
         status: "canceled",
         activity: "Negociacao arquivada",
       });
+      setSyncStatus("warning");
+      setSyncMessage("Negociacao arquivada. Ela pode ser restaurada em Opcoes.");
       return;
     }
 
@@ -1449,6 +1553,219 @@ export default function Crm() {
       noContact: false,
       pendingTask: false,
     });
+  }
+
+  function exportDealsCsv() {
+    const headers = [
+      "Cliente",
+      "Telefone",
+      "Email",
+      "Cidade",
+      "Status",
+      "Etapa",
+      "Origem",
+      "Afiliado",
+      "Campanha",
+      "Valor mensal",
+      "Atualizado em",
+    ];
+    const rows = filteredDeals.map((deal) => [
+      deal.customerName,
+      deal.phone,
+      deal.email,
+      deal.city,
+      getStatusMeta(deal.status).name,
+      getStage(stages, deal.stageId)?.title || "",
+      deal.source,
+      deal.affiliate,
+      deal.campaign,
+      String(deal.monthlyValue).replace(".", ","),
+      formatDateTime(deal.updatedAt),
+    ]);
+    const escapeCell = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
+    const csv = [headers, ...rows]
+      .map((row) => row.map(escapeCell).join(";"))
+      .join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `negociacoes-crm-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setSyncStatus("success");
+    setSyncMessage(`${filteredDeals.length} negociacao(oes) exportada(s).`);
+  }
+
+  function importLeadsFromText() {
+    const lines = importLeadsText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) {
+      setSyncStatus("warning");
+      setSyncMessage("Cole ao menos um lead para importar.");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const fallbackStageId = stages[0]?.id || "sem-contato";
+    const importedDeals = lines.map((line, index) => {
+      const [customerName, phone = "", email = "", city = ""] = line
+        .split(/[;,]/)
+        .map((value) => value.trim());
+
+      return {
+        ...newDealDefaults,
+        id: `import-${Date.now()}-${index}`,
+        customerName: customerName || "LEAD IMPORTADO",
+        phone,
+        email,
+        city,
+        stageId: fallbackStageId,
+        status: "no_contact" as DealStatus,
+        source: "Importacao manual",
+        affiliate: "Sem afiliado",
+        campaign: "Importacao",
+        value: 0,
+        monthlyValue: 0,
+        owner: "Equipe Netbox",
+        activity: "Lead importado",
+        createdAt: now,
+        updatedAt: now,
+        lastInteractionAt: now,
+        nextFollowUpAt: now,
+        priority: "medium" as Priority,
+        attempts: 0,
+        notes: "Lead importado pelo menu de opcoes.",
+        trackingCode: `NBX-IMP-${String(Date.now()).slice(-4)}-${index + 1}`,
+        chatmixId: "",
+        rdId: "",
+        sgpId: "",
+        history: [`${formatDateTime(now)} - Lead importado manualmente`],
+        tasks: [],
+      } satisfies Deal;
+    });
+
+    setDeals((current) => [...importedDeals, ...current]);
+    setImportLeadsText("");
+    setOptionsModal(null);
+    setSyncStatus("success");
+    setSyncMessage(`${importedDeals.length} lead(s) importado(s) para o funil.`);
+  }
+
+  async function syncChatmix() {
+    setSyncStatus("info");
+    setSyncMessage("Sincronizando com Chatmix...");
+
+    try {
+      const logs = await listarChatmixWebhookLogs(20);
+
+      setSyncStatus("success");
+      setSyncMessage(`${logs.length} evento(s) recentes do Chatmix consultado(s).`);
+    } catch {
+      setSyncStatus("warning");
+      setSyncMessage("Nao foi possivel sincronizar com Chatmix.");
+    }
+  }
+
+  async function syncSgp() {
+    setSyncStatus("info");
+    setSyncMessage("Sincronizando com SGP...");
+
+    try {
+      const data = await listarClientesSgp();
+
+      setSyncStatus("success");
+      setSyncMessage(`${data.summary.total} cliente(s) consultado(s) no SGP.`);
+    } catch {
+      setSyncStatus("warning");
+      setSyncMessage("Nao foi possivel sincronizar com SGP.");
+    }
+  }
+
+  function handleGeneralMenuAction(label: string) {
+    setGeneralMenuOpen(false);
+
+    if (label === "Exportar negociacoes") {
+      exportDealsCsv();
+      return;
+    }
+
+    if (label === "Importar leads") {
+      setOptionsModal("import");
+      return;
+    }
+
+    if (label === "Negociacoes arquivadas") {
+      setArchivedOpen(true);
+      return;
+    }
+
+    if (label === "Configurar funil") {
+      setOptionsModal("funnel");
+      return;
+    }
+
+    if (label === "Configurar etapas") {
+      setOptionsModal("stages");
+      return;
+    }
+
+    if (label === "Ver historico de sincronizacao") {
+      setSyncDetailsOpen(true);
+      return;
+    }
+
+    if (label === "Sincronizar com RD") {
+      loadRdCrm();
+      return;
+    }
+
+    if (label === "Sincronizar com Chatmix") {
+      syncChatmix();
+      return;
+    }
+
+    if (label === "Sincronizar com SGP") {
+      syncSgp();
+      return;
+    }
+
+    if (label === "Configurar permissoes") {
+      setOptionsModal("permissions");
+    }
+  }
+
+  function restoreArchivedDeal(deal: Deal) {
+    const fallbackStageId =
+      stages.some((stage) => stage.id === deal.stageId)
+        ? deal.stageId
+        : stages[0]?.id || "sem-contato";
+
+    updateDeal(deal.id, {
+      status: "ongoing",
+      stageId: fallbackStageId,
+      activity: "Negociacao restaurada",
+      cardColor: "",
+    });
+    setSyncStatus("success");
+    setSyncMessage("Negociacao restaurada para o funil.");
+  }
+
+  function deleteArchivedDeal(dealId: string) {
+    setDeals((current) => current.filter((deal) => deal.id !== dealId));
+
+    if (selectedDealId === dealId) {
+      setSelectedDealId(null);
+    }
+
+    setSyncStatus("warning");
+    setSyncMessage("Negociacao apagada da tela de arquivadas.");
   }
 
   function openCreateStageModal() {
@@ -1558,6 +1875,48 @@ export default function Crm() {
     }
   }
 
+  function handleDeleteStage() {
+    if (!stageForm.id) {
+      return;
+    }
+
+    const remainingStages = stages.filter((stage) => stage.id !== stageForm.id);
+
+    if (remainingStages.length === 0) {
+      setSyncStatus("warning");
+      setSyncMessage("O funil precisa ter pelo menos uma coluna.");
+      return;
+    }
+
+    const fallbackStage = remainingStages[0];
+    const movedDeals = deals.filter((deal) => deal.stageId === stageForm.id).length;
+
+    setStages(remainingStages);
+    setDeals((current) =>
+      current.map((deal) =>
+        deal.stageId === stageForm.id
+          ? {
+              ...deal,
+              stageId: fallbackStage.id,
+              updatedAt: new Date().toISOString(),
+              history: [
+                `${formatDateTime(new Date().toISOString())} - Coluna removida; negociacao movida para ${fallbackStage.title}`,
+                ...deal.history,
+              ],
+            }
+          : deal
+      )
+    );
+    setStageModalOpen(false);
+    setStageForm(defaultStageForm);
+    setSyncStatus("warning");
+    setSyncMessage(
+      movedDeals > 0
+        ? `Coluna apagada. ${movedDeals} negociacao(oes) movida(s) para ${fallbackStage.title}.`
+        : "Coluna apagada."
+    );
+  }
+
   function openEditCardModal(deal: Deal) {
     setCardEditForm({
       id: deal.id,
@@ -1663,8 +2022,64 @@ export default function Crm() {
     }
   }
 
+  async function handleQuickStatusChange(
+    deal: Deal,
+    option: (typeof quickStatusOptions)[number]
+  ) {
+    setActiveStatusMenuId(null);
+    updateDeal(deal.id, {
+      status: option.id,
+      cardColor: option.cardColor,
+      activity: option.name,
+    });
+    setSyncStatus("success");
+    setSyncMessage(`Status do cartao alterado para ${option.name}.`);
+
+    if (isDemoDeal(deal.id)) {
+      return;
+    }
+
+    try {
+      if (/^\d+$/.test(deal.id)) {
+        await atualizarCrmDeal(deal.id, {
+          status: option.id,
+          cardColor: option.cardColor,
+          activity: option.name,
+        });
+      } else {
+        const response = await fetch(`/api/rdstation/deals/${deal.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: option.id,
+            cardColor: option.cardColor,
+            activity: option.name,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("RD recusou a atualizacao.");
+        }
+      }
+
+      setSyncStatus("success");
+      setSyncMessage(`Status ${option.name} salvo no CRM.`);
+    } catch {
+      setSyncStatus("warning");
+      setSyncMessage(
+        `Status ${option.name} aplicado na tela, mas nao foi possivel salvar no CRM.`
+      );
+    }
+  }
+
   function renderDealCard(deal: Deal) {
     const status = getStatusMeta(deal.status);
+    const quickStatus =
+      quickStatusOptions.find((option) => option.id === deal.status) || null;
+    const statusLabel = quickStatus?.name || status.name;
+    const statusColor = quickStatus?.dotColor || status.color;
     const alertClass = isOverdue(deal)
       ? styles.dealCardDanger
       : isNearDue(deal) || deal.priority === "urgent"
@@ -1680,24 +2095,58 @@ export default function Crm() {
         onDragStart={() => setDraggingDealId(deal.id)}
         onDragEnd={() => setDraggingDealId(null)}
       >
-        <button
-          type="button"
-          className={styles.cardMainButton}
-          onClick={() => {
-            setSelectedDealId(deal.id);
-            setActiveDetailTab("lead");
-          }}
-        >
-          <span className={styles.cardStatus}>
-            <span
-              className={styles.statusDot}
-              style={{ backgroundColor: status.color }}
-            />
-            <span>{status.name}</span>
-          </span>
+        <div className={styles.cardMainButton}>
+          <div className={styles.cardStatusWrap}>
+            <button
+              type="button"
+              className={styles.cardStatus}
+              onClick={() => {
+                setActiveCardMenuId(null);
+                setActiveStatusMenuId((current) =>
+                  current === deal.id ? null : deal.id
+                );
+              }}
+              aria-expanded={activeStatusMenuId === deal.id}
+            >
+              <span
+                className={styles.statusDot}
+                style={{ backgroundColor: statusColor }}
+              />
+              <span>{statusLabel}</span>
+              <FiChevronDown aria-hidden="true" />
+            </button>
 
-          <strong className={styles.dealName}>{deal.customerName}</strong>
-        </button>
+            {activeStatusMenuId === deal.id && (
+              <div className={styles.statusMiniMenu}>
+                {quickStatusOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={deal.status === option.id ? styles.statusMiniActive : ""}
+                    onClick={() => handleQuickStatusChange(deal, option)}
+                  >
+                    <span
+                      className={styles.statusColorSwatch}
+                      style={{ backgroundColor: option.cardColor }}
+                    />
+                    <span>{option.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className={styles.dealNameButton}
+            onClick={() => {
+              setSelectedDealId(deal.id);
+              setActiveDetailTab("lead");
+            }}
+          >
+            <strong className={styles.dealName}>{deal.customerName}</strong>
+          </button>
+        </div>
 
         <div className={styles.cardMeta}>
           <label className={styles.prioritySelect}>
@@ -1833,6 +2282,7 @@ export default function Crm() {
                 {[
                   ["Exportar negociacoes", FiDownload],
                   ["Importar leads", FiClipboard],
+                  ["Negociacoes arquivadas", FiClock],
                   ["Configurar funil", FiSliders],
                   ["Configurar etapas", FiList],
                   ["Ver historico de sincronizacao", FiClock],
@@ -1844,17 +2294,7 @@ export default function Crm() {
                   <button
                     key={label as string}
                     type="button"
-                    onClick={() => {
-                      setGeneralMenuOpen(false);
-                      if (label === "Ver historico de sincronizacao") {
-                        setSyncDetailsOpen(true);
-                      } else if (label === "Sincronizar com RD") {
-                        loadRdCrm();
-                      } else {
-                        setSyncStatus("info");
-                        setSyncMessage(`${label} preparado para o modulo do CRM.`);
-                      }
-                    }}
+                    onClick={() => handleGeneralMenuAction(label as string)}
                   >
                     <Icon aria-hidden="true" />
                     <span>{label as string}</span>
@@ -2476,6 +2916,15 @@ export default function Crm() {
             </div>
 
             <footer>
+              {stageForm.id && (
+                <button
+                  type="button"
+                  className={styles.deleteAction}
+                  onClick={handleDeleteStage}
+                >
+                  Apagar coluna
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.primaryAction}
@@ -2688,6 +3137,97 @@ export default function Crm() {
         </div>
       )}
 
+      {archivedOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <section className={styles.archiveModal}>
+            <header>
+              <div>
+                <h2>Negociacoes arquivadas</h2>
+                <span>{archivedDeals.length} item(ns) arquivado(s)</span>
+              </div>
+              <button type="button" onClick={() => setArchivedOpen(false)}>
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
+
+            <div className={styles.archiveList}>
+              {archivedDeals.length === 0 ? (
+                <div className={styles.emptyColumn}>Nenhuma negociacao arquivada</div>
+              ) : (
+                archivedDeals.map((deal) => (
+                  <article key={deal.id}>
+                    <div>
+                      <strong>{deal.customerName}</strong>
+                      <span>
+                        {deal.phone || "-"} - {deal.city || deal.source || "Sem origem"}
+                      </span>
+                    </div>
+                    <small>{formatDateTime(deal.updatedAt)}</small>
+                    <div className={styles.archiveActions}>
+                      <button
+                        type="button"
+                        className={styles.secondaryAction}
+                        onClick={() => {
+                          setArchivedOpen(false);
+                          setSelectedDealId(deal.id);
+                          setActiveDetailTab("lead");
+                        }}
+                      >
+                        Ver
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondaryAction}
+                        onClick={() => {
+                          setArchivedOpen(false);
+                          openEditCardModal(deal);
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondaryAction}
+                        onClick={() => {
+                          setArchivedOpen(false);
+                          createTaskForDeal(deal.id);
+                        }}
+                      >
+                        Tarefa
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.primaryAction}
+                        onClick={() => restoreArchivedDeal(deal)}
+                      >
+                        Resgatar
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteAction}
+                        onClick={() => deleteArchivedDeal(deal.id)}
+                      >
+                        Apagar
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+
+            <footer>
+              <button
+                type="button"
+                className={styles.ghostAction}
+                onClick={() => setArchivedOpen(false)}
+              >
+                Fechar
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+
       {selectedDeal && (
         <aside className={styles.detailPanel} aria-label="Detalhes da negociacao">
           <header>
@@ -2836,6 +3376,193 @@ export default function Crm() {
             </button>
           </footer>
         </aside>
+      )}
+
+      {optionsModal && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <section className={styles.optionModal}>
+            <header>
+              <h2>
+                {optionsModal === "import" && "Importar leads"}
+                {optionsModal === "funnel" && "Configurar funil"}
+                {optionsModal === "stages" && "Configurar etapas"}
+                {optionsModal === "permissions" && "Configurar permissoes"}
+              </h2>
+              <button type="button" onClick={() => setOptionsModal(null)}>
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
+
+            {optionsModal === "import" && (
+              <div className={styles.optionBody}>
+                <label className={styles.fullField}>
+                  <span>Leads para importar</span>
+                  <textarea
+                    value={importLeadsText}
+                    placeholder={"Nome; telefone; email; cidade\nMaria Souza; 63999999999; maria@email.com; Palmas"}
+                    onChange={(event) => setImportLeadsText(event.target.value)}
+                  />
+                </label>
+              </div>
+            )}
+
+            {optionsModal === "funnel" && (
+              <div className={styles.optionBody}>
+                <label>
+                  <span>Funil ativo</span>
+                  <select
+                    value={selectedFunnel}
+                    onChange={(event) => setSelectedFunnel(event.target.value)}
+                  >
+                    {funnels.map((funnel) => (
+                      <option key={funnel} value={funnel}>
+                        {funnel}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Visualizacao padrao</span>
+                  <select
+                    value={viewMode}
+                    onChange={(event) => setViewMode(event.target.value as ViewMode)}
+                  >
+                    <option value="kanban">Kanban</option>
+                    <option value="list">Lista</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Status padrao do filtro</span>
+                  <select
+                    value={statusFilter}
+                    onChange={(event) =>
+                      setStatusFilter(event.target.value as DealStatus | "all")
+                    }
+                  >
+                    <option value="all">Todos os status</option>
+                    {statusOptions.map((status) => (
+                      <option key={status.id} value={status.id}>
+                        {status.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+
+            {optionsModal === "stages" && (
+              <div className={styles.optionBody}>
+                <div className={styles.optionList}>
+                  {stages.map((stage, index) => (
+                    <article key={stage.id}>
+                      <span style={{ backgroundColor: stage.color }} />
+                      <strong>{stage.title}</strong>
+                      <small>{stage.slaHours}h SLA</small>
+                      <button
+                        type="button"
+                        className={styles.secondaryAction}
+                        onClick={() => {
+                          setOptionsModal(null);
+                          openEditStageModal(stage, index + 1);
+                        }}
+                      >
+                        Editar
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {optionsModal === "permissions" && (
+              <div className={styles.optionBody}>
+                <label className={styles.checkRow}>
+                  <input
+                    type="checkbox"
+                    checked={permissionSettings.teamCanMoveCards}
+                    onChange={(event) =>
+                      setPermissionSettings((current) => ({
+                        ...current,
+                        teamCanMoveCards: event.target.checked,
+                      }))
+                    }
+                  />
+                  Equipe pode mover cartoes
+                </label>
+                <label className={styles.checkRow}>
+                  <input
+                    type="checkbox"
+                    checked={permissionSettings.teamCanEditCards}
+                    onChange={(event) =>
+                      setPermissionSettings((current) => ({
+                        ...current,
+                        teamCanEditCards: event.target.checked,
+                      }))
+                    }
+                  />
+                  Equipe pode editar cartoes
+                </label>
+                <label className={styles.checkRow}>
+                  <input
+                    type="checkbox"
+                    checked={permissionSettings.teamCanDeleteColumns}
+                    onChange={(event) =>
+                      setPermissionSettings((current) => ({
+                        ...current,
+                        teamCanDeleteColumns: event.target.checked,
+                      }))
+                    }
+                  />
+                  Equipe pode apagar colunas
+                </label>
+              </div>
+            )}
+
+            <footer>
+              {optionsModal === "import" && (
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  onClick={importLeadsFromText}
+                >
+                  Importar leads
+                </button>
+              )}
+              {optionsModal === "stages" && (
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  onClick={() => {
+                    setOptionsModal(null);
+                    openCreateStageModal();
+                  }}
+                >
+                  Adicionar etapa
+                </button>
+              )}
+              {(optionsModal === "funnel" || optionsModal === "permissions") && (
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  onClick={() => {
+                    setOptionsModal(null);
+                    setSyncStatus("success");
+                    setSyncMessage("Configuracao salva para esta sessao.");
+                  }}
+                >
+                  Salvar configuracao
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.ghostAction}
+                onClick={() => setOptionsModal(null)}
+              >
+                Fechar
+              </button>
+            </footer>
+          </section>
+        </div>
       )}
 
       {syncDetailsOpen && (
