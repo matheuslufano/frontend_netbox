@@ -109,16 +109,16 @@ const userSettingsPanels: {
   label: string;
 }[] = [
   {
+    id: "editarCadastros",
+    label: "Editar cadastros",
+  },
+  {
     id: "novoUsuario",
     label: "Cadastrar novo usuario",
   },
   {
     id: "novoAfiliado",
     label: "Cadastrar novo afiliado",
-  },
-  {
-    id: "editarCadastros",
-    label: "Editar cadastros",
   },
 ];
 
@@ -178,8 +178,9 @@ export default function Configuracoes() {
   const [profileSearchTerm, setProfileSearchTerm] = useState("");
   const [showAllProfileResults, setShowAllProfileResults] = useState(false);
   const [photoCrop, setPhotoCrop] = useState<PhotoCropState>(null);
-  const [pendingPhotoCrops, setPendingPhotoCrops] =
-    useState<PendingPhotoCrops>({});
+  const [pendingPhotoCrops, setPendingPhotoCrops] = useState<PendingPhotoCrops>(
+    {},
+  );
 
   const activeAffiliates = useMemo(
     () => affiliates.filter((affiliate) => affiliate.active).length,
@@ -187,7 +188,8 @@ export default function Configuracoes() {
   );
 
   const normalizedProfileSearch = profileSearchTerm.trim().toLowerCase();
-  const shouldShowProfileResults = showAllProfileResults || Boolean(normalizedProfileSearch);
+  const shouldShowProfileResults =
+    showAllProfileResults || Boolean(normalizedProfileSearch);
 
   const filteredUsers = useMemo(() => {
     if (showAllProfileResults && !normalizedProfileSearch) {
@@ -611,9 +613,7 @@ export default function Configuracoes() {
 
       setUsers((current) =>
         current.map((user) =>
-          user.id === id
-            ? preserveProfilePhoto(updated, photoUrl)
-            : user,
+          user.id === id ? preserveProfilePhoto(updated, photoUrl) : user,
         ),
       );
       setEditingUserId(null);
@@ -787,7 +787,7 @@ export default function Configuracoes() {
                   className={styles.backButton}
                   onClick={() => setActiveSettingsSection("inicio")}
                 >
-                  ← Voltar
+                  ←
                 </button>
 
                 <div className={styles.userWorkspaceTitle}>
@@ -1641,7 +1641,7 @@ function WebhookMonitor({
 }) {
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
   const selectedLogExists = logs.some((log) => log.id === selectedLogId);
-  const activeLogId = selectedLogExists ? selectedLogId : logs[0]?.id ?? null;
+  const activeLogId = selectedLogExists ? selectedLogId : (logs[0]?.id ?? null);
   const activeLog = logs.find((log) => log.id === activeLogId) || logs[0];
 
   return (

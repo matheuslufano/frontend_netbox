@@ -323,6 +323,98 @@ export type ChatmixWebhookLogResponse = {
   result: Record<string, unknown>;
 };
 
+export type CrmStage = {
+  id: string;
+  title: string;
+  color: string;
+  slaHours: number;
+  isFinal?: boolean;
+  isWonStage?: boolean;
+  isLostStage?: boolean;
+};
+
+export type CrmDeal = {
+  id: string;
+  customerName: string;
+  phone: string;
+  email: string;
+  city: string;
+  neighborhood: string;
+  address: string;
+  status: string;
+  statusName?: string;
+  statusColor?: string;
+  stageId: string;
+  stageName: string;
+  funnelId: string;
+  source: string;
+  affiliate: string;
+  affiliateId: number | null;
+  campaign: string;
+  value: number;
+  monthlyValue: number;
+  plan: string;
+  cardColor: string;
+  owner: string;
+  activity: string;
+  createdAt: string;
+  updatedAt: string;
+  lastInteractionAt: string;
+  nextFollowUpAt: string;
+  priority: string;
+  attempts: number;
+  notes: string;
+  trackingCode: string;
+  chatmixId: string;
+  rdId: string;
+  sgpId: string;
+  conversionId: number | null;
+  linkId: number | null;
+  tasks: {
+    id: string;
+    title: string;
+    status: "pending" | "overdue" | "done" | string;
+    dueAt: string | null;
+  }[];
+  history: {
+    id: string;
+    eventType: string;
+    message: string;
+    createdAt: string;
+  }[];
+  sale: {
+    plan: string;
+    monthlyValue: number;
+    installationFee: number;
+    closedAt: string;
+    installationAt: string | null;
+    installationStatus: string;
+    commission: number;
+  } | null;
+};
+
+export type CrmDealsResponse = {
+  funnels: {
+    id: string;
+    name: string;
+    description: string | null;
+    stages: CrmStage[];
+  }[];
+  stages: CrmStage[];
+  statuses: {
+    id: string;
+    name: string;
+    color: string | null;
+    isFinal: boolean;
+  }[];
+  deals: CrmDeal[];
+  sync: {
+    created: number;
+    updated: number;
+    total: number;
+  } | null;
+};
+
 const defaultApiUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3001"
@@ -943,6 +1035,58 @@ export async function listarChatmixWebhookLogs(limit = 50) {
   );
 
   return Array.isArray(data) ? data : [];
+}
+
+export async function listarCrmDeals(syncConverted = true) {
+  const { data } = await api.get<CrmDealsResponse>("/crm/deals", {
+    params: {
+      syncConverted,
+    },
+  });
+
+  return {
+    ...data,
+    deals: Array.isArray(data.deals) ? data.deals : [],
+    stages: Array.isArray(data.stages) ? data.stages : [],
+    statuses: Array.isArray(data.statuses) ? data.statuses : [],
+    funnels: Array.isArray(data.funnels) ? data.funnels : [],
+  };
+}
+
+export async function atualizarCrmDeal(
+  id: string | number,
+  payload: Record<string, unknown>
+) {
+  const { data } = await api.put(`/crm/deals/${id}`, payload);
+  return data;
+}
+
+export type CrmStagePayload = {
+  funnelId?: string | number;
+  name?: string;
+  title?: string;
+  color?: string;
+  slaHours?: number;
+  position?: number;
+  isFinal?: boolean;
+  isWonStage?: boolean;
+  isLostStage?: boolean;
+};
+
+export async function criarCrmStage(payload: CrmStagePayload) {
+  const { data } = await api.post<{ stage: CrmStage }>("/crm/stages", payload);
+  return data.stage;
+}
+
+export async function atualizarCrmStage(
+  id: string | number,
+  payload: CrmStagePayload
+) {
+  const { data } = await api.put<{ stage: CrmStage }>(
+    `/crm/stages/${id}`,
+    payload
+  );
+  return data.stage;
 }
 
 export default api;

@@ -4,7 +4,7 @@
   position: relative;
   z-index: 1000;
 
-  width: 230px;
+  width: 214px;
   min-height: 100vh;
 
   padding: 18px 14px;
@@ -234,7 +234,7 @@
   position: relative;
 
   width: 100%;
-  min-height: 48px;
+  min-height: 46px;
 
   display: flex;
   align-items: center;
@@ -242,7 +242,7 @@
 
   overflow: hidden;
 
-  padding: 8px 11px;
+  padding: 8px 9px;
 
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 15px;
@@ -315,6 +315,131 @@
   outline-offset: 2px;
 }
 
+.logoutButton {
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+.logoutButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+}
+
+.logoutMenuItem {
+  border-color: rgba(248, 113, 113, 0.38);
+  background:
+    linear-gradient(135deg, rgba(220, 38, 38, 0.28), rgba(255, 255, 255, 0.04)),
+    rgba(127, 29, 29, 0.28);
+  color: #fee2e2;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 12px 24px rgba(127, 29, 29, 0.18);
+}
+
+.logoutMenuItem:hover {
+  border-color: rgba(248, 113, 113, 0.72);
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.42), rgba(255, 255, 255, 0.06)),
+    rgba(127, 29, 29, 0.38);
+  color: #ffffff;
+}
+
+.logoutMenuItem .icon {
+  background: rgba(248, 113, 113, 0.2);
+  color: #fecaca;
+}
+
+.logoutModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 5, 5, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.logoutModal {
+  display: grid;
+  width: min(100%, 390px);
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 95, 52, 0.18), transparent 38%),
+    linear-gradient(180deg, #201816, #0f0d0c);
+  color: #ffffff;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+}
+
+.logoutModalIcon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fecaca;
+  font-size: 24px;
+}
+
+.logoutModalText h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.logoutModalText p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.logoutModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.logoutCancelButton,
+.logoutConfirmButton {
+  min-height: 42px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.logoutCancelButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.logoutConfirmButton {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(239, 68, 68, 0.24);
+}
+
 .itemLabel {
   position: relative;
   z-index: 1;
@@ -337,16 +462,16 @@
   position: relative;
   z-index: 1;
 
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
-  padding: 7px;
+  padding: 6px;
 
   border-radius: 12px;
 
@@ -366,7 +491,7 @@
 .collapseButton {
   position: fixed;
   top: 46vh;
-  left: 214px;
+  left: 198px;
   right: auto;
   z-index: 99999;
 
@@ -563,8 +688,13 @@
     padding: 0;
   }
 
+  .sidebar.collapsed .logoutButton {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
   .sidebar.collapsed .menuItem {
-    min-height: 48px;
+    min-height: 46px;
 
     justify-content: center;
 
@@ -579,11 +709,11 @@
 
   .sidebar.collapsed .icon {
     margin: 0;
-    min-width: 34px;
+    min-width: 32px;
   }
 
   .sidebar.collapsed .collapseButton {
-    left: 62px;
+    left: 60px;
   }
 
   .sidebar.collapsed .collapseButton svg {
@@ -654,8 +784,13 @@
     padding: 0;
   }
 
+  .logoutButton {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+
   .menuItem {
-    min-height: 48px;
+    min-height: 46px;
 
     justify-content: center;
     align-items: center;
@@ -671,7 +806,7 @@
 
   .icon {
     margin: 0;
-    min-width: 34px;
+    min-width: 32px;
   }
 
   .collapseButton {
@@ -809,6 +944,15 @@
     border-radius: 0;
 
     background: transparent;
+  }
+
+  .logoutButton {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .logoutButton::before {
+    display: none;
   }
 
   .button:hover {

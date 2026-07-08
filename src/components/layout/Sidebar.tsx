@@ -7,11 +7,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BsClipboardDataFill } from "react-icons/bs";
-import { FiDatabase } from "react-icons/fi";
+import { FiDatabase, FiGitBranch } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
 import { ImUsers } from "react-icons/im";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
-import { MdSpaceDashboard } from "react-icons/md";
+import { MdContactPhone, MdSpaceDashboard } from "react-icons/md";
 import { PiLinkFill } from "react-icons/pi";
 import { RiLogoutBoxFill } from "react-icons/ri";
 
@@ -50,6 +50,7 @@ export default function Sidebar() {
   const router = useRouter();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userPhoto, setUserPhoto] = useState<UserPhoto>(logo1);
   const [userName, setUserName] = useState("usuario");
 
@@ -182,6 +183,13 @@ export default function Sidebar() {
           </li>
 
           <li className={styles.button}>
+            <Link href="/crm" className={styles.menuItem} aria-label="CRM">
+              <MdContactPhone className={styles.icon} />
+              <span className={styles.itemLabel}>CRM</span>
+            </Link>
+          </li>
+
+          <li className={styles.button}>
             <Link
               href="/relatorios"
               className={styles.menuItem}
@@ -201,6 +209,17 @@ export default function Sidebar() {
 
           <li className={styles.button}>
             <Link
+              href="/fluxograma-conversoes"
+              className={styles.menuItem}
+              aria-label="Fluxograma de conversoes"
+            >
+              <FiGitBranch className={styles.icon} />
+              <span className={styles.itemLabel}>Fluxograma</span>
+            </Link>
+          </li>
+
+          <li className={styles.button}>
+            <Link
               href="/configuracoes"
               className={styles.menuItem}
               aria-label="Configurações"
@@ -212,11 +231,11 @@ export default function Sidebar() {
             </Link>
           </li>
 
-          <li className={styles.button}>
+          <li className={`${styles.button} ${styles.logoutButton}`}>
             <button
               type="button"
-              className={styles.menuItem}
-              onClick={handleLogout}
+              className={`${styles.menuItem} ${styles.logoutMenuItem}`}
+              onClick={() => setShowLogoutModal(true)}
               aria-label="Sair"
             >
               <RiLogoutBoxFill className={styles.icon} />
@@ -225,6 +244,48 @@ export default function Sidebar() {
           </li>
         </ul>
       </nav>
+
+      {showLogoutModal && (
+        <div
+          className={styles.logoutModalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-modal-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowLogoutModal(false);
+            }
+          }}
+        >
+          <section className={styles.logoutModal}>
+            <div className={styles.logoutModalIcon}>
+              <RiLogoutBoxFill aria-hidden="true" />
+            </div>
+
+            <div className={styles.logoutModalText}>
+              <h2 id="logout-modal-title">Sair da conta?</h2>
+              <p>Voce precisa entrar novamente para acessar o painel.</p>
+            </div>
+
+            <div className={styles.logoutModalActions}>
+              <button
+                type="button"
+                className={styles.logoutCancelButton}
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={styles.logoutConfirmButton}
+                onClick={handleLogout}
+              >
+                Sim, sair
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </aside>
   );
 }

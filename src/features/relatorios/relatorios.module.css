@@ -2,6 +2,10 @@
   padding: 24px;
 }
 
+.transparentPage {
+  background: transparent;
+}
+
 .title {
   margin-bottom: 20px;
   font-size: 32px;
@@ -408,6 +412,10 @@
   align-items: start;
 }
 
+.conversionReportShellFull {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .conversionAffiliatePanel {
   display: grid;
   gap: 16px;
@@ -683,6 +691,179 @@
   cursor: pointer;
 }
 
+.affiliateFilterPicker {
+  min-width: 260px;
+}
+
+.affiliateFilterTrigger,
+.affiliateFilterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: none;
+  min-height: 42px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  border-radius: 8px;
+  padding: 4px 10px 4px 4px;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.conversionReportFilters .affiliateFilterTrigger,
+.conversionReportFilters .affiliateFilterButton {
+  min-height: 42px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  border-radius: 8px;
+  padding: 4px 10px 4px 4px;
+  background: #fff;
+  color: #111827;
+}
+
+.affiliateFilterTrigger {
+  min-width: 260px;
+  max-width: 360px;
+}
+
+.conversionReportFilters .affiliateFilterTrigger:hover,
+.conversionReportFilters .affiliateFilterTrigger:focus-visible,
+.conversionReportFilters .affiliateFilterButton:hover,
+.conversionReportFilters .affiliateFilterButtonActive,
+.affiliateFilterTrigger:hover,
+.affiliateFilterTrigger:focus-visible,
+.affiliateFilterButton:hover,
+.affiliateFilterButtonActive {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  color: #064e3b;
+}
+
+.affiliateFilterTrigger:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.22);
+  outline-offset: 2px;
+}
+
+.affiliateFilterTriggerText {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+}
+
+.affiliateFilterTriggerText small {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.affiliateFilterTriggerText strong,
+.affiliateFilterButton strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.affiliateFilterModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.affiliateFilterModal {
+  display: grid;
+  width: min(100%, 440px);
+  max-height: min(78vh, 620px);
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.22);
+}
+
+.affiliateFilterModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.affiliateFilterModalHeader strong {
+  color: #111827;
+  font-size: 17px;
+}
+
+.affiliateFilterModalHeader button {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #111827;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.conversionReportFilters .affiliateFilterModalHeader button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: #f1f5f9;
+  color: #111827;
+}
+
+.affiliateFilterList {
+  display: grid;
+  max-height: min(58vh, 460px);
+  gap: 8px;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+}
+
+.affiliateFilterAvatar,
+.affiliateFilterAvatarAll {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--avatar-bg, #111827);
+  color: var(--avatar-color, #fff);
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
+}
+
+.affiliateFilterAvatarPhoto {
+  background-position: center;
+  background-size: cover;
+  color: transparent;
+}
+
+.affiliateFilterAvatarAll {
+  width: auto;
+  min-width: 54px;
+  padding: 0 10px;
+  background: #ff744f;
+  color: #111827;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
 .conversionReportMetrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -800,21 +981,21 @@
   justify-content: center;
   border: 2px solid rgba(15, 23, 42, 0.82);
   border-radius: 999px;
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  background: rgba(255, 255, 255, 0.72);
   color: #111827;
   font-size: 18px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
 }
 
 .objectiveStageIconDone {
-  border-color: #22c55e;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-color: rgba(34, 197, 94, 0.55);
+  background: rgba(240, 253, 244, 0.74);
   color: #fff;
 }
 
 .objectiveSgpButton {
-  border-color: #050505;
-  background: #050505;
+  border-color: rgba(5, 5, 5, 0.38);
+  background: rgba(5, 5, 5, 0.72);
   color: #fff;
   font-size: 12px;
   font-weight: 900;
@@ -823,13 +1004,29 @@
 }
 
 .objectiveSgpButtonActive {
-  background: linear-gradient(135deg, #16a34a, #166534);
-  border-color: #166534;
+  background: rgba(22, 101, 52, 0.76);
+  border-color: rgba(22, 101, 52, 0.68);
 }
 
 .objectiveSgpButton:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.objectiveStageImage,
+.objectiveSgpImage {
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 8px;
+}
+
+.objectiveSgpImage {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
 }
 
 .objectiveStatusText {
@@ -947,12 +1144,36 @@
 }
 
 .flowMetric {
+  text-align: left;
   min-width: 0;
   padding: 16px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.flowMetric:hover,
+.flowMetric:focus-visible {
+  border-color: #111827;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+.flowMetric:focus-visible {
+  outline: 3px solid rgba(17, 24, 39, 0.18);
+  outline-offset: 2px;
+}
+
+.flowMetricActive {
+  border-color: #111827;
+  background: #111827;
 }
 
 .flowMetric span {
@@ -970,6 +1191,11 @@
   color: #111827;
   font-size: 28px;
   line-height: 1;
+}
+
+.flowMetricActive span,
+.flowMetricActive strong {
+  color: #fff;
 }
 
 .conversionFlowList {
@@ -1162,29 +1388,38 @@
 
 .stageIconBox {
   display: inline-flex;
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   align-items: center;
   justify-content: center;
   justify-self: center;
   margin-top: 8px;
   border-radius: 12px;
-  background: #111827;
+  background: rgba(17, 24, 39, 0.72);
   color: #fff;
   font-size: 18px;
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
 }
 
 .conversionStageCard:nth-child(2) .stageIconBox {
-  background: #20b815;
+  background: rgba(32, 184, 21, 0.18);
 }
 
 .conversionStageCard:nth-child(3) .stageIconBox {
-  background: linear-gradient(180deg, #5ccfff, #2498e7);
+  background: rgba(36, 152, 231, 0.18);
 }
 
 .conversionStageCard:nth-child(4) .stageIconBox {
-  background: #050505;
+  background: rgba(5, 5, 5, 0.78);
+}
+
+.stageImageIcon {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 11px;
 }
 
 .stageContentCard {
@@ -3492,5 +3727,957 @@
 
   .conversionDataModalBody .clientDataList {
     grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+/* =========================================================
+   AJUSTE FINAL - RELATÓRIOS / CONVERSÕES PROFISSIONAL
+   Implementado para deixar a tela mais limpa e o filtro
+   de afiliado como lista suspensa abaixo do componente.
+========================================================= */
+
+.page {
+  padding: 28px;
+  color: #111827;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 95, 52, 0.08), transparent 32%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.title {
+  margin: 0 0 22px;
+  color: #0f172a;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 950;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.card,
+.conversionHero,
+.conversionRanking,
+.affiliateDetailsSurface,
+.conversionFlowCard,
+.flowMetric,
+.affiliateCard {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.card {
+  margin-top: 16px;
+  padding: 20px;
+}
+
+.cardTitle,
+.sectionTitle {
+  color: #0f172a;
+  font-weight: 950;
+  letter-spacing: -0.025em;
+}
+
+.sectionTitle {
+  font-size: 24px;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.searchField {
+  width: min(100%, 560px);
+  min-height: 46px;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: #64748b;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.searchField input {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.clearSearchButton {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.clearSearchButton:hover {
+  background: #ffedd5;
+}
+
+.searchCount {
+  min-height: 34px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.summaryGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summaryStats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summaryItem {
+  border-color: #eef2f7;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.summaryLabel {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.summaryValue {
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.affiliateDetailsSurface {
+  gap: 18px;
+  margin-top: 28px;
+  padding: 22px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 95, 52, 0.09), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.sectionHeader {
+  align-items: flex-start;
+  margin: 0 0 12px;
+}
+
+.headerActions {
+  gap: 10px;
+}
+
+.detailTabs,
+.viewSwitcher {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.detailTab {
+  min-height: 36px;
+  padding: 0 13px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.detailTab svg {
+  width: 15px;
+  height: 15px;
+}
+
+.detailTabActive {
+  background: #111827;
+  color: #ffffff;
+}
+
+.viewButton {
+  width: 38px;
+  height: 34px;
+  font-size: 17px;
+}
+
+.viewButtonActive {
+  color: #ea580c;
+}
+
+.conversionReportShell {
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.conversionReportMain {
+  gap: 14px;
+}
+
+.conversionReportTitleRow {
+  align-items: center;
+  padding: 2px 0 4px;
+}
+
+.conversionReportTitleRow h3 {
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.conversionViewSwitcher {
+  gap: 6px;
+}
+
+.conversionViewSwitcher span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.conversionViewSwitcher button {
+  min-height: 32px;
+  border-color: #e5e7eb;
+  font-size: 12px;
+}
+
+.conversionViewButtonActive {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+.conversionReportFilters {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 95, 52, 0.18);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 95, 52, 0.12), transparent 34%),
+    linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+  box-shadow: 0 12px 24px rgba(255, 95, 52, 0.08);
+}
+
+.conversionReportFilters > strong {
+  align-self: center;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.conversionReportFilters label {
+  display: grid;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.conversionReportFilters label span {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  overflow: visible;
+  color: #9a3412;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.conversionReportFilters select,
+.conversionReportFilters input {
+  min-height: 42px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.conversionReportFilters button {
+  min-height: 42px;
+  border-radius: 12px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+/* Filtro de afiliado como dropdown abaixo do botão */
+.affiliateFilterPicker {
+  position: relative;
+  z-index: 30;
+  min-width: 260px;
+}
+
+.affiliateFilterTrigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 4px 12px 4px 5px;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.affiliateFilterTrigger:hover,
+.affiliateFilterTrigger:focus-visible {
+  border-color: #ff744f;
+  background: #fff7ed;
+  outline: none;
+}
+
+.affiliateFilterTriggerText {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+  text-align: left;
+}
+
+.affiliateFilterTriggerText small {
+  color: #9a3412;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.affiliateFilterTriggerText strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.affiliateFilterDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: grid;
+  gap: 6px;
+  max-height: 310px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 22px 44px rgba(15, 23, 42, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  scrollbar-width: thin;
+  scrollbar-color: #ff8b75 #f1f5f9;
+}
+
+.affiliateFilterDropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.affiliateFilterDropdown::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.affiliateFilterDropdown::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #ff8b75;
+}
+
+.affiliateFilterButton {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 6px 8px;
+  background: #ffffff;
+  color: #0f172a;
+  text-align: left;
+  box-shadow: none;
+}
+
+.affiliateFilterButton:hover,
+.affiliateFilterButtonActive {
+  border-color: rgba(255, 95, 52, 0.28);
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.affiliateFilterButtonText {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.affiliateFilterButtonText strong,
+.affiliateFilterButton strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.affiliateFilterButtonText small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.affiliateFilterAvatar,
+.affiliateFilterAvatarAll {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--avatar-bg, #111827);
+  background-position: center;
+  background-size: cover;
+  color: var(--avatar-color, #ffffff);
+  font-size: 10px;
+  font-weight: 950;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.8),
+    0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.affiliateFilterAvatarPhoto {
+  color: transparent;
+}
+
+.affiliateFilterAvatarAll {
+  width: 46px;
+  padding: 0 8px;
+  background: #ff744f;
+  color: #111827;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.conversionReportMetrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flowMetric {
+  min-height: 92px;
+  padding: 15px;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.flowMetric span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.flowMetric strong {
+  margin-top: 7px;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.flowMetricActive {
+  border-color: #111827;
+  background: #111827;
+}
+
+.flowMetricActive span,
+.flowMetricActive strong {
+  color: #ffffff;
+}
+
+.conversionObjectiveList {
+  max-height: 650px;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #111827;
+}
+
+.conversionObjectiveCard {
+  grid-template-columns: minmax(190px, 0.75fr) minmax(310px, 1.25fr) auto;
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.objectiveConversionInfo strong {
+  font-size: 13px;
+}
+
+.objectiveConversionInfo span,
+.objectiveConversionInfo small {
+  font-size: 11px;
+}
+
+.objectiveInfographic {
+  min-height: 68px;
+  border-radius: 16px;
+}
+
+.objectiveStageIcon,
+.objectiveSgpButton {
+  width: 42px;
+  height: 42px;
+}
+
+.objectiveStatusText span {
+  font-size: 11px;
+}
+
+.objectiveStatusText small {
+  font-size: 10px;
+}
+
+.conversionFlowList {
+  max-height: 680px;
+  padding: 12px;
+  border-radius: 18px;
+}
+
+.conversionFlowCard {
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.conversionIdentity h3 {
+  font-size: 16px;
+}
+
+.conversionIdentity span,
+.conversionIdentity p {
+  font-size: 11px;
+}
+
+.conversionStageTrack {
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+}
+
+.conversionStageCard {
+  min-height: 238px;
+  border-radius: 16px;
+}
+
+.stageContentCard {
+  min-height: 136px;
+}
+
+.stageContentCard strong {
+  font-size: 12px;
+}
+
+.stageContentCard p,
+.stageContentCard small {
+  font-size: 10px;
+}
+
+.conversionDataModalCard {
+  border-radius: 22px;
+}
+
+.conversionDataModalHero {
+  background:
+    radial-gradient(circle at top right, rgba(255, 95, 52, 0.26), transparent 34%),
+    linear-gradient(135deg, #111827 0%, #1f2937 54%, #ff5f34 100%);
+}
+
+.conversionDataModalHero h2 {
+  font-size: 22px;
+}
+
+.conversionDataModalHero p {
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .conversionReportShell,
+  .conversionReportShellFull {
+    grid-template-columns: 1fr;
+  }
+
+  .conversionReportMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .conversionReportFilters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .affiliateFilterPicker,
+  .affiliateFilterTrigger {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .affiliateFilterDropdown {
+    position: static;
+    margin-top: 8px;
+    max-height: 260px;
+  }
+
+  .conversionObjectiveCard {
+    grid-template-columns: 1fr;
+  }
+
+  .conversionStageTrack {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 14px;
+  }
+
+  .affiliateDetailsSurface {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .sectionHeader,
+  .conversionReportTitleRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .headerActions,
+  .detailTabs,
+  .conversionViewSwitcher {
+    width: 100%;
+  }
+
+  .detailTab {
+    flex: 1;
+    padding: 0 9px;
+  }
+
+  .conversionReportMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .conversionObjectiveList,
+  .conversionFlowList {
+    max-height: none;
+  }
+
+  .summaryGrid,
+  .summaryStats,
+  .conversionSummary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fluxograma de conversoes: ajustes finais de layout e modal do filtro. */
+.conversionReportShellFull .conversionReportFilters {
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  overflow: visible;
+}
+
+.conversionReportShellFull .conversionReportFilters > strong {
+  min-height: 44px;
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+}
+
+.conversionReportShellFull .conversionReportFilters label {
+  flex: 0 1 190px;
+}
+
+.conversionReportShellFull .conversionReportFilters select,
+.conversionReportShellFull .conversionReportFilters input {
+  height: 54px;
+  min-height: 54px;
+}
+
+.conversionReportShellFull .conversionReportFilters > button {
+  height: 54px;
+  min-height: 54px;
+  align-self: flex-end;
+}
+
+.conversionReportShellFull .affiliateFilterPicker {
+  flex: 0 0 320px;
+  min-width: 260px;
+  max-width: 320px;
+  position: relative;
+  z-index: 80;
+}
+
+.conversionReportShellFull .affiliateFilterTrigger {
+  width: 100%;
+  height: 54px;
+  min-height: 54px;
+  min-width: 0;
+  max-width: 320px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.conversionReportShellFull .affiliateFilterTrigger:hover,
+.conversionReportShellFull .affiliateFilterTrigger:focus-visible {
+  border-color: #fb923c;
+  background: #fff7ed;
+  color: #0f172a;
+}
+
+.conversionReportShellFull .affiliateFilterTriggerText strong {
+  color: #0f172a;
+}
+
+.conversionReportShellFull .affiliateFilterDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 3200;
+  display: grid;
+  width: min(440px, calc(100vw - 48px));
+  max-height: min(62vh, 460px);
+  gap: 8px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 22px 44px rgba(15, 23, 42, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  scrollbar-width: thin;
+}
+
+.conversionReportShellFull .affiliateFilterModalOverlay {
+  display: none;
+}
+
+.conversionReportShellFull .affiliateFilterModal {
+  display: grid;
+  width: min(100%, 460px);
+  max-height: min(80vh, 640px);
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+}
+
+.conversionReportShellFull .affiliateFilterModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.conversionReportShellFull .affiliateFilterModalHeader strong {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.conversionReportShellFull .affiliateFilterModalHeader button {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  padding: 0;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.conversionReportShellFull .affiliateFilterList {
+  display: grid;
+  max-height: min(60vh, 480px);
+  gap: 8px;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+}
+
+.conversionReportShellFull .affiliateFilterAvatarAll {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  background: #ff744f;
+  color: #111827;
+  font-size: 11px;
+}
+
+.conversionReportShellFull .affiliateFilterButton {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: #0f172a;
+  text-align: left;
+  box-shadow: none;
+}
+
+.conversionReportShellFull .affiliateFilterButton:hover,
+.conversionReportShellFull .affiliateFilterButtonActive {
+  border-color: #fb923c;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.conversionReportShellFull .affiliateFilterButtonText {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.conversionReportShellFull .affiliateFilterButtonText strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversionReportShellFull .affiliateFilterButtonText small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversionReportShellFull .conversionReportMetrics {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+.conversionReportShellFull,
+.conversionReportShellFull .conversionReportMain,
+.conversionReportShellFull .conversionFlowPanel,
+.conversionReportShellFull .conversionFlowList,
+.conversionReportShellFull .conversionFlowCard,
+.conversionReportShellFull .conversionBoard {
+  width: 100%;
+  min-width: 0;
+}
+
+.conversionReportShellFull {
+  display: block;
+}
+
+.conversionReportShellFull .conversionReportMain {
+  display: grid;
+  justify-self: stretch;
+}
+
+.conversionReportShellFull .conversionReportTitleRow {
+  width: 100%;
+}
+
+.conversionReportShellFull .conversionFlowList {
+  max-height: min(1320px, calc(100vh - 250px));
+  min-height: 860px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-color: #94a3b8 rgba(226, 232, 240, 0.68);
+  scrollbar-width: thin;
+}
+
+.conversionReportShellFull .conversionObjectiveList {
+  max-height: min(980px, calc(100vh - 250px));
+  min-height: 560px;
+  overflow-y: auto;
+}
+
+.conversionReportShellFull .conversionStageTrack {
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+}
+
+.conversionReportShellFull .conversionStageCard {
+  min-height: 250px;
+}
+
+@media (max-width: 920px) {
+  .conversionReportShellFull .conversionReportMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .conversionReportShellFull .conversionStageTrack {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .conversionReportShellFull .conversionReportFilters label,
+  .conversionReportShellFull .affiliateFilterPicker {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .conversionReportShellFull .conversionReportMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .conversionReportShellFull .conversionStageTrack {
+    grid-template-columns: 1fr;
+  }
+
+  .conversionReportShellFull .conversionFlowList {
+    max-height: 74vh;
+    min-height: 520px;
+  }
+
+  .conversionReportShellFull .conversionObjectiveList {
+    max-height: 74vh;
+    min-height: 420px;
   }
 }
