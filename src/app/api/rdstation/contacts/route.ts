@@ -50,19 +50,21 @@ function buildPayload(input: CreateRdStationContactRequest) {
     };
   }
 
-  if (!email) {
+  if (!email && !phone) {
     return {
-      error: "Informe o email do contato.",
+      error: "Informe o email ou telefone do contato.",
     };
   }
 
   const data: RdStationContactData = {
     name,
-    emails: [
-      {
-        email,
-      },
-    ],
+    emails: email
+      ? [
+          {
+            email,
+          },
+        ]
+      : [],
   };
 
   if (jobTitle) {
@@ -179,7 +181,15 @@ export async function POST(request: Request) {
   return Response.json(
     {
       message: "Contato criado no RD Station CRM.",
-      contactId: typeof body?.id === "string" ? body.id : null,
+      contactId:
+        typeof body?.id === "string"
+          ? body.id
+          : body?.data &&
+              typeof body.data === "object" &&
+              !Array.isArray(body.data) &&
+              typeof (body.data as Record<string, unknown>).id === "string"
+            ? String((body.data as Record<string, unknown>).id)
+            : null,
       contact: body,
     },
     {

@@ -122,26 +122,26 @@ export default function Sidebar() {
 
       <div className={styles.profileBox} title={userName}>
         <div className={styles.avatarFrame}>
-        <Image
-          src={userPhoto}
-          alt="Foto do usuário"
-          className={styles.userPhoto}
-          width={88}
-          height={88}
-          unoptimized={typeof userPhoto === "string"}
-          onError={() => setUserPhoto(logo1)}
-          priority
-        />
-
-        <span className={styles.brandBubble} aria-label="Netbox">
           <Image
-            src={logo1}
-            alt="Netbox"
-            className={styles.brandBubbleImg}
-            width={24}
-            height={24}
+            src={userPhoto}
+            alt="Foto do usuário"
+            className={styles.userPhoto}
+            width={88}
+            height={88}
+            unoptimized={typeof userPhoto === "string"}
+            onError={() => setUserPhoto(logo1)}
+            priority
           />
-        </span>
+
+          <span className={styles.brandBubble} aria-label="Netbox">
+            <Image
+              src={logo1}
+              alt="Netbox"
+              className={styles.brandBubbleImg}
+              width={24}
+              height={24}
+            />
+          </span>
         </div>
 
         <strong className={styles.userName}>{userName}</strong>
@@ -188,6 +188,16 @@ export default function Sidebar() {
               <span className={styles.itemLabel}>CRM</span>
             </Link>
           </li>
+          <li className={styles.button}>
+            <Link
+              href="/fluxograma-conversoes"
+              className={styles.menuItem}
+              aria-label="Fluxograma de conversoes"
+            >
+              <FiGitBranch className={styles.icon} />
+              <span className={styles.itemLabel}>Fluxograma</span>
+            </Link>
+          </li>
 
           <li className={styles.button}>
             <Link
@@ -204,17 +214,6 @@ export default function Sidebar() {
             <Link href="/sgp" className={styles.menuItem} aria-label="SGP">
               <FiDatabase className={styles.icon} />
               <span className={styles.itemLabel}>SGP</span>
-            </Link>
-          </li>
-
-          <li className={styles.button}>
-            <Link
-              href="/fluxograma-conversoes"
-              className={styles.menuItem}
-              aria-label="Fluxograma de conversoes"
-            >
-              <FiGitBranch className={styles.icon} />
-              <span className={styles.itemLabel}>Fluxograma</span>
             </Link>
           </li>
 

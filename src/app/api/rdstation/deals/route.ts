@@ -117,11 +117,15 @@ export async function GET(request: Request) {
     params.set("filter", filters.join(" AND "));
   }
 
-  addQueryParam(params, "page", page);
-  addQueryParam(params, "limit", limit);
-  addQueryParam(params, "per_page", limit);
-  addQueryParam(params, "q", search);
-  params.set("sort", "updated_at:desc");
+  addQueryParam(params, "page[number]", page || "1");
+  addQueryParam(params, "page[size]", limit);
+
+  if (search) {
+    filters.push(`name~${search}`);
+    params.set("filter", filters.join(" AND "));
+  }
+
+  params.set("sort[updated_at]", "desc");
   const query = params.toString();
   const result = await rdRequest(`/deals${query ? `?${query}` : ""}`);
 
@@ -183,12 +187,10 @@ export async function POST(request: Request) {
 
   if (stageId) {
     data.stage_id = stageId;
-    data.deal_stage_id = stageId;
   }
 
   if (pipelineId) {
     data.pipeline_id = pipelineId;
-    data.deal_pipeline_id = pipelineId;
   }
 
   if (value > 0) {
@@ -211,13 +213,14 @@ export async function POST(request: Request) {
     data.description = notes;
   }
 
-  if (customerName || email || phone) {
-    data.contact = {
-      name: customerName || name,
-      ...(email ? { email } : {}),
-      ...(phone ? { phone: phone.replace(/\D/g, "") } : {}),
-    };
-    data.contacts = [data.contact];
+  const contactId = await createContactForDeal({
+    name: customerName || name,
+    email,
+    phone,
+  });
+
+  if (contactId) {
+    data.contact_id = contactId;
   }
 
   const result = await rdRequest("/deals", {
@@ -244,11 +247,70 @@ export async function POST(request: Request) {
 
   return Response.json(
     {
-      deal: isRecord(result.body) ? normalizeDeal(result.body) : null,
+      deal: isRecord(result.body)
+        ? normalizeDeal(isRecord(result.body.data) ? result.body.data : result.body)
+        : null,
       raw: result.body,
     },
     {
       status: 201,
     }
   );
+}
+
+async function createContactForDeal(input: {
+  name: string;
+  email: string;
+  phone: string;
+}) {
+  if (!input.name || (!input.email && !input.phone)) {
+    return "";
+  }
+
+  const result = await rdRequest("/contacts", {
+    method: "POST",
+    body: JSON.stringify({
+      data: {
+        name: input.name,
+        ...(input.email
+          ? {
+              emails: [
+                {
+                  email: input.email.toLowerCase(),
+                },
+              ],
+            }
+          : {}),
+        ...(input.phone
+          ? {
+              phones: [
+                {
+                  phone: input.phone.replace(/\D/g, ""),
+                  type: "mobile",
+                },
+              ],
+            }
+          : {}),
+        legal_bases: [
+          {
+            category: "communications",
+            type: "consent",
+            status: "granted",
+          },
+        ],
+      },
+    }),
+  });
+
+  if (!result.configured || !result.response?.ok || !isRecord(result.body)) {
+    return "";
+  }
+
+  if (typeof result.body.id === "string") {
+    return result.body.id;
+  }
+
+  const data = isRecord(result.body.data) ? result.body.data : null;
+
+  return readString(data ?? {}, ["id"]);
 }

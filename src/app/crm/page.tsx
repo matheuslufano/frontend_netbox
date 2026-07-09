@@ -515,7 +515,7 @@ const demoDeals: Deal[] = [
 ];
 
 const statusOptions: Array<{ id: DealStatus; name: string; color: string }> = [
-  { id: "new", name: "Nova", color: "#2563eb" },
+  { id: "new", name: "Nova", color: "#fdfdfd" },
   { id: "ongoing", name: "Em andamento", color: "#0891b2" },
   { id: "no_contact", name: "Sem contato", color: "#64748b" },
   { id: "waiting", name: "Aguardando retorno", color: "#ca8a04" },
@@ -583,7 +583,7 @@ const quickStatusOptions: Array<{
   {
     id: "new",
     name: "Nova",
-    cardColor: "#dbeafe",
+    cardColor: "#fbfdff",
     dotColor: "#2563eb",
   },
   {
@@ -742,17 +742,84 @@ function isNearDue(deal: Deal) {
 }
 
 function getStatusMeta(status: DealStatus) {
-  return (
-    statusOptions.find((item) => item.id === status) || statusOptions[0]
-  );
+  return statusOptions.find((item) => item.id === status) || statusOptions[0];
 }
 
 function getStage(stages: KanbanColumn[], stageId: string) {
   return stages.find((stage) => stage.id === stageId) || stages[0];
 }
 
+function getQuickStatusCardColor(status: DealStatus) {
+  return (
+    quickStatusOptions.find((option) => option.id === status)?.cardColor || ""
+  );
+}
+
 function normalizeTitle(value: string) {
   return value.trim() || "Sem etapa";
+}
+
+const CRM_LOCAL_DEAL_EDITS_KEY = "afiliados-netbox:crm:deal-edits";
+
+type LocalDealEdits = Record<string, Partial<Deal>>;
+
+function readLocalDealEdits(): LocalDealEdits {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CRM_LOCAL_DEAL_EDITS_KEY);
+
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as LocalDealEdits)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalDealEdit(dealId: string, patch: Partial<Deal>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const edits = readLocalDealEdits();
+
+  edits[dealId] = {
+    ...edits[dealId],
+    ...patch,
+  };
+
+  window.localStorage.setItem(CRM_LOCAL_DEAL_EDITS_KEY, JSON.stringify(edits));
+}
+
+function mergeLocalDealEdits(sourceDeals: Deal[]) {
+  const edits = readLocalDealEdits();
+
+  return sourceDeals.map((deal) => {
+    const localEdit = edits[deal.id];
+
+    if (!localEdit) {
+      return deal;
+    }
+
+    return {
+      ...deal,
+      ...localEdit,
+      history: Array.isArray(localEdit.history)
+        ? localEdit.history
+        : deal.history,
+      tasks: Array.isArray(localEdit.tasks) ? localEdit.tasks : deal.tasks,
+      sale: localEdit.sale === undefined ? deal.sale : localEdit.sale,
+    };
+  });
 }
 
 function createDealFromRd(record: RdDeal, fallbackStageId: string): Deal {
@@ -857,7 +924,7 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
         }
       : undefined,
     history: (record.history || []).map(
-      (item) => `${formatDateTime(item.createdAt)} - ${item.message}`
+      (item) => `${formatDateTime(item.createdAt)} - ${item.message}`,
     ),
     tasks: (record.tasks || []).map((task) => ({
       id: task.id,
@@ -870,7 +937,14 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
 
 function buildStagesFromRd(pipelines: RdPipeline[]) {
   const firstPipeline = pipelines[0];
-  const colors = ["#64748b", "#0891b2", "#2563eb", "#7c3aed", "#16a34a", "#6b7280"];
+  const colors = [
+    "#64748b",
+    "#0891b2",
+    "#2563eb",
+    "#7c3aed",
+    "#16a34a",
+    "#6b7280",
+  ];
 
   if (!firstPipeline?.stages?.length) {
     return defaultStages;
@@ -902,7 +976,9 @@ export default function Crm() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [stages, setStages] = useState<KanbanColumn[]>(defaultStages);
-  const [deals, setDeals] = useState<Deal[]>(demoDeals);
+  const [deals, setDeals] = useState<Deal[]>(() =>
+    mergeLocalDealEdits(demoDeals),
+  );
   const [draggingDealId, setDraggingDealId] = useState<string | null>(null);
   const [selectedFunnel, setSelectedFunnel] = useState(funnels[0]);
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
@@ -921,13 +997,15 @@ export default function Crm() {
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("lead");
   const [activeCardMenuId, setActiveCardMenuId] = useState<string | null>(null);
-  const [activeStatusMenuId, setActiveStatusMenuId] = useState<string | null>(null);
+  const [activeStatusMenuId, setActiveStatusMenuId] = useState<string | null>(
+    null,
+  );
   const [loadingRd, setLoadingRd] = useState(false);
   const [syncMessage, setSyncMessage] = useState(
-    "Kanban demonstrativo. Configure o token do RD para sincronizar."
+    "Kanban demonstrativo. Configure o token do RD para sincronizar.",
   );
   const [syncStatus, setSyncStatus] = useState<"info" | "success" | "warning">(
-    "info"
+    "info",
   );
   const [advancedFilters, setAdvancedFilters] = useState({
     affiliate: "",
@@ -971,23 +1049,23 @@ export default function Crm() {
               isFinal: stage.isFinal,
               isWonStage: stage.isWonStage,
               isLostStage: stage.isLostStage,
-            }))
+            })),
           );
         }
 
-        setDeals(crmData.deals.map(createDealFromBackend));
+        setDeals(mergeLocalDealEdits(crmData.deals.map(createDealFromBackend)));
         setSyncStatus("success");
         setSyncMessage(
           crmData.sync
             ? `${crmData.sync.total} cliente(s) convertido(s) sincronizados do relatorio.`
-            : "CRM carregado do banco de dados."
+            : "CRM carregado do banco de dados.",
         );
         return;
       }
     } catch {
       setSyncStatus("warning");
       setSyncMessage(
-        "Nao foi possivel carregar o CRM do banco. Tentando RD Station."
+        "Nao foi possivel carregar o CRM do banco. Tentando RD Station.",
       );
     }
 
@@ -1000,7 +1078,7 @@ export default function Crm() {
       if (!pipelinesResponse.ok || !dealsResponse.ok) {
         setSyncStatus("warning");
         setSyncMessage(
-          "Nao foi possivel sincronizar com o RD. Exibindo dados locais."
+          "Nao foi possivel sincronizar com o RD. Exibindo dados locais.",
         );
         return;
       }
@@ -1016,23 +1094,25 @@ export default function Crm() {
       if (rdDeals.length === 0) {
         setSyncStatus("success");
         setSyncMessage(
-          "RD conectado, mas nenhuma negociacao foi encontrada no filtro atual."
+          "RD conectado, mas nenhuma negociacao foi encontrada no filtro atual.",
         );
         return;
       }
 
       setStages(nextStages);
       setDeals(
-        rdDeals.map((deal: RdDeal) =>
-          createDealFromRd(deal, nextStages[0]?.id || "sem-contato")
-        )
+        mergeLocalDealEdits(
+          rdDeals.map((deal: RdDeal) =>
+            createDealFromRd(deal, nextStages[0]?.id || "sem-contato"),
+          ),
+        ),
       );
       setSyncStatus("success");
       setSyncMessage("Dados atualizados com sucesso.");
     } catch {
       setSyncStatus("warning");
       setSyncMessage(
-        "Nao foi possivel sincronizar com o RD. Exibindo dados locais."
+        "Nao foi possivel sincronizar com o RD. Exibindo dados locais.",
       );
     } finally {
       setLoadingRd(false);
@@ -1049,7 +1129,7 @@ export default function Crm() {
 
   function syncBoardScroll(
     sourceRef: { current: HTMLElement | null },
-    targetRef: { current: HTMLElement | null }
+    targetRef: { current: HTMLElement | null },
   ) {
     const source = sourceRef.current;
     const target = targetRef.current;
@@ -1067,12 +1147,12 @@ export default function Crm() {
 
   const selectedDeal = useMemo(
     () => deals.find((deal) => deal.id === selectedDealId) || null,
-    [deals, selectedDealId]
+    [deals, selectedDealId],
   );
 
   const activeFilterCount = useMemo(() => {
     return Object.values(advancedFilters).filter((value) =>
-      typeof value === "boolean" ? value : Boolean(value)
+      typeof value === "boolean" ? value : Boolean(value),
     ).length;
   }, [advancedFilters]);
 
@@ -1099,7 +1179,10 @@ export default function Crm() {
         return false;
       }
 
-      if (scopeFilter === "open" && ["won", "lost", "canceled"].includes(deal.status)) {
+      if (
+        scopeFilter === "open" &&
+        ["won", "lost", "canceled"].includes(deal.status)
+      ) {
         return false;
       }
 
@@ -1145,7 +1228,9 @@ export default function Crm() {
 
       if (
         advancedFilters.source &&
-        !deal.source.toLowerCase().includes(advancedFilters.source.toLowerCase())
+        !deal.source
+          .toLowerCase()
+          .includes(advancedFilters.source.toLowerCase())
       ) {
         return false;
       }
@@ -1153,11 +1238,19 @@ export default function Crm() {
       const minValue = Number(advancedFilters.minValue);
       const maxValue = Number(advancedFilters.maxValue);
 
-      if (Number.isFinite(minValue) && minValue > 0 && deal.monthlyValue < minValue) {
+      if (
+        Number.isFinite(minValue) &&
+        minValue > 0 &&
+        deal.monthlyValue < minValue
+      ) {
         return false;
       }
 
-      if (Number.isFinite(maxValue) && maxValue > 0 && deal.monthlyValue > maxValue) {
+      if (
+        Number.isFinite(maxValue) &&
+        maxValue > 0 &&
+        deal.monthlyValue > maxValue
+      ) {
         return false;
       }
 
@@ -1197,7 +1290,9 @@ export default function Crm() {
       }
 
       if (sortMode === "oldest-no-contact") {
-        return a.attempts - b.attempts || toTime(a.createdAt) - toTime(b.createdAt);
+        return (
+          a.attempts - b.attempts || toTime(a.createdAt) - toTime(b.createdAt)
+        );
       }
 
       if (sortMode === "next-follow-up") {
@@ -1215,14 +1310,17 @@ export default function Crm() {
   const totals = useMemo(
     () => ({
       deals: filteredDeals.length,
-      amount: filteredDeals.reduce((total, deal) => total + deal.monthlyValue, 0),
+      amount: filteredDeals.reduce(
+        (total, deal) => total + deal.monthlyValue,
+        0,
+      ),
     }),
-    [filteredDeals]
+    [filteredDeals],
   );
 
   const archivedDeals = useMemo(
     () => deals.filter((deal) => deal.status === "canceled"),
-    [deals]
+    [deals],
   );
 
   useEffect(() => {
@@ -1267,10 +1365,11 @@ export default function Crm() {
         user: "Sistema",
       },
     ],
-    [syncMessage, syncStatus]
+    [syncMessage, syncStatus],
   );
 
   function updateDeal(dealId: string, patch: Partial<Deal>) {
+    saveLocalDealEdit(dealId, patch);
     setDeals((current) =>
       current.map((deal) =>
         deal.id === dealId
@@ -1283,8 +1382,8 @@ export default function Crm() {
                 ...deal.history,
               ],
             }
-          : deal
-      )
+          : deal,
+      ),
     );
   }
 
@@ -1311,8 +1410,8 @@ export default function Crm() {
                 ...deal.history,
               ],
             }
-          : deal
-      )
+          : deal,
+      ),
     );
     setSelectedDealId(dealId);
     setActiveDetailTab("tasks");
@@ -1338,7 +1437,9 @@ export default function Crm() {
       setSyncMessage("Venda concluida. Comissao do afiliado preparada.");
     } else if (targetStage.isLostStage) {
       setSyncStatus("warning");
-      setSyncMessage("Venda marcada como perdida. Informe o motivo no historico.");
+      setSyncMessage(
+        "Venda marcada como perdida. Informe o motivo no historico.",
+      );
     }
 
     if (!isDemoDeal(dealId) && /^\d+$/.test(dealId)) {
@@ -1353,7 +1454,7 @@ export default function Crm() {
       } catch {
         setSyncStatus("warning");
         setSyncMessage(
-          "Card movido localmente, mas nao foi possivel salvar no banco do CRM."
+          "Card movido localmente, mas nao foi possivel salvar no banco do CRM.",
         );
       }
       return;
@@ -1375,12 +1476,12 @@ export default function Crm() {
         setSyncMessage(
           response.ok
             ? "Etapa atualizada no RD Station CRM."
-            : "Card movido localmente, mas o RD recusou a atualizacao."
+            : "Card movido localmente, mas o RD recusou a atualizacao.",
         );
       } catch {
         setSyncStatus("warning");
         setSyncMessage(
-          "Card movido localmente, mas nao foi possivel atualizar o RD."
+          "Card movido localmente, mas nao foi possivel atualizar o RD.",
         );
       }
     }
@@ -1471,12 +1572,14 @@ export default function Crm() {
       if (!response.ok) {
         setSyncStatus("warning");
         setSyncMessage(
-          "Negociacao criada localmente, mas o RD recusou a criacao."
+          "Negociacao criada localmente, mas o RD recusou a criacao.",
         );
       }
     } catch {
       setSyncStatus("warning");
-      setSyncMessage("Negociacao criada localmente. RD indisponivel no momento.");
+      setSyncMessage(
+        "Negociacao criada localmente. RD indisponivel no momento.",
+      );
     }
   }
 
@@ -1495,12 +1598,18 @@ export default function Crm() {
     }
 
     if (action === "won") {
-      moveDeal(deal.id, stages.find((stage) => stage.isWonStage)?.id || deal.stageId);
+      moveDeal(
+        deal.id,
+        stages.find((stage) => stage.isWonStage)?.id || deal.stageId,
+      );
       return;
     }
 
     if (action === "lost") {
-      moveDeal(deal.id, stages.find((stage) => stage.isLostStage)?.id || deal.stageId);
+      moveDeal(
+        deal.id,
+        stages.find((stage) => stage.isLostStage)?.id || deal.stageId,
+      );
       return;
     }
 
@@ -1510,7 +1619,7 @@ export default function Crm() {
       window.open(
         `https://wa.me/55${deal.phone}?text=${encodeURIComponent(message)}`,
         "_blank",
-        "noopener,noreferrer"
+        "noopener,noreferrer",
       );
       return;
     }
@@ -1530,10 +1639,13 @@ export default function Crm() {
     if (action === "archive") {
       updateDeal(deal.id, {
         status: "canceled",
+        cardColor: deal.cardColor || getQuickStatusCardColor(deal.status),
         activity: "Negociacao arquivada",
       });
       setSyncStatus("warning");
-      setSyncMessage("Negociacao arquivada. Ela pode ser restaurada em Opcoes.");
+      setSyncMessage(
+        "Negociacao arquivada. Ela pode ser restaurada em Opcoes.",
+      );
       return;
     }
 
@@ -1582,7 +1694,8 @@ export default function Crm() {
       String(deal.monthlyValue).replace(".", ","),
       formatDateTime(deal.updatedAt),
     ]);
-    const escapeCell = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
+    const escapeCell = (value: string) =>
+      `"${String(value).replace(/"/g, '""')}"`;
     const csv = [headers, ...rows]
       .map((row) => row.map(escapeCell).join(";"))
       .join("\n");
@@ -1655,7 +1768,9 @@ export default function Crm() {
     setImportLeadsText("");
     setOptionsModal(null);
     setSyncStatus("success");
-    setSyncMessage(`${importedDeals.length} lead(s) importado(s) para o funil.`);
+    setSyncMessage(
+      `${importedDeals.length} lead(s) importado(s) para o funil.`,
+    );
   }
 
   async function syncChatmix() {
@@ -1666,7 +1781,9 @@ export default function Crm() {
       const logs = await listarChatmixWebhookLogs(20);
 
       setSyncStatus("success");
-      setSyncMessage(`${logs.length} evento(s) recentes do Chatmix consultado(s).`);
+      setSyncMessage(
+        `${logs.length} evento(s) recentes do Chatmix consultado(s).`,
+      );
     } catch {
       setSyncStatus("warning");
       setSyncMessage("Nao foi possivel sincronizar com Chatmix.");
@@ -1742,10 +1859,9 @@ export default function Crm() {
   }
 
   function restoreArchivedDeal(deal: Deal) {
-    const fallbackStageId =
-      stages.some((stage) => stage.id === deal.stageId)
-        ? deal.stageId
-        : stages[0]?.id || "sem-contato";
+    const fallbackStageId = stages.some((stage) => stage.id === deal.stageId)
+      ? deal.stageId
+      : stages[0]?.id || "sem-contato";
 
     updateDeal(deal.id, {
       status: "ongoing",
@@ -1798,8 +1914,10 @@ export default function Crm() {
       name,
       color: stageForm.color,
       slaHours: Number.isFinite(slaHours) && slaHours >= 0 ? slaHours : 0,
-      position: Number.isFinite(position) && position > 0 ? position : undefined,
-      isFinal: stageForm.isFinal || stageForm.isWonStage || stageForm.isLostStage,
+      position:
+        Number.isFinite(position) && position > 0 ? position : undefined,
+      isFinal:
+        stageForm.isFinal || stageForm.isWonStage || stageForm.isLostStage,
       isWonStage: stageForm.isWonStage,
       isLostStage: stageForm.isLostStage,
     };
@@ -1812,7 +1930,9 @@ export default function Crm() {
 
     if (stageForm.isWonStage && stageForm.isLostStage) {
       setSyncStatus("warning");
-      setSyncMessage("A coluna nao pode ser venda concluida e venda perdida ao mesmo tempo.");
+      setSyncMessage(
+        "A coluna nao pode ser venda concluida e venda perdida ao mesmo tempo.",
+      );
       return;
     }
 
@@ -1832,20 +1952,22 @@ export default function Crm() {
                     isWonStage: updatedStage.isWonStage,
                     isLostStage: updatedStage.isLostStage,
                   }
-                : stage
+                : stage,
             )
             .sort((first, second) => {
               const firstPosition =
                 first.id === updatedStage.id
-                  ? payload.position ?? stages.findIndex((item) => item.id === first.id) + 1
+                  ? (payload.position ??
+                    stages.findIndex((item) => item.id === first.id) + 1)
                   : stages.findIndex((item) => item.id === first.id) + 1;
               const secondPosition =
                 second.id === updatedStage.id
-                  ? payload.position ?? stages.findIndex((item) => item.id === second.id) + 1
+                  ? (payload.position ??
+                    stages.findIndex((item) => item.id === second.id) + 1)
                   : stages.findIndex((item) => item.id === second.id) + 1;
 
               return firstPosition - secondPosition;
-            })
+            }),
         );
         setSyncMessage("Coluna atualizada com sucesso.");
       } else {
@@ -1889,7 +2011,9 @@ export default function Crm() {
     }
 
     const fallbackStage = remainingStages[0];
-    const movedDeals = deals.filter((deal) => deal.stageId === stageForm.id).length;
+    const movedDeals = deals.filter(
+      (deal) => deal.stageId === stageForm.id,
+    ).length;
 
     setStages(remainingStages);
     setDeals((current) =>
@@ -1904,8 +2028,8 @@ export default function Crm() {
                 ...deal.history,
               ],
             }
-          : deal
-      )
+          : deal,
+      ),
     );
     setStageModalOpen(false);
     setStageForm(defaultStageForm);
@@ -1913,7 +2037,7 @@ export default function Crm() {
     setSyncMessage(
       movedDeals > 0
         ? `Coluna apagada. ${movedDeals} negociacao(oes) movida(s) para ${fallbackStage.title}.`
-        : "Coluna apagada."
+        : "Coluna apagada.",
     );
   }
 
@@ -1982,39 +2106,46 @@ export default function Crm() {
         setSyncMessage("Cartao atualizado com sucesso.");
       } catch {
         setSyncStatus("warning");
-        setSyncMessage("Cartao atualizado na tela, mas nao foi possivel salvar no banco.");
+        setSyncMessage(
+          "Cartao atualizado na tela, mas nao foi possivel salvar no banco.",
+        );
       }
     } else if (!isDemoDeal(cardEditForm.id)) {
       try {
-        const response = await fetch(`/api/rdstation/deals/${cardEditForm.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `/api/rdstation/deals/${cardEditForm.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              customerName: patch.customerName,
+              phone: patch.phone,
+              email: patch.email,
+              source: patch.source,
+              affiliate: patch.affiliate,
+              campaign: patch.campaign,
+              plan: patch.plan,
+              monthlyValue: patch.monthlyValue,
+              priority: patch.priority,
+              cardColor: patch.cardColor,
+              notes: patch.notes,
+            }),
           },
-          body: JSON.stringify({
-            customerName: patch.customerName,
-            phone: patch.phone,
-            email: patch.email,
-            source: patch.source,
-            affiliate: patch.affiliate,
-            campaign: patch.campaign,
-            plan: patch.plan,
-            monthlyValue: patch.monthlyValue,
-            priority: patch.priority,
-            cardColor: patch.cardColor,
-            notes: patch.notes,
-          }),
-        });
+        );
 
         setSyncStatus(response.ok ? "success" : "warning");
         setSyncMessage(
           response.ok
             ? "Cartao atualizado no RD Station CRM."
-            : "Cartao atualizado na tela, mas o RD recusou a atualizacao."
+            : "Cartao atualizado na tela, mas o RD recusou a atualizacao.",
         );
       } catch {
         setSyncStatus("warning");
-        setSyncMessage("Cartao atualizado na tela, mas nao foi possivel salvar no RD.");
+        setSyncMessage(
+          "Cartao atualizado na tela, mas nao foi possivel salvar no RD.",
+        );
       }
     } else {
       setSyncStatus("success");
@@ -2024,7 +2155,7 @@ export default function Crm() {
 
   async function handleQuickStatusChange(
     deal: Deal,
-    option: (typeof quickStatusOptions)[number]
+    option: (typeof quickStatusOptions)[number],
   ) {
     setActiveStatusMenuId(null);
     updateDeal(deal.id, {
@@ -2069,7 +2200,7 @@ export default function Crm() {
     } catch {
       setSyncStatus("warning");
       setSyncMessage(
-        `Status ${option.name} aplicado na tela, mas nao foi possivel salvar no CRM.`
+        `Status ${option.name} aplicado na tela, mas nao foi possivel salvar no CRM.`,
       );
     }
   }
@@ -2103,7 +2234,7 @@ export default function Crm() {
               onClick={() => {
                 setActiveCardMenuId(null);
                 setActiveStatusMenuId((current) =>
-                  current === deal.id ? null : deal.id
+                  current === deal.id ? null : deal.id,
                 );
               }}
               aria-expanded={activeStatusMenuId === deal.id}
@@ -2122,7 +2253,9 @@ export default function Crm() {
                   <button
                     key={option.id}
                     type="button"
-                    className={deal.status === option.id ? styles.statusMiniActive : ""}
+                    className={
+                      deal.status === option.id ? styles.statusMiniActive : ""
+                    }
                     onClick={() => handleQuickStatusChange(deal, option)}
                   >
                     <span
@@ -2192,7 +2325,7 @@ export default function Crm() {
             title="Acoes da negociacao"
             onClick={() =>
               setActiveCardMenuId((current) =>
-                current === deal.id ? null : deal.id
+                current === deal.id ? null : deal.id,
               )
             }
           >
@@ -2201,13 +2334,22 @@ export default function Crm() {
 
           {activeCardMenuId === deal.id && (
             <div className={styles.cardMenu}>
-              <button type="button" onClick={() => handleCardAction("details", deal)}>
+              <button
+                type="button"
+                onClick={() => handleCardAction("details", deal)}
+              >
                 Ver detalhes
               </button>
-              <button type="button" onClick={() => handleCardAction("edit", deal)}>
+              <button
+                type="button"
+                onClick={() => handleCardAction("edit", deal)}
+              >
                 Editar negociacao
               </button>
-              <button type="button" onClick={() => handleCardAction("task", deal)}>
+              <button
+                type="button"
+                onClick={() => handleCardAction("task", deal)}
+              >
                 Criar tarefa
               </button>
               <button
@@ -2222,13 +2364,22 @@ export default function Crm() {
               >
                 Enviar WhatsApp
               </button>
-              <button type="button" onClick={() => handleCardAction("copy", deal)}>
+              <button
+                type="button"
+                onClick={() => handleCardAction("copy", deal)}
+              >
                 Copiar telefone
               </button>
-              <button type="button" onClick={() => handleCardAction("won", deal)}>
+              <button
+                type="button"
+                onClick={() => handleCardAction("won", deal)}
+              >
                 Marcar venda concluida
               </button>
-              <button type="button" onClick={() => handleCardAction("lost", deal)}>
+              <button
+                type="button"
+                onClick={() => handleCardAction("lost", deal)}
+              >
                 Marcar venda perdida
               </button>
               <button
@@ -2251,7 +2402,11 @@ export default function Crm() {
         <div className={styles.viewSwitcher} aria-label="Modo de visualizacao">
           <button
             type="button"
-            className={viewMode === "kanban" ? styles.viewButtonActive : styles.viewButton}
+            className={
+              viewMode === "kanban"
+                ? styles.viewButtonActive
+                : styles.viewButton
+            }
             title="Visualizacao Kanban"
             onClick={() => setViewMode("kanban")}
           >
@@ -2259,7 +2414,9 @@ export default function Crm() {
           </button>
           <button
             type="button"
-            className={viewMode === "list" ? styles.viewButtonActive : styles.viewButton}
+            className={
+              viewMode === "list" ? styles.viewButtonActive : styles.viewButton
+            }
             title="Visualizacao em Lista"
             onClick={() => setViewMode("list")}
           >
@@ -2319,7 +2476,9 @@ export default function Crm() {
                   <button
                     key={option.id}
                     type="button"
-                    className={periodFilter === option.id ? styles.menuActive : ""}
+                    className={
+                      periodFilter === option.id ? styles.menuActive : ""
+                    }
                     onClick={() => {
                       setPeriodFilter(option.id);
                       setCalendarOpen(false);
@@ -2338,7 +2497,10 @@ export default function Crm() {
             title="Atualizar"
             onClick={loadRdCrm}
           >
-            <FiRefreshCw aria-hidden="true" className={loadingRd ? styles.spin : ""} />
+            <FiRefreshCw
+              aria-hidden="true"
+              className={loadingRd ? styles.spin : ""}
+            />
           </button>
           <button
             type="button"
@@ -2370,7 +2532,9 @@ export default function Crm() {
           <FiUser aria-hidden="true" />
           <select
             value={scopeFilter}
-            onChange={(event) => setScopeFilter(event.target.value as ScopeFilter)}
+            onChange={(event) =>
+              setScopeFilter(event.target.value as ScopeFilter)
+            }
           >
             {scopeOptions.map((option) => (
               <option key={option.id} value={option.id}>
@@ -2444,7 +2608,8 @@ export default function Crm() {
         </span>
         <strong>{formatCurrency(totals.amount)}</strong>
         <em>
-          {selectedFunnel} - {periodOptions.find((item) => item.id === periodFilter)?.name}
+          {selectedFunnel} -{" "}
+          {periodOptions.find((item) => item.id === periodFilter)?.name}
         </em>
       </div>
 
@@ -2470,11 +2635,11 @@ export default function Crm() {
           >
             {stages.map((stage, index) => {
               const stageDeals = filteredDeals.filter(
-                (deal) => deal.stageId === stage.id
+                (deal) => deal.stageId === stage.id,
               );
               const amount = stageDeals.reduce(
                 (total, deal) => total + deal.monthlyValue,
-                0
+                0,
               );
 
               return (
@@ -2568,7 +2733,9 @@ export default function Crm() {
                   <td>
                     <span className={styles.tableStatus}>
                       <span
-                        style={{ backgroundColor: getStatusMeta(deal.status).color }}
+                        style={{
+                          backgroundColor: getStatusMeta(deal.status).color,
+                        }}
                       />
                       {getStatusMeta(deal.status).name}
                     </span>
@@ -2586,7 +2753,10 @@ export default function Crm() {
       )}
 
       {advancedFiltersOpen && (
-        <aside className={styles.sidePanel} aria-label="Painel de Filtros Avancados">
+        <aside
+          className={styles.sidePanel}
+          aria-label="Painel de Filtros Avancados"
+        >
           <header>
             <h2>Painel de Filtros Avancados</h2>
             <button type="button" onClick={() => setAdvancedFiltersOpen(false)}>
@@ -2607,7 +2777,11 @@ export default function Crm() {
               <label key={key}>
                 <span>{label}</span>
                 <input
-                  value={advancedFilters[key as keyof typeof advancedFilters] as string}
+                  value={
+                    advancedFilters[
+                      key as keyof typeof advancedFilters
+                    ] as string
+                  }
                   onChange={(event) =>
                     setAdvancedFilters((current) => ({
                       ...current,
@@ -2660,13 +2834,25 @@ export default function Crm() {
           </label>
 
           <footer>
-            <button type="button" className={styles.primaryAction} onClick={() => setAdvancedFiltersOpen(false)}>
+            <button
+              type="button"
+              className={styles.primaryAction}
+              onClick={() => setAdvancedFiltersOpen(false)}
+            >
               Aplicar filtros
             </button>
-            <button type="button" className={styles.secondaryAction} onClick={clearAdvancedFilters}>
+            <button
+              type="button"
+              className={styles.secondaryAction}
+              onClick={clearAdvancedFilters}
+            >
               Limpar filtros
             </button>
-            <button type="button" className={styles.ghostAction} onClick={() => setAdvancedFiltersOpen(false)}>
+            <button
+              type="button"
+              className={styles.ghostAction}
+              onClick={() => setAdvancedFiltersOpen(false)}
+            >
               Fechar
             </button>
           </footer>
@@ -2765,13 +2951,25 @@ export default function Crm() {
             </div>
 
             <footer>
-              <button type="button" className={styles.primaryAction} onClick={() => handleCreateDeal(false)}>
+              <button
+                type="button"
+                className={styles.primaryAction}
+                onClick={() => handleCreateDeal(false)}
+              >
                 Salvar negociacao
               </button>
-              <button type="button" className={styles.secondaryAction} onClick={() => handleCreateDeal(true)}>
+              <button
+                type="button"
+                className={styles.secondaryAction}
+                onClick={() => handleCreateDeal(true)}
+              >
                 Salvar e criar tarefa
               </button>
-              <button type="button" className={styles.ghostAction} onClick={() => setCreateOpen(false)}>
+              <button
+                type="button"
+                className={styles.ghostAction}
+                onClick={() => setCreateOpen(false)}
+              >
                 Cancelar
               </button>
             </footer>
@@ -2972,7 +3170,7 @@ export default function Crm() {
                     setCardEditForm((current) =>
                       current
                         ? { ...current, customerName: event.target.value }
-                        : current
+                        : current,
                     )
                   }
                 />
@@ -2984,7 +3182,9 @@ export default function Crm() {
                   value={cardEditForm.phone}
                   onChange={(event) =>
                     setCardEditForm((current) =>
-                      current ? { ...current, phone: event.target.value } : current
+                      current
+                        ? { ...current, phone: event.target.value }
+                        : current,
                     )
                   }
                 />
@@ -2996,7 +3196,9 @@ export default function Crm() {
                   value={cardEditForm.email}
                   onChange={(event) =>
                     setCardEditForm((current) =>
-                      current ? { ...current, email: event.target.value } : current
+                      current
+                        ? { ...current, email: event.target.value }
+                        : current,
                     )
                   }
                 />
@@ -3008,7 +3210,9 @@ export default function Crm() {
                   value={cardEditForm.city}
                   onChange={(event) =>
                     setCardEditForm((current) =>
-                      current ? { ...current, city: event.target.value } : current
+                      current
+                        ? { ...current, city: event.target.value }
+                        : current,
                     )
                   }
                 />
@@ -3020,7 +3224,9 @@ export default function Crm() {
                   value={cardEditForm.plan}
                   onChange={(event) =>
                     setCardEditForm((current) =>
-                      current ? { ...current, plan: event.target.value } : current
+                      current
+                        ? { ...current, plan: event.target.value }
+                        : current,
                     )
                   }
                 />
@@ -3034,7 +3240,7 @@ export default function Crm() {
                     setCardEditForm((current) =>
                       current
                         ? { ...current, monthlyValue: event.target.value }
-                        : current
+                        : current,
                     )
                   }
                 />
@@ -3051,7 +3257,7 @@ export default function Crm() {
                             ...current,
                             priority: event.target.value as Priority,
                           }
-                        : current
+                        : current,
                     )
                   }
                 >
@@ -3073,7 +3279,7 @@ export default function Crm() {
                       setCardEditForm((current) =>
                         current
                           ? { ...current, cardColor: event.target.value }
-                          : current
+                          : current,
                       )
                     }
                   />
@@ -3083,7 +3289,7 @@ export default function Crm() {
                       setCardEditForm((current) =>
                         current
                           ? { ...current, cardColor: event.target.value }
-                          : current
+                          : current,
                       )
                     }
                   />
@@ -3096,7 +3302,9 @@ export default function Crm() {
                   value={cardEditForm.notes}
                   onChange={(event) =>
                     setCardEditForm((current) =>
-                      current ? { ...current, notes: event.target.value } : current
+                      current
+                        ? { ...current, notes: event.target.value }
+                        : current,
                     )
                   }
                 />
@@ -3116,7 +3324,7 @@ export default function Crm() {
                 className={styles.secondaryAction}
                 onClick={() =>
                   setCardEditForm((current) =>
-                    current ? { ...current, cardColor: "#ffffff" } : current
+                    current ? { ...current, cardColor: "#ffffff" } : current,
                   )
                 }
               >
@@ -3152,17 +3360,56 @@ export default function Crm() {
 
             <div className={styles.archiveList}>
               {archivedDeals.length === 0 ? (
-                <div className={styles.emptyColumn}>Nenhuma negociacao arquivada</div>
+                <div className={styles.emptyColumn}>
+                  Nenhuma negociacao arquivada
+                </div>
               ) : (
                 archivedDeals.map((deal) => (
-                  <article key={deal.id}>
-                    <div>
-                      <strong>{deal.customerName}</strong>
+                  <article
+                    key={deal.id}
+                    className={`${styles.dealCard} ${styles.archiveCard}`}
+                    style={
+                      deal.cardColor
+                        ? { backgroundColor: deal.cardColor }
+                        : undefined
+                    }
+                  >
+                    <div className={styles.cardMainButton}>
+                      <span className={styles.cardStatus}>
+                        <span
+                          className={styles.statusDot}
+                          style={{
+                            backgroundColor: getStatusMeta(deal.status).color,
+                          }}
+                        />
+                        <span>{getStatusMeta(deal.status).name}</span>
+                        <FiClock aria-hidden="true" />
+                      </span>
+                      <strong className={styles.dealName}>
+                        {deal.customerName}
+                      </strong>
+                    </div>
+
+                    <div className={styles.cardMeta}>
                       <span>
-                        {deal.phone || "-"} - {deal.city || deal.source || "Sem origem"}
+                        <FiUser aria-hidden="true" />{" "}
+                        {deal.affiliate || deal.campaign}
+                      </span>
+                      <span>
+                        {deal.phone || deal.city || deal.source || "Sem origem"}
                       </span>
                     </div>
-                    <small>{formatDateTime(deal.updatedAt)}</small>
+
+                    <div className={styles.cardValueRow}>
+                      <span>{deal.source}</span>
+                      <strong>{formatCurrency(deal.monthlyValue)}/mes</strong>
+                    </div>
+
+                    <div className={styles.activity}>
+                      <span>{deal.activity}</span>
+                      <time>{formatDateTime(deal.updatedAt)}</time>
+                    </div>
+
                     <div className={styles.archiveActions}>
                       <button
                         type="button"
@@ -3229,7 +3476,10 @@ export default function Crm() {
       )}
 
       {selectedDeal && (
-        <aside className={styles.detailPanel} aria-label="Detalhes da negociacao">
+        <aside
+          className={styles.detailPanel}
+          aria-label="Detalhes da negociacao"
+        >
           <header>
             <div>
               <span>{getStatusMeta(selectedDeal.status).name}</span>
@@ -3332,13 +3582,28 @@ export default function Crm() {
                 <dt>Plano contratado</dt>
                 <dd>{selectedDeal.sale?.plan || selectedDeal.plan}</dd>
                 <dt>Valor mensal</dt>
-                <dd>{formatCurrency(selectedDeal.sale?.monthlyValue || selectedDeal.monthlyValue)}</dd>
+                <dd>
+                  {formatCurrency(
+                    selectedDeal.sale?.monthlyValue ||
+                      selectedDeal.monthlyValue,
+                  )}
+                </dd>
                 <dt>Taxa de instalacao</dt>
-                <dd>{formatCurrency(selectedDeal.sale?.installationFee || 0)}</dd>
+                <dd>
+                  {formatCurrency(selectedDeal.sale?.installationFee || 0)}
+                </dd>
                 <dt>Data de fechamento</dt>
-                <dd>{selectedDeal.sale?.closedAt ? formatDateTime(selectedDeal.sale.closedAt) : "-"}</dd>
+                <dd>
+                  {selectedDeal.sale?.closedAt
+                    ? formatDateTime(selectedDeal.sale.closedAt)
+                    : "-"}
+                </dd>
                 <dt>Data de instalacao</dt>
-                <dd>{selectedDeal.sale?.installationAt ? formatDateTime(selectedDeal.sale.installationAt) : "-"}</dd>
+                <dd>
+                  {selectedDeal.sale?.installationAt
+                    ? formatDateTime(selectedDeal.sale.installationAt)
+                    : "-"}
+                </dd>
                 <dt>Status da instalacao</dt>
                 <dd>{selectedDeal.sale?.installationStatus || "Pendente"}</dd>
                 <dt>Codigo do cliente no SGP</dt>
@@ -3359,19 +3624,30 @@ export default function Crm() {
                 <dt>Ultima sincronizacao</dt>
                 <dd>{formatDateTime(selectedDeal.updatedAt)}</dd>
                 <dt>Status da sincronizacao</dt>
-                <dd>{syncStatus === "warning" ? "Falha parcial" : "Atualizado"}</dd>
+                <dd>
+                  {syncStatus === "warning" ? "Falha parcial" : "Atualizado"}
+                </dd>
               </dl>
             )}
           </div>
 
           <footer className={styles.detailActions}>
-            <button type="button" onClick={() => handleCardAction("whatsapp", selectedDeal)}>
+            <button
+              type="button"
+              onClick={() => handleCardAction("whatsapp", selectedDeal)}
+            >
               <FiSend aria-hidden="true" /> WhatsApp
             </button>
-            <button type="button" onClick={() => handleCardAction("task", selectedDeal)}>
+            <button
+              type="button"
+              onClick={() => handleCardAction("task", selectedDeal)}
+            >
               <FiClock aria-hidden="true" /> Tarefa
             </button>
-            <button type="button" onClick={() => handleCardAction("won", selectedDeal)}>
+            <button
+              type="button"
+              onClick={() => handleCardAction("won", selectedDeal)}
+            >
               <FiCheckCircle aria-hidden="true" /> Concluir
             </button>
           </footer>
@@ -3399,7 +3675,9 @@ export default function Crm() {
                   <span>Leads para importar</span>
                   <textarea
                     value={importLeadsText}
-                    placeholder={"Nome; telefone; email; cidade\nMaria Souza; 63999999999; maria@email.com; Palmas"}
+                    placeholder={
+                      "Nome; telefone; email; cidade\nMaria Souza; 63999999999; maria@email.com; Palmas"
+                    }
                     onChange={(event) => setImportLeadsText(event.target.value)}
                   />
                 </label>
@@ -3425,7 +3703,9 @@ export default function Crm() {
                   <span>Visualizacao padrao</span>
                   <select
                     value={viewMode}
-                    onChange={(event) => setViewMode(event.target.value as ViewMode)}
+                    onChange={(event) =>
+                      setViewMode(event.target.value as ViewMode)
+                    }
                   >
                     <option value="kanban">Kanban</option>
                     <option value="list">Lista</option>
@@ -3540,7 +3820,8 @@ export default function Crm() {
                   Adicionar etapa
                 </button>
               )}
-              {(optionsModal === "funnel" || optionsModal === "permissions") && (
+              {(optionsModal === "funnel" ||
+                optionsModal === "permissions") && (
                 <button
                   type="button"
                   className={styles.primaryAction}

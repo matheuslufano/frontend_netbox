@@ -1,4 +1,8 @@
 const DEFAULT_RD_STATION_BASE_URL = "https://api.rd.services/crm/v2";
+const DEFAULT_RD_STATION_AUTH_DIALOG_URL =
+  "https://api.rd.services/auth/dialog";
+const DEFAULT_RD_STATION_AUTH_TOKEN_URL =
+  "https://api.rd.services/auth/token";
 
 export type RdRecord = Record<string, unknown>;
 
@@ -14,6 +18,21 @@ export function getRdStationBaseUrl() {
   return (
     process.env.RD_STATION_API_BASE_URL || DEFAULT_RD_STATION_BASE_URL
   ).replace(/\/+$/, "");
+}
+
+export function getRdStationOAuthConfig() {
+  return {
+    clientId: process.env.RD_STATION_CLIENT_ID || "",
+    clientSecret: process.env.RD_STATION_CLIENT_SECRET || "",
+    callbackUrl: process.env.RD_STATION_CALLBACK_URL || "",
+    refreshToken: process.env.RD_STATION_REFRESH_TOKEN || "",
+    authDialogUrl:
+      process.env.RD_STATION_AUTH_DIALOG_URL ||
+      DEFAULT_RD_STATION_AUTH_DIALOG_URL,
+    authTokenUrl:
+      process.env.RD_STATION_AUTH_TOKEN_URL ||
+      DEFAULT_RD_STATION_AUTH_TOKEN_URL,
+  };
 }
 
 export function jsonError(message: string, status = 500, details?: unknown) {
@@ -224,6 +243,12 @@ function readValue(record: RdRecord, key: string) {
   }
 
   return key.split(".").reduce<unknown>((current, part) => {
+    if (Array.isArray(current)) {
+      const index = Number(part);
+
+      return Number.isInteger(index) ? current[index] : undefined;
+    }
+
     if (!isRecord(current)) {
       return undefined;
     }

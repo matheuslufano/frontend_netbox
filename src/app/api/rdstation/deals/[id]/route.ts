@@ -67,15 +67,15 @@ function normalizeDealUpdate(input: RdRecord) {
   delete data.pipelineId;
   delete data.customerName;
   delete data.monthlyValue;
+  delete data.deal_stage_id;
+  delete data.deal_pipeline_id;
 
   if (stageId) {
     data.stage_id = stageId;
-    data.deal_stage_id = stageId;
   }
 
   if (pipelineId) {
     data.pipeline_id = pipelineId;
-    data.deal_pipeline_id = pipelineId;
   }
 
   if (customerName) {
