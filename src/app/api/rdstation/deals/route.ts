@@ -2,6 +2,7 @@ import {
   addQueryParam,
   getListPayload,
   isRecord,
+  isRdStationCrmV1,
   jsonError,
   RdRecord,
   rdRequest,
@@ -59,7 +60,8 @@ function normalizeDeal(record: RdRecord) {
       "emails.0.address",
     ]),
     status: normalizeStatus(
-      readString(record, ["status", "deal_status", "state"])
+      readString(record, ["status", "deal_status", "state"]) ||
+        (readString(record, ["win"]) === "true" ? "won" : "")
     ),
     value: readNumber(record, ["value", "amount", "total_value", "deal_value"]),
     source:
@@ -101,31 +103,50 @@ export async function GET(request: Request) {
   const search = url.searchParams.get("q");
   const filters = [];
 
-  if (pipelineId) {
-    filters.push(`pipeline_id:${pipelineId}`);
+  if (isRdStationCrmV1()) {
+    addQueryParam(params, "page", page || "1");
+    addQueryParam(params, "limit", limit);
+    addQueryParam(params, "order", "updated_at");
+    addQueryParam(params, "direction", "desc");
+    addQueryParam(params, "deal_pipeline_id", pipelineId || "");
+    addQueryParam(params, "deal_stage_id", stageId || "");
+    addQueryParam(params, "name", search || "");
+
+    if (status === "won") {
+      params.set("win", "true");
+    } else if (status === "lost") {
+      params.set("win", "false");
+    } else if (status === "open" || status === "ongoing") {
+      params.set("closed_at", "false");
+    }
+  } else {
+    if (pipelineId) {
+      filters.push(`pipeline_id:${pipelineId}`);
+    }
+
+    if (stageId) {
+      filters.push(`stage_id:${stageId}`);
+    }
+
+    if (status && status !== "all") {
+      filters.push(`status:${status}`);
+    }
+
+    if (filters.length > 0) {
+      params.set("filter", filters.join(" AND "));
+    }
+
+    addQueryParam(params, "page[number]", page || "1");
+    addQueryParam(params, "page[size]", limit);
+
+    if (search) {
+      filters.push(`name~${search}`);
+      params.set("filter", filters.join(" AND "));
+    }
+
+    params.set("sort[updated_at]", "desc");
   }
 
-  if (stageId) {
-    filters.push(`stage_id:${stageId}`);
-  }
-
-  if (status && status !== "all") {
-    filters.push(`status:${status}`);
-  }
-
-  if (filters.length > 0) {
-    params.set("filter", filters.join(" AND "));
-  }
-
-  addQueryParam(params, "page[number]", page || "1");
-  addQueryParam(params, "page[size]", limit);
-
-  if (search) {
-    filters.push(`name~${search}`);
-    params.set("filter", filters.join(" AND "));
-  }
-
-  params.set("sort[updated_at]", "desc");
   const query = params.toString();
   const result = await rdRequest(`/deals${query ? `?${query}` : ""}`);
 
@@ -186,11 +207,11 @@ export async function POST(request: Request) {
   };
 
   if (stageId) {
-    data.stage_id = stageId;
+    data[isRdStationCrmV1() ? "deal_stage_id" : "stage_id"] = stageId;
   }
 
   if (pipelineId) {
-    data.pipeline_id = pipelineId;
+    data[isRdStationCrmV1() ? "deal_pipeline_id" : "pipeline_id"] = pipelineId;
   }
 
   if (value > 0) {
@@ -211,6 +232,72 @@ export async function POST(request: Request) {
 
   if (notes) {
     data.description = notes;
+  }
+
+  if (isRdStationCrmV1()) {
+    const result = await rdRequest("/deals", {
+      method: "POST",
+      body: JSON.stringify({
+        deal: data,
+        ...(customerName || email || phone
+          ? {
+              contacts: [
+                {
+                  name: customerName || name,
+                  ...(email
+                    ? {
+                        emails: [
+                          {
+                            email: email.toLowerCase(),
+                          },
+                        ],
+                      }
+                    : {}),
+                  ...(phone
+                    ? {
+                        phones: [
+                          {
+                            phone: phone.replace(/\D/g, ""),
+                            type: "cellphone",
+                          },
+                        ],
+                      }
+                    : {}),
+                },
+              ],
+            }
+          : {}),
+        ...(source ? { deal_source: { name: source } } : {}),
+        ...(campaign ? { campaign: { name: campaign } } : {}),
+      }),
+    });
+
+    if (!result.configured) {
+      return jsonError(
+        "Defina RD_STATION_ACCESS_TOKEN no ambiente do servidor.",
+        503
+      );
+    }
+
+    if (!result.response?.ok) {
+      return jsonError(
+        "Nao foi possivel criar a negociacao no RD Station.",
+        result.response?.status || 500,
+        result.body
+      );
+    }
+
+    return Response.json(
+      {
+        deal: isRecord(result.body)
+          ? normalizeDeal(isRecord(result.body.deal) ? result.body.deal : result.body)
+          : null,
+        raw: result.body,
+      },
+      {
+        status: 201,
+      }
+    );
   }
 
   const contactId = await createContactForDeal({

@@ -1,5 +1,6 @@
 import {
   isRecord,
+  isRdStationCrmV1,
   jsonError,
   RdRecord,
   rdRequest,
@@ -26,7 +27,7 @@ export async function PUT(request: Request, context: RouteContext) {
   const result = await rdRequest(`/deals/${encodeURIComponent(id)}`, {
     method: "PUT",
     body: JSON.stringify({
-      data,
+      [isRdStationCrmV1() ? "deal" : "data"]: data,
     }),
   });
 
@@ -71,11 +72,11 @@ function normalizeDealUpdate(input: RdRecord) {
   delete data.deal_pipeline_id;
 
   if (stageId) {
-    data.stage_id = stageId;
+    data[isRdStationCrmV1() ? "deal_stage_id" : "stage_id"] = stageId;
   }
 
   if (pipelineId) {
-    data.pipeline_id = pipelineId;
+    data[isRdStationCrmV1() ? "deal_pipeline_id" : "pipeline_id"] = pipelineId;
   }
 
   if (customerName) {

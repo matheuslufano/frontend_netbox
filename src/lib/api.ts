@@ -1061,6 +1061,23 @@ export async function atualizarCrmDeal(
   return data;
 }
 
+export async function criarCrmDeal(payload: Record<string, unknown>) {
+  const { data } = await api.post<{ deal?: CrmDeal } | CrmDeal>(
+    "/crm/deals",
+    payload
+  );
+
+  if (data && typeof data === "object" && "deal" in data) {
+    return data.deal as CrmDeal;
+  }
+
+  return data as CrmDeal;
+}
+
+export async function apagarCrmDeal(id: string | number) {
+  await api.delete(`/crm/deals/${id}`);
+}
+
 export type CrmStagePayload = {
   funnelId?: string | number;
   name?: string;

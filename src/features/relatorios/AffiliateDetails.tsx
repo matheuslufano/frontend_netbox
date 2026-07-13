@@ -125,7 +125,7 @@ const AFFILIATE_VIEW_OPTIONS: SelectOption<AffiliateViewMode>[] = [
 
 const DETAIL_TAB_OPTIONS: SelectOption<DetailTab>[] = [
   { value: "links", label: "Links", icon: FiLink },
-  { value: "conversions", label: "Conversoes", icon: FiGitBranch },
+  { value: "conversions", label: "Conv.", icon: FiGitBranch },
 ];
 
 const CONVERSION_STAGE_ICONS = [
@@ -283,7 +283,7 @@ function DetailsHeader({
 }) {
   return (
     <div className={styles.sectionHeader}>
-      <h2 className={styles.sectionTitle}>Detalhe por afiliado</h2>
+      <h2 className={styles.sectionTitle}>Afiliados</h2>
 
       <div className={styles.headerActions}>
         <SegmentedControl
@@ -429,15 +429,15 @@ function ConversionSummary({
   return (
     <div className={styles.conversionSummary}>
       <div className={styles.conversionHero}>
-        <span>Conversoes pelo WhatsApp</span>
+        <span>Conv. WhatsApp</span>
         <strong>{totalConversions}</strong>
         <p>Cliques no botao da landing que vieram de links de divulgacao.</p>
       </div>
 
       <div className={styles.conversionRanking}>
         <div className={styles.rankingHeader}>
-          <strong>Afiliados que converteram</strong>
-          <span>{ranking.length} com conversao</span>
+          <strong>Top afiliados</strong>
+          <span>{ranking.length} conv.</span>
         </div>
 
         {ranking.length === 0 ? (
@@ -1249,12 +1249,12 @@ function ConversionFlowPanel({
     filter: ConversionStatusFilter;
   }> = [
     {
-      label: "Conversoes",
+      label: "Conv.",
       value: filteredConversionEvents.length,
       filter: "all",
     },
     {
-      label: "Em atendimento",
+      label: "Atendimento",
       value: reportStats.inProgress,
       filter: "in_progress",
     },
@@ -1524,7 +1524,7 @@ function ConversionFlowPanel({
                     handleSelectAffiliate(event.target.value)
                   }
                 >
-                  <option value="all">Todos os afiliados</option>
+                  <option value="all">Todos</option>
                   {affiliateOptions.map((affiliate) => (
                     <option key={affiliate.id} value={affiliate.id}>
                       {affiliate.name}
@@ -1544,10 +1544,10 @@ function ConversionFlowPanel({
 
         <div className={styles.conversionReportMain}>
           <div className={styles.conversionReportTitleRow}>
-            <h3>Lista de conversões de novos clientes</h3>
+            <h3>Conversoes de clientes</h3>
             <div className={styles.conversionViewSwitcher}>
               <span>
-                {statusFilteredConversionEvents.length} conversoes exibidas
+                {statusFilteredConversionEvents.length} exibidas
               </span>
               <button
                 type="button"
@@ -1557,7 +1557,7 @@ function ConversionFlowPanel({
                 )}
                 onClick={() => setConversionReportView("objective")}
               >
-                Objetivo
+                Resumo
               </button>
               <button
                 type="button"
@@ -1567,7 +1567,7 @@ function ConversionFlowPanel({
                 )}
                 onClick={() => setConversionReportView("flow")}
               >
-                Fluxograma
+                Fluxo
               </button>
             </div>
           </div>
@@ -1582,7 +1582,7 @@ function ConversionFlowPanel({
               />
             )}
             <label>
-              <span>Codigo do afiliado</span>
+              <span>Codigo</span>
               <select
                 value={effectiveCodeFilter}
                 onChange={(event) => {
@@ -1590,7 +1590,7 @@ function ConversionFlowPanel({
                   if (linkFilter) onClearLinkFilter();
                 }}
               >
-                <option value="">Todos os codigos</option>
+                <option value="">Todos</option>
                 {codeOptions.map((code) => (
                   <option key={code} value={code}>
                     {code}
@@ -1767,7 +1767,7 @@ function AffiliateFilterPicker({
           (affiliate) => String(affiliate.affiliateId) === selectedAffiliateId,
         ) ?? null);
 
-  const selectedName = selectedAffiliate?.affiliate || "Todos os afiliados";
+  const selectedName = selectedAffiliate?.affiliate || "Todos";
 
   const selectedPhotoUrl = selectedAffiliate
     ? getAffiliatePhotoUrl(selectedAffiliate)
@@ -1836,7 +1836,7 @@ function AffiliateFilterPicker({
             <span className={styles.affiliateFilterAvatarAll}>T</span>
 
             <span className={styles.affiliateFilterButtonText}>
-              <strong>Todos os afiliados</strong>
+              <strong>Todos</strong>
               <small>Visualizar a base completa</small>
             </span>
           </button>
@@ -1912,7 +1912,7 @@ function AffiliateReportProfile({
 }) {
   const profileName =
     selectedAffiliate?.affiliate ||
-    (details.length === 1 ? details[0].affiliate : "Todos os afiliados");
+    (details.length === 1 ? details[0].affiliate : "Todos");
   const profileId =
     selectedAffiliate?.affiliateId ||
     (details.length === 1 ? details[0].affiliateId : null);

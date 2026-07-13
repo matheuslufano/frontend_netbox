@@ -4681,3 +4681,298 @@
     min-height: 420px;
   }
 }
+
+
+/* =========================================================
+   CABECALHO COMPACTO - FLUXOGRAMA / CONVERSOES
+   Reduz altura, textos e espacamentos dos titulos e filtros.
+========================================================= */
+.page {
+  padding: 18px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: clamp(20px, 1.55vw, 26px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.affiliateDetailsSurface {
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 18px;
+}
+
+.sectionHeader {
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.sectionTitle {
+  font-size: clamp(15px, 1.2vw, 18px) !important;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.headerActions {
+  gap: 6px;
+}
+
+.detailTabs,
+.viewSwitcher {
+  gap: 3px;
+  padding: 3px;
+  border-radius: 12px;
+}
+
+.detailTab {
+  min-height: 30px;
+  gap: 5px;
+  padding: 0 9px;
+  font-size: 10.5px;
+  line-height: 1;
+}
+
+.detailTab svg {
+  width: 13px;
+  height: 13px;
+}
+
+.viewButton {
+  width: 32px;
+  height: 30px;
+  font-size: 15px;
+}
+
+.conversionReportShell {
+  gap: 14px;
+}
+
+.conversionReportMain {
+  gap: 8px;
+}
+
+.conversionReportTitleRow {
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.conversionReportTitleRow h3 {
+  font-size: clamp(14px, 1.1vw, 16px) !important;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.conversionViewSwitcher {
+  gap: 4px;
+}
+
+.conversionViewSwitcher span {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.conversionViewSwitcher button {
+  min-height: 28px;
+  padding: 0 9px;
+  font-size: 10.5px;
+  line-height: 1;
+}
+
+.conversionReportFilters {
+  align-items: end;
+  gap: 7px;
+  padding: 8px;
+  border-radius: 14px;
+}
+
+.conversionReportFilters > strong {
+  min-height: 34px;
+  align-self: end;
+  font-size: 10px;
+}
+
+.conversionReportFilters label {
+  min-width: 118px;
+  gap: 3px;
+}
+
+.conversionReportFilters label span {
+  font-size: 8.5px;
+  line-height: 1;
+}
+
+.conversionReportFilters select,
+.conversionReportFilters input,
+.conversionReportFilters button {
+  height: 34px;
+  min-height: 34px;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 10.5px;
+  line-height: 1;
+}
+
+.affiliateFilterPicker {
+  min-width: 210px;
+  max-width: 240px;
+}
+
+.affiliateFilterTrigger,
+.conversionReportFilters .affiliateFilterTrigger {
+  min-height: 34px;
+  height: 34px;
+  max-width: 240px;
+  border-radius: 10px;
+  padding: 3px 8px 3px 4px;
+}
+
+.affiliateFilterAvatar,
+.affiliateFilterAvatarAll {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  font-size: 8px;
+}
+
+.affiliateFilterAvatarAll {
+  padding: 0;
+}
+
+.affiliateFilterTriggerText {
+  gap: 0;
+}
+
+.affiliateFilterTriggerText small {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.affiliateFilterTriggerText strong,
+.affiliateFilterButton strong,
+.affiliateFilterButtonText strong {
+  font-size: 10.5px;
+  line-height: 1.05;
+}
+
+.affiliateFilterButtonText small {
+  font-size: 9px;
+}
+
+.affiliateFilterDropdown {
+  top: calc(100% + 5px);
+  max-height: 260px;
+  gap: 5px;
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.affiliateFilterButton {
+  min-height: 38px;
+  gap: 7px;
+  border-radius: 10px;
+  padding: 5px 7px;
+}
+
+.conversionReportMetrics {
+  gap: 6px;
+}
+
+.flowMetric {
+  min-height: 64px;
+  padding: 9px 10px;
+  border-radius: 13px;
+}
+
+.flowMetric span {
+  font-size: 8.5px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+.flowMetric strong {
+  margin-top: 4px;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.conversionReportShellFull .conversionReportFilters {
+  gap: 7px;
+  padding: 8px;
+}
+
+.conversionReportShellFull .conversionReportFilters > strong {
+  min-height: 34px;
+}
+
+.conversionReportShellFull .conversionReportFilters label {
+  flex: 0 1 142px;
+}
+
+.conversionReportShellFull .conversionReportFilters select,
+.conversionReportShellFull .conversionReportFilters input,
+.conversionReportShellFull .conversionReportFilters > button {
+  height: 38px;
+  min-height: 38px;
+  font-size: 10.5px;
+}
+
+.conversionReportShellFull .affiliateFilterPicker {
+  flex: 0 0 230px;
+  min-width: 210px;
+  max-width: 230px;
+}
+
+.conversionReportShellFull .affiliateFilterTrigger {
+  height: 38px;
+  min-height: 38px;
+  max-width: 230px;
+}
+
+.conversionReportShellFull .conversionReportMetrics {
+  grid-template-columns: repeat(4, minmax(112px, 1fr));
+  gap: 7px;
+}
+
+.conversionReportShellFull .conversionObjectiveList {
+  max-height: min(980px, calc(100vh - 200px));
+}
+
+.conversionReportShellFull .conversionFlowList {
+  max-height: min(1320px, calc(100vh - 200px));
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 12px;
+  }
+
+  .sectionHeader,
+  .conversionReportTitleRow {
+    gap: 8px;
+  }
+
+  .detailTab {
+    min-height: 30px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+
+  .conversionReportFilters {
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .conversionReportMetrics,
+  .conversionReportShellFull .conversionReportMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .flowMetric {
+    min-height: 58px;
+  }
+}

@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FiAlertTriangle,
   FiBarChart2,
@@ -23,9 +30,11 @@ import {
   FiX,
 } from "react-icons/fi";
 import {
+  apagarCrmDeal,
   atualizarCrmDeal,
   atualizarCrmStage,
   criarCrmStage,
+  criarCrmDeal,
   listarChatmixWebhookLogs,
   listarClientesSgp,
   listarCrmDeals,
@@ -80,6 +89,16 @@ type DetailTab =
   | "sale"
   | "integrations";
 type OptionsModal = "import" | "funnel" | "stages" | "permissions";
+type DealOutcome = "won" | "lost";
+type StageIcon = string;
+
+const STAGE_ICONS_STORAGE_KEY = "crm-stage-icons-v1";
+const stageIconOptions = [
+  { value: "", label: "Sem icone" },
+  { value: "/conversion-icons/whatsapp.png", label: "WhatsApp" },
+  { value: "/conversion-icons/chatmix.png", label: "ChatMix" },
+  { value: "/conversion-icons/sgp.png", label: "SGP" },
+];
 
 type Deal = {
   id: string;
@@ -663,6 +682,7 @@ type StageForm = {
   isFinal: boolean;
   isWonStage: boolean;
   isLostStage: boolean;
+  icon: StageIcon;
 };
 
 const defaultStageForm: StageForm = {
@@ -674,6 +694,7 @@ const defaultStageForm: StageForm = {
   isFinal: false,
   isWonStage: false,
   isLostStage: false,
+  icon: "",
 };
 
 type CardEditForm = {
@@ -690,6 +711,22 @@ type CardEditForm = {
   priority: Priority;
   cardColor: string;
   notes: string;
+};
+
+type TaskForm = {
+  id: string | null;
+  dealId: string;
+  title: string;
+  status: "pending" | "overdue" | "done";
+  dueAt: string;
+};
+
+const defaultTaskForm: TaskForm = {
+  id: null,
+  dealId: "",
+  title: "",
+  status: "pending",
+  dueAt: "",
 };
 
 function formatCurrency(value: number) {
@@ -719,6 +756,22 @@ function toTime(value: string) {
   const date = new Date(value).getTime();
 
   return Number.isNaN(date) ? 0 : date;
+}
+
+function toDateTimeInputValue(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+
+  return offsetDate.toISOString().slice(0, 16);
 }
 
 function isOverdue(deal: Deal) {
@@ -759,6 +812,29 @@ function normalizeTitle(value: string) {
   return value.trim() || "Sem etapa";
 }
 
+function darkenHexColor(value: string, amount = 48) {
+  const match = value.trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+
+  if (!match) {
+    return "#b8c3cc";
+  }
+
+  const hex =
+    match[1].length === 3
+      ? match[1]
+          .split("")
+          .map((item) => item + item)
+          .join("")
+      : match[1];
+  const channels = [0, 2, 4].map((start) =>
+    Math.max(0, parseInt(hex.slice(start, start + 2), 16) - amount),
+  );
+
+  return `#${channels
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
 const CRM_LOCAL_DEAL_EDITS_KEY = "afiliados-netbox:crm:deal-edits";
 
 type LocalDealEdits = Record<string, Partial<Deal>>;
@@ -783,21 +859,6 @@ function readLocalDealEdits(): LocalDealEdits {
   } catch {
     return {};
   }
-}
-
-function saveLocalDealEdit(dealId: string, patch: Partial<Deal>) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const edits = readLocalDealEdits();
-
-  edits[dealId] = {
-    ...edits[dealId],
-    ...patch,
-  };
-
-  window.localStorage.setItem(CRM_LOCAL_DEAL_EDITS_KEY, JSON.stringify(edits));
 }
 
 function mergeLocalDealEdits(sourceDeals: Deal[]) {
@@ -935,6 +996,47 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
   };
 }
 
+function createBackendDealPayload(deal: Deal) {
+  return {
+    customerName: deal.customerName,
+    phone: deal.phone,
+    email: deal.email,
+    city: deal.city,
+    neighborhood: deal.neighborhood,
+    address: deal.address,
+    status: deal.status,
+    stageId: deal.stageId,
+    funnelId: deal.pipelineId,
+    source: deal.source,
+    affiliate: deal.affiliate,
+    campaign: deal.campaign,
+    value: deal.value,
+    monthlyValue: deal.monthlyValue,
+    plan: deal.plan,
+    cardColor: deal.cardColor || "",
+    owner: deal.owner,
+    activity: deal.activity,
+    lastInteractionAt: deal.lastInteractionAt,
+    nextFollowUpAt: deal.nextFollowUpAt,
+    priority: deal.priority,
+    attempts: deal.attempts,
+    notes: deal.notes,
+    trackingCode: deal.trackingCode,
+    chatmixId: deal.chatmixId,
+    rdId: deal.rdId,
+    sgpId: deal.sgpId,
+  };
+}
+
+function createBackendTaskPayload(deal: Deal) {
+  return {
+    activity: deal.activity,
+    nextFollowUpAt: deal.nextFollowUpAt,
+    tasks: deal.tasks,
+    history: deal.history,
+  };
+}
+
 function buildStagesFromRd(pipelines: RdPipeline[]) {
   const firstPipeline = pipelines[0];
   const colors = [
@@ -969,6 +1071,50 @@ function isDemoDeal(id: string) {
   return /^deal-\d+$/.test(id);
 }
 
+function getDealVisualClass(status: DealStatus) {
+  if (status === "won") {
+    return styles.dealCardWon;
+  }
+
+  if (status === "lost") {
+    return styles.dealCardLost;
+  }
+
+  if (status === "canceled") {
+    return styles.dealCardCanceled;
+  }
+
+  return "";
+}
+
+function getDealBorderColor(deal: Deal) {
+  if (deal.cardColor) {
+    return darkenHexColor(deal.cardColor);
+  }
+
+  if (isOverdue(deal)) {
+    return "#e11d48";
+  }
+
+  if (isNearDue(deal) || deal.priority === "urgent") {
+    return "#d97706";
+  }
+
+  if (deal.status === "won") {
+    return "#15803d";
+  }
+
+  if (deal.status === "lost") {
+    return "#475569";
+  }
+
+  if (deal.status === "canceled") {
+    return "#7f1d1d";
+  }
+
+  return darkenHexColor(getQuickStatusCardColor(deal.status) || "#e2e8f0");
+}
+
 export default function Crm() {
   const topBoardScrollRef = useRef<HTMLDivElement | null>(null);
   const boardRef = useRef<HTMLElement | null>(null);
@@ -976,6 +1122,8 @@ export default function Crm() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [stages, setStages] = useState<KanbanColumn[]>(defaultStages);
+  const [stageIcons, setStageIcons] = useState<Record<string, StageIcon>>({});
+  const [stageIconsLoaded, setStageIconsLoaded] = useState(false);
   const [deals, setDeals] = useState<Deal[]>(() =>
     mergeLocalDealEdits(demoDeals),
   );
@@ -991,6 +1139,7 @@ export default function Crm() {
   const [createOpen, setCreateOpen] = useState(false);
   const [stageModalOpen, setStageModalOpen] = useState(false);
   const [cardEditOpen, setCardEditOpen] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [syncDetailsOpen, setSyncDetailsOpen] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
   const [optionsModal, setOptionsModal] = useState<OptionsModal | null>(null);
@@ -1021,7 +1170,37 @@ export default function Crm() {
   });
   const [newDeal, setNewDeal] = useState(newDealDefaults);
   const [stageForm, setStageForm] = useState<StageForm>(defaultStageForm);
+
+  useEffect(() => {
+    let storedIcons: Record<string, StageIcon> = {};
+
+    try {
+      const stored = window.localStorage.getItem(STAGE_ICONS_STORAGE_KEY);
+      if (stored) {
+        storedIcons = JSON.parse(stored) as Record<string, StageIcon>;
+      }
+    } catch {
+      // Mantem os icones vazios quando o armazenamento estiver indisponivel.
+    }
+
+    queueMicrotask(() => {
+      setStageIcons(storedIcons);
+      setStageIconsLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!stageIconsLoaded) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      STAGE_ICONS_STORAGE_KEY,
+      JSON.stringify(stageIcons),
+    );
+  }, [stageIcons, stageIconsLoaded]);
   const [cardEditForm, setCardEditForm] = useState<CardEditForm | null>(null);
+  const [taskForm, setTaskForm] = useState<TaskForm>(defaultTaskForm);
   const [importLeadsText, setImportLeadsText] = useState("");
   const [permissionSettings, setPermissionSettings] = useState({
     teamCanMoveCards: true,
@@ -1029,6 +1208,10 @@ export default function Crm() {
     teamCanDeleteColumns: false,
   });
   const [boardScrollWidth, setBoardScrollWidth] = useState(0);
+  const [dealOutcome, setDealOutcome] = useState<{
+    type: DealOutcome;
+    dealName: string;
+  } | null>(null);
 
   const loadRdCrm = useCallback(async () => {
     setLoadingRd(true);
@@ -1053,7 +1236,7 @@ export default function Crm() {
           );
         }
 
-        setDeals(mergeLocalDealEdits(crmData.deals.map(createDealFromBackend)));
+        setDeals(crmData.deals.map(createDealFromBackend));
         setSyncStatus("success");
         setSyncMessage(
           crmData.sync
@@ -1101,10 +1284,8 @@ export default function Crm() {
 
       setStages(nextStages);
       setDeals(
-        mergeLocalDealEdits(
-          rdDeals.map((deal: RdDeal) =>
-            createDealFromRd(deal, nextStages[0]?.id || "sem-contato"),
-          ),
+        rdDeals.map((deal: RdDeal) =>
+          createDealFromRd(deal, nextStages[0]?.id || "sem-contato"),
         ),
       );
       setSyncStatus("success");
@@ -1369,7 +1550,6 @@ export default function Crm() {
   );
 
   function updateDeal(dealId: string, patch: Partial<Deal>) {
-    saveLocalDealEdit(dealId, patch);
     setDeals((current) =>
       current.map((deal) =>
         deal.id === dealId
@@ -1387,40 +1567,160 @@ export default function Crm() {
     );
   }
 
+  function showDealOutcome(type: DealOutcome, dealName: string) {
+    setDealOutcome({
+      type,
+      dealName,
+    });
+
+    window.setTimeout(() => {
+      setDealOutcome(null);
+    }, 2600);
+  }
+
   function createTaskForDeal(dealId: string) {
-    const taskCreatedAt = new Date();
-    const newTask = {
-      id: `task-${taskCreatedAt.getTime()}`,
-      title: "Retorno ao cliente",
-      status: "pending" as const,
-      dueAt: taskCreatedAt.toISOString(),
+    setTaskForm({
+      ...defaultTaskForm,
+      dealId,
+      dueAt: toDateTimeInputValue(new Date().toISOString()),
+    });
+    setTaskModalOpen(true);
+    setSelectedDealId(dealId);
+    setActiveDetailTab("tasks");
+  }
+
+  function editTaskForDeal(dealId: string, taskId: string) {
+    const deal = deals.find((item) => item.id === dealId);
+    const task = deal?.tasks.find((item) => item.id === taskId);
+
+    if (!task) {
+      return;
+    }
+
+    setTaskForm({
+      id: task.id,
+      dealId,
+      title: task.title,
+      status: task.status,
+      dueAt: toDateTimeInputValue(task.dueAt),
+    });
+    setTaskModalOpen(true);
+    setSelectedDealId(dealId);
+    setActiveDetailTab("tasks");
+  }
+
+  async function persistTaskChanges(
+    nextDeal: Deal,
+    successMessage: string,
+    warningMessage: string,
+  ) {
+    if (!/^\d+$/.test(nextDeal.id)) {
+      setSyncStatus("success");
+      setSyncMessage(successMessage);
+      return;
+    }
+
+    try {
+      await atualizarCrmDeal(nextDeal.id, createBackendTaskPayload(nextDeal));
+      setSyncStatus("success");
+      setSyncMessage(successMessage);
+    } catch {
+      setSyncStatus("warning");
+      setSyncMessage(warningMessage);
+    }
+  }
+
+  async function handleSaveTask() {
+    const title = taskForm.title.trim();
+
+    if (!title) {
+      setSyncStatus("warning");
+      setSyncMessage("Informe o titulo da tarefa.");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const dueAt = taskForm.dueAt ? new Date(taskForm.dueAt).toISOString() : null;
+    const currentDeal = deals.find((deal) => deal.id === taskForm.dealId);
+
+    if (!currentDeal) {
+      setSyncStatus("warning");
+      setSyncMessage("Negociacao nao encontrada para cadastrar a tarefa.");
+      return;
+    }
+
+    const task = {
+      id: taskForm.id || `task-${Date.now()}`,
+      title,
+      status: taskForm.status,
+      dueAt,
+    };
+    const isEditing = Boolean(taskForm.id);
+    const nextTasks = isEditing
+      ? currentDeal.tasks.map((item) => (item.id === task.id ? task : item))
+      : [task, ...currentDeal.tasks];
+    const message = isEditing
+      ? `Tarefa atualizada: ${task.title}`
+      : `Tarefa criada: ${task.title}`;
+    const nextDeal: Deal = {
+      ...currentDeal,
+      activity: isEditing ? "Tarefa atualizada" : "Nova tarefa criada",
+      updatedAt: now,
+      nextFollowUpAt: dueAt || currentDeal.nextFollowUpAt,
+      tasks: nextTasks,
+      history: [`${formatDateTime(now)} - ${message}`, ...currentDeal.history],
     };
 
     setDeals((current) =>
-      current.map((deal) =>
-        deal.id === dealId
-          ? {
-              ...deal,
-              activity: "Nova tarefa criada",
-              updatedAt: taskCreatedAt.toISOString(),
-              nextFollowUpAt: taskCreatedAt.toISOString(),
-              tasks: [newTask, ...deal.tasks],
-              history: [
-                `${formatDateTime(taskCreatedAt.toISOString())} - Tarefa criada: ${newTask.title}`,
-                ...deal.history,
-              ],
-            }
-          : deal,
-      ),
+      current.map((deal) => (deal.id === nextDeal.id ? nextDeal : deal)),
     );
-    setSelectedDealId(dealId);
-    setActiveDetailTab("tasks");
-    setSyncStatus("success");
-    setSyncMessage("Tarefa criada e adicionada ao cartao.");
+
+    setTaskModalOpen(false);
+    setTaskForm(defaultTaskForm);
+
+    await persistTaskChanges(
+      nextDeal,
+      isEditing ? "Tarefa atualizada e salva." : "Tarefa criada e salva.",
+      isEditing
+        ? "Tarefa atualizada na tela, mas nao foi possivel salvar no backend."
+        : "Tarefa criada na tela, mas nao foi possivel salvar no backend.",
+    );
+  }
+
+  async function deleteTaskForDeal(dealId: string, taskId: string) {
+    const now = new Date().toISOString();
+    const currentDeal = deals.find((deal) => deal.id === dealId);
+
+    if (!currentDeal) {
+      return;
+    }
+
+    const task = currentDeal.tasks.find((item) => item.id === taskId);
+    const nextDeal: Deal = {
+      ...currentDeal,
+      activity: "Tarefa apagada",
+      updatedAt: now,
+      tasks: currentDeal.tasks.filter((item) => item.id !== taskId),
+      history: [
+        `${formatDateTime(now)} - Tarefa apagada${task ? `: ${task.title}` : ""}`,
+        ...currentDeal.history,
+      ],
+    };
+
+    setDeals((current) =>
+      current.map((deal) => (deal.id === nextDeal.id ? nextDeal : deal)),
+    );
+
+    await persistTaskChanges(
+      nextDeal,
+      "Tarefa apagada e salva.",
+      "Tarefa apagada na tela, mas nao foi possivel salvar no backend.",
+    );
   }
 
   async function moveDeal(dealId: string, targetStageId: string) {
     const targetStage = getStage(stages, targetStageId);
+    const movedDeal = deals.find((deal) => deal.id === dealId);
     const targetStatus = targetStage.isWonStage
       ? "won"
       : targetStage.isLostStage
@@ -1435,11 +1735,17 @@ export default function Crm() {
     if (targetStage.isWonStage) {
       setSyncStatus("success");
       setSyncMessage("Venda concluida. Comissao do afiliado preparada.");
+      if (movedDeal?.status !== "won") {
+        showDealOutcome("won", movedDeal?.customerName || "Negociacao");
+      }
     } else if (targetStage.isLostStage) {
       setSyncStatus("warning");
       setSyncMessage(
         "Venda marcada como perdida. Informe o motivo no historico.",
       );
+      if (movedDeal?.status !== "lost") {
+        showDealOutcome("lost", movedDeal?.customerName || "Negociacao");
+      }
     }
 
     if (!isDemoDeal(dealId) && /^\d+$/.test(dealId)) {
@@ -1500,6 +1806,9 @@ export default function Crm() {
     const value = Number(newDeal.value.replace(",", "."));
     const id = `deal-${Date.now()}`;
     const now = new Date().toISOString();
+    const fallbackStageId = stages.some((stage) => stage.id === newDeal.stageId)
+      ? newDeal.stageId
+      : stages[0]?.id || "sem-contato";
     const createdDeal: Deal = {
       id,
       customerName: newDeal.customerName || "NOVA NEGOCIACAO",
@@ -1509,7 +1818,7 @@ export default function Crm() {
       neighborhood: newDeal.neighborhood,
       address: newDeal.address,
       status: newDeal.status,
-      stageId: newDeal.stageId,
+      stageId: fallbackStageId,
       source: newDeal.source,
       affiliate: newDeal.affiliate || "Sem afiliado",
       campaign: newDeal.campaign || "Manual",
@@ -1545,45 +1854,29 @@ export default function Crm() {
     setDeals((current) => [createdDeal, ...current]);
     setCreateOpen(false);
     setNewDeal(newDealDefaults);
-    setSyncStatus("success");
-    setSyncMessage("Negociacao criada e adicionada ao funil.");
+    setSyncStatus("info");
+    setSyncMessage("Salvando negociacao no backend...");
 
     try {
-      const response = await fetch("/api/rdstation/deals", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: createdDeal.customerName,
-          customerName: createdDeal.customerName,
-          phone: createdDeal.phone,
-          email: createdDeal.email,
-          source: createdDeal.source,
-          affiliate: createdDeal.affiliate,
-          campaign: createdDeal.campaign,
-          stageId: createdDeal.stageId,
-          pipelineId: createdDeal.pipelineId,
-          value: createdDeal.monthlyValue,
-          notes: createdDeal.notes,
-        }),
-      });
+      const savedDeal = await criarCrmDeal(createBackendDealPayload(createdDeal));
 
-      if (!response.ok) {
-        setSyncStatus("warning");
-        setSyncMessage(
-          "Negociacao criada localmente, mas o RD recusou a criacao.",
-        );
-      }
+      setDeals((current) =>
+        current.map((deal) =>
+          deal.id === id ? createDealFromBackend(savedDeal) : deal,
+        ),
+      );
+      setSyncStatus("success");
+      setSyncMessage("Negociacao criada e salva no backend.");
     } catch {
+      setDeals((current) => current.filter((deal) => deal.id !== id));
       setSyncStatus("warning");
       setSyncMessage(
-        "Negociacao criada localmente. RD indisponivel no momento.",
+        "Nao foi possivel salvar a negociacao no backend. O cartao nao foi criado.",
       );
     }
   }
 
-  function handleCardAction(action: string, deal: Deal) {
+  async function handleCardAction(action: string, deal: Deal) {
     setActiveCardMenuId(null);
 
     if (action === "details") {
@@ -1637,15 +1930,31 @@ export default function Crm() {
     }
 
     if (action === "archive") {
-      updateDeal(deal.id, {
+      const patch: Partial<Deal> = {
         status: "canceled",
         cardColor: deal.cardColor || getQuickStatusCardColor(deal.status),
         activity: "Negociacao arquivada",
-      });
+      };
+
+      updateDeal(deal.id, patch);
       setSyncStatus("warning");
       setSyncMessage(
         "Negociacao arquivada. Ela pode ser restaurada em Opcoes.",
       );
+
+      if (/^\d+$/.test(deal.id)) {
+        try {
+          await atualizarCrmDeal(deal.id, patch);
+          setSyncStatus("success");
+          setSyncMessage("Negociacao arquivada no backend.");
+        } catch {
+          setSyncStatus("warning");
+          setSyncMessage(
+            "Negociacao arquivada na tela, mas nao foi possivel salvar no backend.",
+          );
+        }
+      }
+
       return;
     }
 
@@ -1713,7 +2022,7 @@ export default function Crm() {
     setSyncMessage(`${filteredDeals.length} negociacao(oes) exportada(s).`);
   }
 
-  function importLeadsFromText() {
+  async function importLeadsFromText() {
     const lines = importLeadsText
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -1767,9 +2076,41 @@ export default function Crm() {
     setDeals((current) => [...importedDeals, ...current]);
     setImportLeadsText("");
     setOptionsModal(null);
-    setSyncStatus("success");
+    setSyncStatus("info");
+    setSyncMessage(`Salvando ${importedDeals.length} lead(s) no backend...`);
+
+    const results = await Promise.allSettled(
+      importedDeals.map((deal) => criarCrmDeal(createBackendDealPayload(deal))),
+    );
+    const savedDeals = results
+      .map((result, index) =>
+        result.status === "fulfilled"
+          ? {
+              temporaryId: importedDeals[index].id,
+              deal: createDealFromBackend(result.value),
+            }
+          : null,
+      )
+      .filter(
+        (item): item is { temporaryId: string; deal: Deal } => item !== null,
+      );
+    const savedByTemporaryId = new Map(
+      savedDeals.map((item) => [item.temporaryId, item.deal]),
+    );
+    const failedIds = new Set(
+      importedDeals
+        .filter((deal) => !savedByTemporaryId.has(deal.id))
+        .map((deal) => deal.id),
+    );
+
+    setDeals((current) =>
+      current
+        .filter((deal) => !failedIds.has(deal.id))
+        .map((deal) => savedByTemporaryId.get(deal.id) || deal),
+    );
+    setSyncStatus(savedDeals.length === importedDeals.length ? "success" : "warning");
     setSyncMessage(
-      `${importedDeals.length} lead(s) importado(s) para o funil.`,
+      `${savedDeals.length} de ${importedDeals.length} lead(s) importado(s) foram salvos no backend.`,
     );
   }
 
@@ -1858,30 +2199,56 @@ export default function Crm() {
     }
   }
 
-  function restoreArchivedDeal(deal: Deal) {
+  async function restoreArchivedDeal(deal: Deal) {
     const fallbackStageId = stages.some((stage) => stage.id === deal.stageId)
       ? deal.stageId
       : stages[0]?.id || "sem-contato";
-
-    updateDeal(deal.id, {
+    const patch: Partial<Deal> = {
       status: "ongoing",
       stageId: fallbackStageId,
       activity: "Negociacao restaurada",
       cardColor: "",
-    });
+    };
+
+    updateDeal(deal.id, patch);
     setSyncStatus("success");
     setSyncMessage("Negociacao restaurada para o funil.");
+
+    if (!/^\d+$/.test(deal.id)) {
+      return;
+    }
+
+    try {
+      await atualizarCrmDeal(deal.id, patch);
+      setSyncStatus("success");
+      setSyncMessage("Negociacao restaurada no backend.");
+    } catch {
+      setSyncStatus("warning");
+      setSyncMessage(
+        "Negociacao restaurada na tela, mas nao foi possivel salvar no backend.",
+      );
+    }
   }
 
-  function deleteArchivedDeal(dealId: string) {
+  async function deleteArchivedDeal(dealId: string) {
+    if (/^\d+$/.test(dealId)) {
+      try {
+        await apagarCrmDeal(dealId);
+      } catch {
+        setSyncStatus("warning");
+        setSyncMessage("Nao foi possivel apagar a negociacao no backend.");
+        return;
+      }
+    }
+
     setDeals((current) => current.filter((deal) => deal.id !== dealId));
 
     if (selectedDealId === dealId) {
       setSelectedDealId(null);
     }
 
-    setSyncStatus("warning");
-    setSyncMessage("Negociacao apagada da tela de arquivadas.");
+    setSyncStatus("success");
+    setSyncMessage("Negociacao apagada do backend.");
   }
 
   function openCreateStageModal() {
@@ -1902,6 +2269,7 @@ export default function Crm() {
       isFinal: Boolean(stage.isFinal),
       isWonStage: Boolean(stage.isWonStage),
       isLostStage: Boolean(stage.isLostStage),
+      icon: stageIcons[stage.id] || "",
     });
     setStageModalOpen(true);
   }
@@ -1969,6 +2337,10 @@ export default function Crm() {
               return firstPosition - secondPosition;
             }),
         );
+        setStageIcons((current) => ({
+          ...current,
+          [updatedStage.id]: stageForm.icon,
+        }));
         setSyncMessage("Coluna atualizada com sucesso.");
       } else {
         const createdStage = await criarCrmStage(payload);
@@ -1984,6 +2356,10 @@ export default function Crm() {
             isLostStage: createdStage.isLostStage,
           },
         ]);
+        setStageIcons((current) => ({
+          ...current,
+          [createdStage.id]: stageForm.icon,
+        }));
         setSyncMessage("Coluna criada com sucesso.");
       }
 
@@ -2016,6 +2392,11 @@ export default function Crm() {
     ).length;
 
     setStages(remainingStages);
+    setStageIcons((current) => {
+      const next = { ...current };
+      delete next[stageForm.id as string];
+      return next;
+    });
     setDeals((current) =>
       current.map((deal) =>
         deal.stageId === stageForm.id
@@ -2166,6 +2547,13 @@ export default function Crm() {
     setSyncStatus("success");
     setSyncMessage(`Status do cartao alterado para ${option.name}.`);
 
+    if (
+      (option.id === "won" || option.id === "lost") &&
+      deal.status !== option.id
+    ) {
+      showDealOutcome(option.id, deal.customerName);
+    }
+
     if (isDemoDeal(deal.id)) {
       return;
     }
@@ -2216,12 +2604,18 @@ export default function Crm() {
       : isNearDue(deal) || deal.priority === "urgent"
         ? styles.dealCardWarning
         : "";
+    const visualClass = getDealVisualClass(deal.status);
 
     return (
       <article
         key={deal.id}
-        className={`${styles.dealCard} ${alertClass}`}
-        style={deal.cardColor ? { backgroundColor: deal.cardColor } : undefined}
+        className={`${styles.dealCard} ${visualClass} ${alertClass}`}
+        style={
+          {
+            "--deal-border": getDealBorderColor(deal),
+            ...(deal.cardColor ? { backgroundColor: deal.cardColor } : {}),
+          } as CSSProperties
+        }
         draggable
         onDragStart={() => setDraggingDealId(deal.id)}
         onDragEnd={() => setDraggingDealId(null)}
@@ -2398,6 +2792,37 @@ export default function Crm() {
 
   return (
     <main className={styles.page}>
+      {dealOutcome && (
+        <div
+          className={`${styles.resultAnimationOverlay} ${
+            dealOutcome.type === "won" ? styles.outcomeWon : styles.outcomeLost
+          }`}
+          aria-live="polite"
+        >
+          <div className={styles.outcomeBurst} aria-hidden="true">
+            {Array.from({ length: 18 }).map((_, index) => (
+              <span key={index} style={{ "--i": index } as CSSProperties} />
+            ))}
+          </div>
+          <div className={styles.resultAnimationCard}>
+            <div className={styles.outcomeIcon} aria-hidden="true">
+              {dealOutcome.type === "won" ? <FiCheckCircle /> : <FiClock />}
+            </div>
+            <strong>
+              {dealOutcome.type === "won"
+                ? "Venda concluida!"
+                : "Venda perdida registrada"}
+            </strong>
+            <p>
+              {dealOutcome.type === "won"
+                ? "Otimo trabalho, essa negociacao foi finalizada com sucesso."
+                : "Tudo bem. O historico foi salvo para analise e melhoria do funil."}
+            </p>
+            <span>{dealOutcome.dealName}</span>
+          </div>
+        </div>
+      )}
+
       <header className={styles.toolbar}>
         <div className={styles.viewSwitcher} aria-label="Modo de visualizacao">
           <button
@@ -2577,7 +3002,9 @@ export default function Crm() {
 
         <button
           type="button"
-          className={styles.filterButton}
+          className={`${styles.filterButton} ${
+            activeFilterCount > 0 ? styles.filterButtonActive : ""
+          }`}
           onClick={() => setAdvancedFiltersOpen(true)}
         >
           <FiFilter aria-hidden="true" />
@@ -2650,11 +3077,20 @@ export default function Crm() {
                   onDrop={() => handleDrop(stage.id)}
                 >
                   <header className={styles.columnHeader}>
-                    <div>
-                      <h2>
-                        {stage.title} ({stageDeals.length})
-                      </h2>
-                      <small>SLA {stage.slaHours || "-"}h</small>
+                    <div className={styles.columnIdentity}>
+                      {stageIcons[stage.id] && (
+                        <span
+                          className={styles.columnIcon}
+                          style={{ backgroundImage: `url("${stageIcons[stage.id]}")` }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <div>
+                        <h2>
+                          {stage.title} ({stageDeals.length})
+                        </h2>
+                        <small>SLA {stage.slaHours || "-"}h</small>
+                      </div>
                     </div>
                     <div className={styles.columnTools}>
                       <span>{formatCurrency(amount)}</span>
@@ -3061,6 +3497,81 @@ export default function Crm() {
                   }
                 />
               </label>
+
+              <label className={styles.fullField}>
+                <span>Icone da coluna</span>
+                <div className={styles.stageIconEditor}>
+                  <span
+                    className={styles.stageIconPreview}
+                    style={
+                      stageForm.icon
+                        ? { backgroundImage: `url("${stageForm.icon}")` }
+                        : undefined
+                    }
+                    aria-hidden="true"
+                  />
+                  <select
+                    value={
+                      stageIconOptions.some(
+                        (option) => option.value === stageForm.icon,
+                      )
+                        ? stageForm.icon
+                        : "custom"
+                    }
+                    onChange={(event) =>
+                      setStageForm((current) => ({
+                        ...current,
+                        icon:
+                          event.target.value === "custom"
+                            ? current.icon
+                            : event.target.value,
+                      }))
+                    }
+                  >
+                    {stageIconOptions.map((option) => (
+                      <option key={option.label} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                    {stageForm.icon.startsWith("data:image/") && (
+                      <option value="custom">Imagem enviada</option>
+                    )}
+                  </select>
+                  <label className={styles.stageIconUpload}>
+                    Enviar imagem
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+
+                        if (file.size > 300_000) {
+                          setSyncStatus("warning");
+                          setSyncMessage("O icone deve ter no maximo 300 KB.");
+                          event.target.value = "";
+                          return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result === "string") {
+                            setStageForm((current) => ({
+                              ...current,
+                              icon: reader.result as StageIcon,
+                            }));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+                <small className={styles.fieldHint}>
+                  PNG, JPG, WebP ou SVG de ate 300 KB.
+                </small>
+              </label>
             </div>
 
             <div className={styles.stageOptions}>
@@ -3136,6 +3647,92 @@ export default function Crm() {
                 onClick={() => {
                   setStageModalOpen(false);
                   setStageForm(defaultStageForm);
+                }}
+              >
+                Cancelar
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {taskModalOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <section className={styles.taskModal}>
+            <header>
+              <h2>{taskForm.id ? "Editar tarefa" : "Criar tarefa"}</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setTaskModalOpen(false);
+                  setTaskForm(defaultTaskForm);
+                }}
+              >
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
+
+            <div className={styles.formGrid}>
+              <label className={styles.fullField}>
+                <span>Titulo da tarefa</span>
+                <input
+                  value={taskForm.title}
+                  placeholder="Ex: Ligar para confirmar instalacao"
+                  onChange={(event) =>
+                    setTaskForm((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Status</span>
+                <select
+                  value={taskForm.status}
+                  onChange={(event) =>
+                    setTaskForm((current) => ({
+                      ...current,
+                      status: event.target.value as TaskForm["status"],
+                    }))
+                  }
+                >
+                  <option value="pending">Pendente</option>
+                  <option value="overdue">Atrasada</option>
+                  <option value="done">Concluida</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Prazo</span>
+                <input
+                  type="datetime-local"
+                  value={taskForm.dueAt}
+                  onChange={(event) =>
+                    setTaskForm((current) => ({
+                      ...current,
+                      dueAt: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <footer>
+              <button
+                type="button"
+                className={styles.primaryAction}
+                onClick={handleSaveTask}
+              >
+                Salvar tarefa
+              </button>
+              <button
+                type="button"
+                className={styles.ghostAction}
+                onClick={() => {
+                  setTaskModalOpen(false);
+                  setTaskForm(defaultTaskForm);
                 }}
               >
                 Cancelar
@@ -3369,9 +3966,12 @@ export default function Crm() {
                     key={deal.id}
                     className={`${styles.dealCard} ${styles.archiveCard}`}
                     style={
-                      deal.cardColor
-                        ? { backgroundColor: deal.cardColor }
-                        : undefined
+                      {
+                        "--deal-border": getDealBorderColor(deal),
+                        ...(deal.cardColor
+                          ? { backgroundColor: deal.cardColor }
+                          : {}),
+                      } as CSSProperties
                     }
                   >
                     <div className={styles.cardMainButton}>
@@ -3476,10 +4076,17 @@ export default function Crm() {
       )}
 
       {selectedDeal && (
-        <aside
-          className={styles.detailPanel}
-          aria-label="Detalhes da negociacao"
-        >
+        <>
+          <button
+            type="button"
+            className={styles.detailBackdrop}
+            aria-label="Fechar detalhes da negociacao"
+            onClick={() => setSelectedDealId(null)}
+          />
+          <aside
+            className={styles.detailPanel}
+            aria-label="Detalhes da negociacao"
+          >
           <header>
             <div>
               <span>{getStatusMeta(selectedDeal.status).name}</span>
@@ -3559,13 +4166,43 @@ export default function Crm() {
                 >
                   Criar nova tarefa
                 </button>
-                {selectedDeal.tasks.map((task) => (
-                  <article key={task.id}>
-                    <strong>{task.title}</strong>
-                    <span>{task.status}</span>
-                    <time>{formatDateTime(task.dueAt)}</time>
-                  </article>
-                ))}
+                {selectedDeal.tasks.length === 0 ? (
+                  <div className={styles.emptyColumn}>
+                    Nenhuma tarefa cadastrada
+                  </div>
+                ) : (
+                  selectedDeal.tasks.map((task) => (
+                    <article key={task.id}>
+                      <div>
+                        <strong>{task.title}</strong>
+                        <span>{task.status}</span>
+                        <time>
+                          {task.dueAt ? formatDateTime(task.dueAt) : "Sem prazo"}
+                        </time>
+                      </div>
+                      <div className={styles.taskActions}>
+                        <button
+                          type="button"
+                          className={styles.secondaryAction}
+                          onClick={() =>
+                            editTaskForDeal(selectedDeal.id, task.id)
+                          }
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.deleteAction}
+                          onClick={() =>
+                            deleteTaskForDeal(selectedDeal.id, task.id)
+                          }
+                        >
+                          Apagar
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                )}
               </div>
             )}
 
@@ -3634,6 +4271,12 @@ export default function Crm() {
           <footer className={styles.detailActions}>
             <button
               type="button"
+              onClick={() => openEditCardModal(selectedDeal)}
+            >
+              <FiEdit3 aria-hidden="true" /> Editar
+            </button>
+            <button
+              type="button"
               onClick={() => handleCardAction("whatsapp", selectedDeal)}
             >
               <FiSend aria-hidden="true" /> WhatsApp
@@ -3651,7 +4294,8 @@ export default function Crm() {
               <FiCheckCircle aria-hidden="true" /> Concluir
             </button>
           </footer>
-        </aside>
+          </aside>
+        </>
       )}
 
       {optionsModal && (

@@ -1,29 +1,38 @@
 .page {
   position: relative;
-  min-height: calc(100vh - 104px);
+  min-height: calc(100vh - 74px);
   overflow: hidden;
   border-radius: 8px;
-  background: #eef2f5;
+  background:
+    radial-gradient(circle at 16% 6%, rgba(14, 165, 233, 0.16), transparent 31%),
+    radial-gradient(circle at 88% 0%, rgba(34, 197, 94, 0.1), transparent 28%),
+    linear-gradient(135deg, #edf5f7 0%, #f7fbfc 44%, #edf2f7 100%);
   color: #123247;
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16);
+  isolation: isolate;
 }
 
 .toolbar {
+  position: relative;
+  z-index: 40;
   display: flex;
-  min-height: 46px;
+  min-height: 42px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px 6px;
-  background: #fff;
+  padding: 8px 14px 5px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
 }
 
 .viewSwitcher {
   display: inline-flex;
   overflow: hidden;
-  border: 1px solid #b7c8d6;
+  border: 1px solid rgba(127, 156, 174, 0.42);
   border-radius: 8px;
-  background: #eef7fb;
+  background: rgba(238, 247, 251, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
 .viewButton,
@@ -40,6 +49,7 @@
 .periodMenu button,
 .sidePanel header button,
 .modal header button,
+.taskModal header button,
 .cardEditModal header button,
 .detailPanel header button,
 .syncModal header button,
@@ -53,6 +63,23 @@
   font: inherit;
 }
 
+.viewButton:focus-visible,
+.viewButtonActive:focus-visible,
+.iconButton:focus-visible,
+.createButton:focus-visible,
+.filterButton:focus-visible,
+.cardStatus:focus-visible,
+.dealNameButton:focus-visible,
+.cardMenuButton:focus-visible,
+.columnTools button:focus-visible,
+.primaryAction:focus-visible,
+.secondaryAction:focus-visible,
+.ghostAction:focus-visible,
+.deleteAction:focus-visible {
+  outline: 3px solid rgba(14, 165, 233, 0.32);
+  outline-offset: 2px;
+}
+
 .viewButton,
 .viewButtonActive {
   width: 34px;
@@ -62,8 +89,9 @@
 }
 
 .viewButtonActive {
-  background: #075e7d;
+  background: linear-gradient(135deg, #075e7d, #0e7490);
   color: #fff;
+  box-shadow: 0 8px 18px rgba(7, 94, 125, 0.2);
 }
 
 .actions {
@@ -80,12 +108,18 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.38);
   color: #075e7d;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .iconButton:hover {
-  background: #e5f4f8;
+  background: rgba(229, 244, 248, 0.9);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
 }
 
 .createButton {
@@ -93,18 +127,30 @@
   gap: 7px;
   border-radius: 8px;
   padding: 0 14px;
-  background: #075e7d;
+  background: linear-gradient(135deg, #075e7d, #0f766e);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
+  box-shadow: 0 12px 22px rgba(7, 94, 125, 0.25);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.createButton:hover {
+  box-shadow: 0 16px 28px rgba(7, 94, 125, 0.3);
+  transform: translateY(-1px);
 }
 
 .filters {
+  position: relative;
+  z-index: 35;
   display: grid;
   grid-template-columns: 1.15fr 1.15fr 1.05fr 1fr auto;
   gap: 7px;
-  padding: 0 14px 8px;
-  background: #fff;
+  padding: 0 14px 6px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
 }
 
 .selectWrap {
@@ -114,11 +160,12 @@
   gap: 7px;
   min-width: 0;
   min-height: 32px;
-  border: 1px solid #9fb4c3;
+  border: 1px solid rgba(127, 156, 174, 0.48);
   border-radius: 8px;
   padding: 0 10px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.72);
   color: #46677c;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
 }
 
 .selectWrap select {
@@ -138,10 +185,24 @@
   gap: 7px;
   border-radius: 8px;
   padding: 0 12px;
-  background: #d7edf4;
+  background: rgba(215, 237, 244, 0.8);
   color: #075e7d;
   font-size: 12px;
   font-weight: 800;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.filterButton:hover {
+  background: rgba(199, 232, 241, 0.96);
+  transform: translateY(-1px);
+}
+
+.filterButtonActive {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(22, 163, 74, 0.14));
+  color: #075e7d;
+  box-shadow: 0 10px 24px rgba(14, 116, 144, 0.14);
 }
 
 .generalMenu,
@@ -149,14 +210,16 @@
   position: absolute;
   top: 38px;
   right: 0;
-  z-index: 15;
+  z-index: 90;
   display: grid;
   min-width: 252px;
   overflow: hidden;
-  border: 1px solid #c8d6df;
+  border: 1px solid rgba(148, 163, 184, 0.36);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(18px);
+  animation: menuIn 0.16s ease-out;
 }
 
 .periodMenu {
@@ -169,7 +232,7 @@
   gap: 9px;
   min-height: 36px;
   padding: 0 12px;
-  background: #fff;
+  background: transparent;
   color: #20394a;
   font-size: 12px;
   font-weight: 750;
@@ -179,25 +242,38 @@
 .generalMenu button:hover,
 .periodMenu button:hover,
 .menuActive {
-  background: #edf7fb !important;
+  background: rgba(237, 247, 251, 0.9) !important;
   color: #075e7d !important;
 }
 
 .syncAlert {
+  position: relative;
+  z-index: 10;
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr) 18px;
   align-items: center;
   gap: 8px;
   width: calc(100% - 28px);
-  min-height: 34px;
-  margin: 0 14px 8px;
-  border: 1px solid #bdd0dc;
+  min-height: 30px;
+  margin: 0 14px 6px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
   border-radius: 8px;
   padding: 0 10px;
   font-size: 12px;
   font-weight: 800;
   text-align: left;
   cursor: pointer;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+  backdrop-filter: blur(16px);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  animation: softEnter 0.24s ease-out;
+}
+
+.syncAlert:hover {
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.11);
+  transform: translateY(-1px);
 }
 
 .syncAlert span {
@@ -207,26 +283,33 @@
 }
 
 .info {
-  background: #eff8fb;
+  background: rgba(239, 248, 251, 0.78);
   color: #075e7d;
 }
 
+.syncAlert.info svg:first-child {
+  animation: syncGlow 1.8s ease-in-out infinite;
+}
+
 .success {
-  background: #edf9f1;
+  background: rgba(237, 249, 241, 0.82);
   color: #166534;
 }
 
 .warning {
-  background: #fff7ed;
+  background: rgba(255, 247, 237, 0.86);
   color: #9a3412;
 }
 
 .summaryBar {
+  position: relative;
+  z-index: 9;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 14px 10px;
-  background: #fff;
+  padding: 0 14px 7px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
 }
 
 .summaryBar span,
@@ -234,7 +317,7 @@
 .columnTools span {
   border-radius: 4px;
   padding: 4px 8px;
-  background: #dbe3e9;
+  background: rgba(219, 227, 233, 0.82);
   color: #20394a;
   font-size: 10px;
   font-weight: 900;
@@ -255,8 +338,8 @@
 }
 
 .topBoardScroll {
-  height: 18px;
-  margin: 0 14px 8px;
+  height: 14px;
+  margin: 0 14px 6px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
@@ -288,16 +371,18 @@
   grid-auto-columns: 286px;
   grid-auto-flow: column;
   gap: 12px;
-  height: calc(100vh - 306px);
-  min-height: 360px;
+  height: calc(100vh - 238px);
+  min-height: 430px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0 14px 18px;
+  padding: 0 14px 14px;
   scrollbar-width: thin;
   scrollbar-color: #8aa6b9 #e8edf1;
+  scroll-behavior: smooth;
 }
 
 .column {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   width: 286px;
@@ -305,10 +390,30 @@
   max-width: 286px;
   min-height: 0;
   align-self: stretch;
-  overflow: hidden;
-  border: 1px solid #cbd5dd;
-  border-radius: 6px;
-  background: #e6ebef;
+  overflow: visible;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 8px;
+  background: rgba(244, 248, 250, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 14px 34px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(14px);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.column:has(.cardMenu),
+.column:has(.statusMiniMenu) {
+  z-index: 25;
+}
+
+.column:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 18px 40px rgba(15, 23, 42, 0.11);
+  transform: translateY(-1px);
 }
 
 .columnHeader {
@@ -316,12 +421,14 @@
   top: 0;
   z-index: 1;
   display: flex;
-  min-height: 50px;
+  min-height: 48px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 8px 9px;
-  background: #e6ebef;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(16px);
 }
 
 .columnHeader h2 {
@@ -343,6 +450,31 @@
   font-weight: 800;
 }
 
+.columnIdentity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.columnIdentity > div {
+  min-width: 0;
+}
+
+.columnIcon,
+.stageIconPreview {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 7px;
+  background-color: rgba(255, 255, 255, 0.82);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.08);
+}
+
 .columnTools {
   display: flex;
   align-items: center;
@@ -353,14 +485,22 @@
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.72);
   color: #057ca8;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease;
+}
+
+.columnTools button:hover {
+  background: rgba(255, 255, 255, 0.98);
+  transform: translateY(-1px);
 }
 
 .addColumn {
   min-height: 230px;
   border-style: dashed;
-  background: #f5f8fa;
+  background: rgba(245, 248, 250, 0.58);
 }
 
 .addColumnButton {
@@ -397,7 +537,7 @@
 }
 
 .addColumnButton:hover {
-  background: #edf7fb;
+  background: rgba(237, 247, 251, 0.7);
 }
 
 .cards {
@@ -407,16 +547,17 @@
   min-height: 0;
   gap: 8px;
   overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0 8px 10px;
+  overflow-x: visible;
+  padding: 0 8px 68px;
   scrollbar-width: thin;
   scrollbar-color: #91a7b5 transparent;
 }
 
 .emptyColumn {
-  border: 1px dashed #b9c8d2;
+  border: 1px dashed rgba(127, 156, 174, 0.55);
   border-radius: 6px;
   padding: 18px 10px;
+  background: rgba(255, 255, 255, 0.38);
   color: #60768a;
   font-size: 12px;
   font-weight: 800;
@@ -431,26 +572,61 @@
   max-width: 100%;
   box-sizing: border-box;
   gap: 8px;
-  border: 1px solid #d4dde4;
-  border-radius: 6px;
-  padding: 9px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--deal-border, rgba(148, 163, 184, 0.36));
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 12px 26px rgba(15, 23, 42, 0.09);
+  backdrop-filter: blur(12px);
   cursor: grab;
+  animation: cardIn 0.28s ease both;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.dealCard:hover {
+  border-color: var(--deal-border, rgba(8, 145, 178, 0.42));
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 18px 34px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.dealCard:has(.cardMenu),
+.dealCard:has(.statusMiniMenu) {
+  z-index: 35;
 }
 
 .dealCard:active {
   cursor: grabbing;
+  transform: scale(0.985);
 }
 
 .dealCardWarning {
-  border-color: #eab308;
-  background: #fffbeb;
+  background: rgba(255, 251, 235, 0.86);
 }
 
 .dealCardDanger {
-  border-color: #fb7185;
-  background: #fff1f2;
+  background: rgba(255, 241, 242, 0.9);
+}
+
+.dealCardWon {
+  background:
+    linear-gradient(135deg, rgba(240, 253, 244, 0.92), rgba(255, 255, 255, 0.74));
+}
+
+.dealCardLost {
+  background:
+    linear-gradient(135deg, rgba(248, 250, 252, 0.94), rgba(255, 255, 255, 0.74));
+}
+
+.dealCardCanceled {
+  background:
+    linear-gradient(135deg, rgba(255, 241, 242, 0.78), rgba(255, 255, 255, 0.7));
 }
 
 .cardMainButton {
@@ -482,10 +658,12 @@
   min-width: 0;
   border-radius: 5px;
   padding: 0 7px;
-  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.72);
   color: #33556b;
   font-size: 11px;
   font-weight: 800;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
 }
 
 .cardStatus span:nth-child(2) {
@@ -508,15 +686,17 @@
   position: absolute;
   top: 26px;
   left: 0;
-  z-index: 9;
+  z-index: 70;
   display: grid;
-  width: min(190px, calc(100vw - 48px));
+  width: min(206px, calc(100vw - 48px));
   max-width: 230px;
   overflow: hidden;
-  border: 1px solid #cbd5dd;
+  border: 1px solid rgba(148, 163, 184, 0.34);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(18px);
+  animation: menuIn 0.16s ease-out;
 }
 
 .statusMiniMenu button {
@@ -527,7 +707,7 @@
   min-width: 0;
   border: 0;
   padding: 8px 10px;
-  background: #fff;
+  background: transparent;
   color: #20394a;
   font-size: 12px;
   font-weight: 800;
@@ -543,7 +723,7 @@
 
 .statusMiniMenu button:hover,
 .statusMiniActive {
-  background: #edf7fb !important;
+  background: rgba(237, 247, 251, 0.92) !important;
 }
 
 .statusColorSwatch {
@@ -646,7 +826,7 @@
   overflow: hidden;
   border-radius: 4px;
   padding: 0 8px;
-  background: #e9edf0;
+  background: rgba(233, 237, 240, 0.75);
   color: #08283b;
   font-size: 10px;
   font-weight: 900;
@@ -660,7 +840,7 @@
 }
 
 .activityDanger {
-  background: #fecdd3;
+  background: rgba(254, 205, 211, 0.84);
   color: #881337;
 }
 
@@ -668,38 +848,41 @@
   position: absolute;
   top: 7px;
   right: 7px;
+  z-index: 60;
 }
 
 .cardMenuButton {
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.12);
   color: #547084;
 }
 
 .cardMenuButton:hover {
-  background: #edf4f7;
+  background: rgba(237, 244, 247, 0.9);
 }
 
 .cardMenu {
   position: absolute;
   top: 25px;
   right: 0;
-  z-index: 8;
+  z-index: 80;
   display: grid;
-  width: 218px;
+  width: 228px;
   overflow: hidden;
-  border: 1px solid #cbd5dd;
+  border: 1px solid rgba(148, 163, 184, 0.34);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.2);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(18px);
+  animation: menuIn 0.16s ease-out;
 }
 
 .cardMenu button {
   border: 0;
-  padding: 8px 10px;
-  background: #fff;
+  padding: 9px 11px;
+  background: transparent;
   color: #20394a;
   font-size: 12px;
   font-weight: 750;
@@ -708,7 +891,7 @@
 }
 
 .cardMenu button:hover {
-  background: #edf7fb;
+  background: rgba(237, 247, 251, 0.92);
 }
 
 .dangerItem {
@@ -726,9 +909,10 @@
   min-width: 1040px;
   border-spacing: 0;
   overflow: hidden;
-  border: 1px solid #cbd5dd;
+  border: 1px solid rgba(148, 163, 184, 0.34);
   border-radius: 8px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(12px);
 }
 
 .listView th,
@@ -744,11 +928,17 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #f3f7fa;
+  background: rgba(243, 247, 250, 0.92);
   color: #435c70;
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.tableStatus {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(238, 243, 246, 0.82);
 }
 
 .listView tbody tr {
@@ -756,7 +946,7 @@
 }
 
 .listView tbody tr:hover {
-  background: #f4fafc;
+  background: rgba(244, 250, 252, 0.84);
 }
 
 .tableStatus {
@@ -772,8 +962,7 @@
   border-radius: 999px;
 }
 
-.sidePanel,
-.detailPanel {
+.sidePanel {
   position: absolute;
   top: 0;
   right: 0;
@@ -782,19 +971,44 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(430px, 96vw);
   height: 100%;
-  border-left: 1px solid #cbd5dd;
-  background: #fff;
+  border-left: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(255, 255, 255, 0.88);
   box-shadow: -18px 0 34px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(20px);
+  animation: panelIn 0.22s ease-out;
+}
+
+.detailBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 105;
+  border: 0;
+  background: rgba(15, 23, 42, 0.16);
+  cursor: default;
+  backdrop-filter: blur(2px);
 }
 
 .detailPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 110;
+  display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: min(430px, 96vw);
+  height: 100vh;
+  border-left: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: -24px 0 54px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(20px);
+  animation: panelIn 0.22s ease-out;
 }
 
 .sidePanel header,
 .detailPanel header,
 .modal header,
 .stageModal header,
+.taskModal header,
 .cardEditModal header,
 .archiveModal header,
 .optionModal header,
@@ -803,7 +1017,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid #e3eaf0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
   padding: 14px;
 }
 
@@ -811,6 +1025,7 @@
 .detailPanel h2,
 .modal h2,
 .stageModal h2,
+.taskModal h2,
 .cardEditModal h2,
 .archiveModal h2,
 .optionModal h2,
@@ -832,6 +1047,7 @@
 .detailPanel header button,
 .modal header button,
 .stageModal header button,
+.taskModal header button,
 .cardEditModal header button,
 .archiveModal header button,
 .optionModal header button,
@@ -839,7 +1055,7 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: #eef3f6;
+  background: rgba(238, 243, 246, 0.82);
   color: #36566b;
 }
 
@@ -872,9 +1088,10 @@
 .formGrid textarea {
   width: 100%;
   min-height: 34px;
-  border: 1px solid #b7c8d6;
+  border: 1px solid rgba(127, 156, 174, 0.48);
   border-radius: 7px;
   padding: 0 9px;
+  background: rgba(255, 255, 255, 0.74);
   color: #123247;
   font: inherit;
   font-size: 12px;
@@ -903,13 +1120,14 @@
 .sidePanel footer,
 .modal footer,
 .stageModal footer,
+.taskModal footer,
 .cardEditModal footer,
 .archiveModal footer,
 .optionModal footer {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  border-top: 1px solid #e3eaf0;
+  border-top: 1px solid rgba(148, 163, 184, 0.24);
   padding: 12px 14px;
 }
 
@@ -927,17 +1145,18 @@
 }
 
 .primaryAction {
-  background: #075e7d;
+  background: linear-gradient(135deg, #075e7d, #0f766e);
   color: #fff;
+  box-shadow: 0 10px 22px rgba(7, 94, 125, 0.18);
 }
 
 .secondaryAction {
-  background: #d7edf4;
+  background: rgba(215, 237, 244, 0.84);
   color: #075e7d;
 }
 
 .ghostAction {
-  background: #eef3f6;
+  background: rgba(238, 243, 246, 0.84);
   color: #36566b;
 }
 
@@ -955,15 +1174,17 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 18px;
-  background: rgba(15, 23, 42, 0.38);
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px);
 }
 
 .modal,
 .stageModal,
+.taskModal,
 .cardEditModal,
 .archiveModal,
 .optionModal,
@@ -973,9 +1194,12 @@
   width: min(760px, 96vw);
   max-height: 90vh;
   overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.68);
   border-radius: 10px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(20px);
+  animation: modalIn 0.2s ease-out;
 }
 
 .syncModal {
@@ -986,6 +1210,10 @@
 
 .stageModal {
   width: min(560px, 96vw);
+}
+
+.taskModal {
+  width: min(540px, 96vw);
 }
 
 .cardEditModal {
@@ -1177,6 +1405,48 @@
   padding: 0 0 4px;
 }
 
+.stageIconEditor {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.stageIconPreview {
+  width: 36px;
+  height: 36px;
+}
+
+.stageIconUpload {
+  position: relative;
+  display: inline-flex !important;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  padding: 0 12px;
+  background: rgba(215, 237, 244, 0.84);
+  color: #075e7d !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  cursor: pointer;
+}
+
+.stageIconUpload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.fieldHint {
+  color: #60768a;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .detailTabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1239,16 +1509,62 @@
 
 .taskList article {
   display: grid;
-  gap: 4px;
-  border: 1px solid #d8e2e9;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 8px;
   padding: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
   font-size: 12px;
+}
+
+.taskList article > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.taskList article strong,
+.taskList article time {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskList article strong {
+  color: #123247;
+  font-weight: 900;
 }
 
 .taskList article span {
   color: #075e7d;
   font-weight: 900;
+  text-transform: uppercase;
+}
+
+.taskList article time {
+  color: #60768a;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.taskActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.taskActions .secondaryAction,
+.taskActions .deleteAction {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.taskActions .deleteAction {
+  margin-right: 0;
 }
 
 .timeline {
@@ -1263,7 +1579,7 @@
 
 .detailActions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   border-top: 1px solid #e3eaf0;
   padding: 12px 14px;
@@ -1283,35 +1599,352 @@
   animation: spin 0.8s linear infinite;
 }
 
+.resultAnimationOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: start center;
+  overflow: hidden;
+  padding-top: 78px;
+  color: #082f2b;
+  pointer-events: none;
+  text-align: center;
+  animation: outcomeToast 2.6s ease both;
+}
+
+.resultAnimationCard {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: min(430px, calc(100vw - 32px));
+  place-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 10px;
+  padding: 18px 22px;
+  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(22px);
+}
+
+.outcomeWon .resultAnimationCard {
+  background:
+    linear-gradient(135deg, rgba(220, 252, 231, 0.92), rgba(240, 253, 244, 0.78)),
+    rgba(255, 255, 255, 0.7);
+}
+
+.outcomeLost .resultAnimationCard {
+  background:
+    linear-gradient(135deg, rgba(255, 247, 237, 0.94), rgba(241, 245, 249, 0.86)),
+    rgba(255, 255, 255, 0.72);
+}
+
+.outcomeIcon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: outcomePop 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.outcomeIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.outcomeWon .outcomeIcon {
+  color: #15803d;
+}
+
+.outcomeLost .outcomeIcon {
+  color: #b45309;
+}
+
+.resultAnimationCard strong {
+  color: #102f43;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.resultAnimationCard p {
+  max-width: 340px;
+  margin: 0;
+  color: #486377;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.resultAnimationCard > span {
+  max-width: 340px;
+  overflow: hidden;
+  color: #486377;
+  font-size: 11px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.outcomeBurst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.outcomeBurst span {
+  --angle: calc(var(--i) * 20deg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 13px;
+  border-radius: 3px;
+  background: #22c55e;
+  opacity: 0;
+  transform: rotate(var(--angle)) translateY(0);
+  animation: burst 1.1s ease-out both;
+  animation-delay: calc(var(--i) * 0.018s);
+}
+
+.outcomeLost .outcomeBurst span {
+  background: #94a3b8;
+}
+
+.outcomeBurst span:nth-child(3n) {
+  background: #0ea5e9;
+}
+
+.outcomeBurst span:nth-child(4n) {
+  height: 7px;
+  background: #facc15;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@media (max-width: 1180px) {
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes softEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes syncGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(14, 165, 233, 0));
+    opacity: 0.85;
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.42));
+    opacity: 1;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes outcomeToast {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  12%,
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+@keyframes outcomePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-8deg);
+  }
+  72% {
+    transform: scale(1.08) rotate(3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes burst {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(0) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(-118px) scale(1);
+  }
+}
+
+@media (max-width: 1280px) {
   .filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .filterButton {
     justify-self: start;
   }
+
+  .board {
+    grid-auto-columns: clamp(260px, 28vw, 286px);
+  }
+
+  .column {
+    width: clamp(260px, 28vw, 286px);
+    max-width: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .page {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .toolbar,
+  .filters,
+  .summaryBar {
+    padding-inline: 12px;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summaryBar {
+    flex-wrap: wrap;
+  }
+
+  .summaryBar strong {
+    margin-left: 0;
+  }
+
+  .board {
+    grid-auto-columns: clamp(260px, 34vw, 320px);
+    height: calc(100vh - 270px);
+    min-height: 390px;
+    padding-inline: 12px;
+  }
+
+  .column {
+    width: clamp(260px, 34vw, 320px);
+    max-width: none;
+  }
+
+  .listView {
+    padding-inline: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .detailActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
   .page {
-    min-height: calc(100vh - 96px);
+    min-height: 100dvh;
+    border-radius: 0;
+    overflow: hidden;
   }
 
   .toolbar {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
+    gap: 10px;
+    padding: 10px 12px 8px;
+  }
+
+  .viewSwitcher {
+    width: 100%;
+  }
+
+  .viewButton,
+  .viewButtonActive {
+    flex: 1;
+    width: auto;
+    min-width: 0;
   }
 
   .actions {
+    display: grid;
     width: 100%;
-    justify-content: flex-end;
+    grid-template-columns: repeat(3, minmax(0, auto)) minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .actions .popoverWrap:last-child,
+  .createButton {
+    width: 100%;
+  }
+
+  .createButton {
+    justify-content: center;
+    min-height: 38px;
   }
 
   .filters,
@@ -1320,24 +1953,92 @@
     grid-template-columns: 1fr;
   }
 
-  .summaryBar {
-    align-items: flex-start;
-    flex-direction: column;
+  .filters {
+    gap: 8px;
+    padding: 0 12px 8px;
   }
 
-  .summaryBar strong {
-    margin-left: 0;
+  .selectWrap,
+  .filterButton {
+    min-height: 38px;
+  }
+
+  .filterButton {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .generalMenu,
+  .periodMenu,
+  .cardMenu {
+    right: 0;
+    width: min(280px, calc(100vw - 32px));
+    min-width: 0;
+  }
+
+  .summaryBar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 12px 8px;
+  }
+
+  .summaryBar span,
+  .summaryBar strong,
+  .summaryBar em {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .topBoardScroll {
+    margin-inline: 12px;
   }
 
   .board {
-    grid-auto-columns: minmax(270px, 88vw);
-    height: calc(100vh - 404px);
-    min-height: 330px;
+    grid-auto-columns: minmax(272px, 86vw);
+    height: auto;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 12px 14px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
   }
 
   .column {
-    width: 88vw;
-    max-width: 286px;
+    width: 86vw;
+    max-width: none;
+    height: min(68dvh, 620px);
+    min-height: 360px;
+    scroll-snap-align: start;
+  }
+
+  .columnHeader h2 {
+    max-width: 62vw;
+  }
+
+  .cards {
+    padding-bottom: 96px;
+  }
+
+  .listView {
+    min-height: auto;
+    max-height: calc(100dvh - 260px);
+    overflow: auto;
+    padding: 0 12px 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .listView table {
+    min-width: 760px;
+  }
+
+  .sidePanel,
+  .detailPanel {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    border-left: 0;
   }
 
   .detailContent dl {
@@ -1350,5 +2051,276 @@
 
   .detailActions {
     grid-template-columns: 1fr;
+  }
+
+  .modalOverlay {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .modal,
+  .stageModal,
+  .taskModal,
+  .cardEditModal,
+  .archiveModal,
+  .optionModal,
+  .syncModal {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    border-radius: 12px;
+  }
+
+  .sidePanel header,
+  .detailPanel header,
+  .modal header,
+  .stageModal header,
+  .taskModal header,
+  .cardEditModal header,
+  .archiveModal header,
+  .optionModal header,
+  .syncModal header {
+    padding: 12px;
+  }
+
+  .filterGrid,
+  .formGrid,
+  .optionBody,
+  .archiveList,
+  .detailContent {
+    padding: 12px;
+  }
+
+  .stageIconEditor {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .stageIconUpload {
+    grid-column: 1 / -1;
+  }
+
+  .sidePanel footer,
+  .modal footer,
+  .stageModal footer,
+  .taskModal footer,
+  .cardEditModal footer,
+  .archiveModal footer,
+  .optionModal footer {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .primaryAction,
+  .secondaryAction,
+  .ghostAction,
+  .deleteAction {
+    width: 100%;
+    min-height: 38px;
+  }
+
+  .deleteAction {
+    margin-right: 0;
+  }
+
+  .archiveList {
+    grid-template-columns: 1fr;
+  }
+
+  .optionList article {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+  }
+
+  .optionList article > button:last-child {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .taskList article {
+    grid-template-columns: 1fr;
+  }
+
+  .taskActions {
+    justify-content: stretch;
+  }
+
+  .taskActions .secondaryAction,
+  .taskActions .deleteAction {
+    flex: 1 1 140px;
+  }
+
+  .resultAnimationOverlay {
+    padding: 14px;
+    place-items: start center;
+  }
+
+  .resultAnimationCard {
+    width: 100%;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    min-height: 100dvh;
+  }
+
+  .toolbar,
+  .filters,
+  .summaryBar {
+    padding-inline: 10px;
+  }
+
+  .actions {
+    grid-template-columns: repeat(3, 34px) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .iconButton {
+    width: 34px;
+    height: 34px;
+  }
+
+  .createButton {
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+
+  .board {
+    grid-auto-columns: minmax(260px, 92vw);
+    padding-inline: 10px;
+  }
+
+  .column {
+    width: 92vw;
+    height: min(70dvh, 620px);
+    min-height: 350px;
+  }
+
+  .dealCard {
+    padding: 9px;
+  }
+
+  .cardMeta,
+  .cardValueRow,
+  .activity {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .cardMeta span,
+  .cardValueRow span,
+  .cardValueRow strong,
+  .activity span,
+  .activity time {
+    white-space: normal;
+  }
+
+  .cardStatusWrap,
+  .dealName,
+  .archiveCard .cardStatus {
+    max-width: 100%;
+  }
+
+  .statusMiniMenu {
+    width: min(230px, calc(100vw - 40px));
+  }
+
+  .listView table {
+    min-width: 680px;
+  }
+
+  .modalOverlay {
+    padding: 0;
+  }
+
+  .modal,
+  .stageModal,
+  .taskModal,
+  .cardEditModal,
+  .archiveModal,
+  .optionModal,
+  .syncModal {
+    max-height: 100dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .detailPanel h2,
+  .sidePanel h2,
+  .modal h2,
+  .stageModal h2,
+  .taskModal h2,
+  .cardEditModal h2,
+  .archiveModal h2,
+  .optionModal h2,
+  .syncModal h2 {
+    font-size: 14px;
+  }
+
+  .resultAnimationCard strong {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .board {
+    grid-auto-columns: minmax(236px, 92vw);
+  }
+
+  .column {
+    width: 92vw;
+  }
+
+  .columnHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .columnTools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .generalMenu,
+  .periodMenu,
+  .cardMenu {
+    width: min(260px, calc(100vw - 24px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iconButton,
+  .createButton,
+  .filterButton,
+  .dealCard,
+  .column,
+  .syncAlert,
+  .columnTools button {
+    transition: none;
+  }
+
+  .dealCard,
+  .generalMenu,
+  .periodMenu,
+  .cardMenu,
+  .statusMiniMenu,
+  .modal,
+  .stageModal,
+  .taskModal,
+  .cardEditModal,
+  .archiveModal,
+  .optionModal,
+  .syncModal,
+  .sidePanel,
+  .detailPanel,
+  .resultAnimationOverlay,
+  .resultAnimationCard,
+  .outcomeIcon,
+  .outcomeBurst span,
+  .syncAlert.info svg:first-child,
+  .spin {
+    animation: none !important;
   }
 }

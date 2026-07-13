@@ -1,5 +1,6 @@
 import {
   getListPayload,
+  isRdStationCrmV1,
   jsonError,
   RdRecord,
   rdRequest,
@@ -14,6 +15,7 @@ function readStages(record: RdRecord) {
     "stages",
     "deal_stages",
     "pipeline_stages",
+    "deal_pipeline_stages",
   ]).map((stage, index) => ({
     id: readString(stage, ["id", "_id", "uuid"]) || `stage-${index + 1}`,
     name: readString(stage, ["name", "title"]) || "Etapa sem nome",
@@ -35,7 +37,9 @@ function normalizePipeline(record: RdRecord) {
 }
 
 export async function GET() {
-  const result = await rdRequest("/pipelines");
+  const result = await rdRequest(
+    isRdStationCrmV1() ? "/deal_pipelines" : "/pipelines"
+  );
 
   if (!result.configured) {
     return jsonError(

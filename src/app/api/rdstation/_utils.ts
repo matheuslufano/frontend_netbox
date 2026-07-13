@@ -1,4 +1,4 @@
-const DEFAULT_RD_STATION_BASE_URL = "https://api.rd.services/crm/v2";
+const DEFAULT_RD_STATION_BASE_URL = "https://crm.rdstation.com/api/v1";
 const DEFAULT_RD_STATION_AUTH_DIALOG_URL =
   "https://api.rd.services/auth/dialog";
 const DEFAULT_RD_STATION_AUTH_TOKEN_URL =
@@ -18,6 +18,10 @@ export function getRdStationBaseUrl() {
   return (
     process.env.RD_STATION_API_BASE_URL || DEFAULT_RD_STATION_BASE_URL
   ).replace(/\/+$/, "");
+}
+
+export function isRdStationCrmV1() {
+  return getRdStationBaseUrl().includes("crm.rdstation.com/api/v1");
 }
 
 export function getRdStationOAuthConfig() {
@@ -78,13 +82,23 @@ export async function rdRequest(
     };
   }
 
-  const response = await fetch(`${getRdStationBaseUrl()}${path}`, {
+  const url = new URL(`${getRdStationBaseUrl()}${path}`);
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+
+  if (isRdStationCrmV1()) {
+    url.searchParams.set("token", accessToken);
+  } else {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(url, {
     ...options,
     cache: "no-store",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
+      ...headers,
       ...options.headers,
     },
   });
