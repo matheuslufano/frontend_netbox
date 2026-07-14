@@ -1,8 +1,10 @@
-const DEFAULT_RD_STATION_BASE_URL = "https://crm.rdstation.com/api/v1";
+const DEFAULT_RD_STATION_BASE_URL = "https://api.rd.services/crm/v2";
 const DEFAULT_RD_STATION_AUTH_DIALOG_URL =
-  "https://api.rd.services/auth/dialog";
+  "https://accounts.rdstation.com/oauth/authorize";
 const DEFAULT_RD_STATION_AUTH_TOKEN_URL =
-  "https://api.rd.services/auth/token";
+  "https://api.rd.services/oauth2/token";
+
+export const RD_STATION_OAUTH_STATE_COOKIE = "rdstation_oauth_state";
 
 export type RdRecord = Record<string, unknown>;
 
@@ -40,7 +42,7 @@ export function getRdStationOAuthConfig() {
 }
 
 export function jsonError(message: string, status = 500, details?: unknown) {
-  return Response.json(
+  return jsonNoStore(
     {
       error: message,
       message,
@@ -50,6 +52,81 @@ export function jsonError(message: string, status = 500, details?: unknown) {
       status,
     }
   );
+}
+
+export function jsonNoStore(
+  body: unknown,
+  init: ResponseInit = {}
+) {
+  const headers = new Headers(init.headers);
+
+  headers.set("Cache-Control", "no-store, max-age=0");
+  headers.set("Pragma", "no-cache");
+  headers.set("Referrer-Policy", "no-referrer");
+
+  return Response.json(body, {
+    ...init,
+    headers,
+  });
+}
+
+export async function requestRdStationOAuthToken(
+  authTokenUrl: string,
+  values: Record<string, string>
+) {
+  const response = await fetch(authTokenUrl, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: new URLSearchParams(values),
+  });
+  const payload = await readJson(response);
+
+  return {
+    response,
+    payload,
+  };
+}
+
+export function readCookie(request: Request, name: string) {
+  const cookieHeader = request.headers.get("cookie");
+
+  if (!cookieHeader) {
+    return "";
+  }
+
+  for (const item of cookieHeader.split(";")) {
+    const [key, ...valueParts] = item.trim().split("=");
+
+    if (key === name) {
+      try {
+        return decodeURIComponent(valueParts.join("="));
+      } catch {
+        return "";
+      }
+    }
+  }
+
+  return "";
+}
+
+export function createOAuthStateCookie(
+  state: string,
+  requestUrl: string,
+  maxAge = 600
+) {
+  const secure = new URL(requestUrl).protocol === "https:" ? "; Secure" : "";
+
+  return [
+    `${RD_STATION_OAUTH_STATE_COOKIE}=${encodeURIComponent(state)}`,
+    "Path=/api/rdstation",
+    "HttpOnly",
+    "SameSite=Lax",
+    `Max-Age=${maxAge}`,
+  ].join("; ") + secure;
 }
 
 export async function readJson(response: Response) {
