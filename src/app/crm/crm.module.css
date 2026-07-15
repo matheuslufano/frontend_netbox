@@ -337,35 +337,6 @@
   white-space: nowrap;
 }
 
-.topBoardScroll {
-  height: 14px;
-  margin: 0 14px 6px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #6f8da0 #dfe8ee;
-}
-
-.topBoardScroll::-webkit-scrollbar {
-  height: 10px;
-}
-
-.topBoardScroll::-webkit-scrollbar-track {
-  border-radius: 999px;
-  background: #dfe8ee;
-}
-
-.topBoardScroll::-webkit-scrollbar-thumb {
-  border: 2px solid #dfe8ee;
-  border-radius: 999px;
-  background: #6f8da0;
-}
-
-.topBoardScrollContent {
-  height: 1px;
-  min-width: 100%;
-}
-
 .board {
   display: grid;
   grid-auto-columns: 286px;
@@ -378,7 +349,27 @@
   padding: 0 14px 14px;
   scrollbar-width: thin;
   scrollbar-color: #8aa6b9 #e8edf1;
-  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  overscroll-behavior-inline: contain;
+}
+
+.board::-webkit-scrollbar {
+  height: 10px;
+}
+
+.board::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #e8edf1;
+}
+
+.board::-webkit-scrollbar-thumb {
+  border: 2px solid #e8edf1;
+  border-radius: 999px;
+  background: #7898ad;
+}
+
+.board::-webkit-scrollbar-thumb:hover {
+  background: #5f8198;
 }
 
 .column {
@@ -393,11 +384,10 @@
   overflow: visible;
   border: 1px solid rgba(148, 163, 184, 0.32);
   border-radius: 8px;
-  background: rgba(244, 248, 250, 0.62);
+  background: #f4f8fa;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.74),
     0 14px 34px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(14px);
   transition:
     box-shadow 0.18s ease,
     transform 0.18s ease,
@@ -427,8 +417,7 @@
   gap: 8px;
   padding: 8px 9px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(16px);
+  background: #fbfdfe;
 }
 
 .columnHeader h2 {
@@ -548,6 +537,7 @@
   gap: 8px;
   overflow-y: auto;
   overflow-x: visible;
+  overscroll-behavior: contain;
   padding: 0 8px 68px;
   scrollbar-width: thin;
   scrollbar-color: #91a7b5 transparent;
@@ -571,21 +561,214 @@
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 8px;
+  gap: 10px;
   border: 1px solid var(--deal-border, rgba(148, 163, 184, 0.36));
-  border-radius: 8px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.88);
+  border-radius: 12px;
+  padding: 14px;
+  background: #ffffff;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.05),
     0 12px 26px rgba(15, 23, 42, 0.09);
-  backdrop-filter: blur(12px);
   cursor: grab;
   animation: cardIn 0.28s ease both;
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
     transform 0.18s ease;
+}
+
+.dealCardHeader {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-right: 24px;
+  color: #506987;
+  font-size: 12px;
+}
+
+.dealCustomer,
+.dealCardHeader time {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.dealCustomer {
+  flex: 1;
+}
+
+.dealCustomer svg,
+.dealCardHeader time svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: #6984a6;
+}
+
+.dealCustomer strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dealCardHeader time {
+  flex: 0 0 auto;
+  color: #768caa;
+  font-weight: 700;
+}
+
+.dealServiceTitle {
+  display: block;
+  overflow: hidden;
+  color: #4f3df4;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dealInfoList {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.dealInfoList > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.dealInfoList > div > svg {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  color: #8095b0;
+}
+
+.dealInfoList > div > span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.dealInfoList small {
+  color: #8293aa;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.dealInfoList strong {
+  overflow: hidden;
+  color: #526d8e;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dealBadges {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dealBadges .cardStatus {
+  grid-template-columns: 6px minmax(0, 1fr) 10px;
+  min-height: 24px;
+  border: 0;
+  padding: 0 7px;
+  color: #ffffff;
+  font-size: 10px;
+  box-shadow: none;
+}
+
+.dealBadges .cardStatus:hover {
+  filter: brightness(0.95);
+}
+
+.dealBadges .statusDot {
+  width: 6px;
+  height: 8px;
+  background: #ffffff !important;
+}
+
+.dealBadges .cardStatus svg {
+  width: 10px;
+  height: 10px;
+}
+
+.dealOrigin {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: #506987;
+  font-size: 11px;
+}
+
+.dealOrigin > span {
+  display: grid;
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  border: 1.5px solid #5468ff;
+  border-radius: 50%;
+  color: #5468ff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.dealOrigin strong {
+  flex: 0 0 auto;
+  color: #263c57;
+}
+
+.dealOrigin p {
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dealDetailsButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #2296e8;
+  border-radius: 5px;
+  padding: 0;
+  background: #ffffff;
+  color: #1688da;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.dealDetailsButton svg {
+  width: 12px;
+  height: 12px;
+}
+
+.dealDetailsButton:hover {
+  background: #2296e8;
+  color: #ffffff;
 }
 
 .dealCard:hover {
@@ -1988,10 +2171,6 @@
   .summaryBar em {
     width: 100%;
     white-space: normal;
-  }
-
-  .topBoardScroll {
-    margin-inline: 12px;
   }
 
   .board {

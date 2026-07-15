@@ -2,10 +2,10 @@
 
 import {
   type CSSProperties,
+  type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import {
@@ -17,10 +17,13 @@ import {
   FiClipboard,
   FiClock,
   FiDownload,
+  FiEye,
   FiEdit3,
   FiFilter,
+  FiHash,
   FiList,
   FiMoreVertical,
+  FiPhone,
   FiPlus,
   FiRefreshCw,
   FiSend,
@@ -129,6 +132,7 @@ type Deal = {
   notes: string;
   trackingCode: string;
   chatmixId: string;
+  conversionId?: number | null;
   rdId: string;
   sgpId: string;
   sale?: {
@@ -234,303 +238,6 @@ const defaultStages: KanbanColumn[] = [
 ];
 
 const demoDeals: Deal[] = [
-  {
-    id: "deal-1",
-    customerName: "GUILHERME",
-    phone: "63992110001",
-    email: "guilherme@email.com",
-    city: "Palmas",
-    neighborhood: "Plano Diretor Sul",
-    address: "Quadra 110 Sul",
-    status: "new",
-    stageId: "em-atendimento",
-    source: "Link Campanha Netbox",
-    affiliate: "Afiliado Sabrina",
-    campaign: "Campanha Julho",
-    value: 149.9,
-    monthlyValue: 149.9,
-    plan: "Fibra 600 Mega",
-    owner: "Mateus",
-    activity: "1o contato - 24 horas",
-    createdAt: "2026-07-04T12:53:00",
-    updatedAt: "2026-07-04T12:53:00",
-    lastInteractionAt: "2026-07-04T12:53:00",
-    nextFollowUpAt: "2026-07-06T09:00:00",
-    priority: "medium",
-    attempts: 1,
-    notes: "Lead pediu retorno pelo WhatsApp.",
-    trackingCode: "NBX-JUL-001",
-    chatmixId: "chatmix-2041",
-    rdId: "rd-1001",
-    sgpId: "",
-    history: [
-      "04/07/2026 12:53 - Lead criado via Link Campanha Netbox",
-      "04/07/2026 13:10 - Primeiro contato registrado",
-    ],
-    tasks: [
-      {
-        id: "task-1",
-        title: "Retornar pelo WhatsApp",
-        status: "pending",
-        dueAt: "2026-07-06T09:00:00",
-      },
-    ],
-  },
-  {
-    id: "deal-2",
-    customerName: "ARTHUR",
-    phone: "63992110002",
-    email: "arthur@email.com",
-    city: "Paraiso do Tocantins",
-    neighborhood: "Centro",
-    address: "Rua 7 de Setembro",
-    status: "ongoing",
-    stageId: "em-atendimento",
-    source: "WhatsApp direto",
-    affiliate: "Afiliado Pedro",
-    campaign: "Organico",
-    value: 139.9,
-    monthlyValue: 139.9,
-    plan: "Fibra 500 Mega",
-    owner: "Juliana",
-    activity: "3o contato - 3 a 4 dias",
-    createdAt: "2026-07-03T18:01:00",
-    updatedAt: "2026-07-05T08:30:00",
-    lastInteractionAt: "2026-07-05T08:30:00",
-    nextFollowUpAt: "2026-07-06T14:00:00",
-    priority: "low",
-    attempts: 3,
-    notes: "Cliente comparando planos.",
-    trackingCode: "NBX-WPP-043",
-    chatmixId: "chatmix-2042",
-    rdId: "rd-1002",
-    sgpId: "",
-    history: [
-      "03/07/2026 18:01 - Lead criado via WhatsApp",
-      "05/07/2026 08:30 - Cliente pediu proposta",
-    ],
-    tasks: [
-      {
-        id: "task-2",
-        title: "Enviar proposta de 500 Mega",
-        status: "pending",
-        dueAt: "2026-07-06T14:00:00",
-      },
-    ],
-  },
-  {
-    id: "deal-3",
-    customerName: "JOELSON SILVA",
-    phone: "63992110003",
-    email: "joelson@email.com",
-    city: "Gurupi",
-    neighborhood: "Setor Aeroporto",
-    address: "Av. Goias",
-    status: "presentation",
-    stageId: "apresentacao",
-    source: "Atendimento Chatmix",
-    affiliate: "Afiliado Arthur",
-    campaign: "Chatmix",
-    value: 159.9,
-    monthlyValue: 159.9,
-    plan: "Fibra 700 Mega",
-    owner: "Mateus",
-    activity: "Apresentacao enviada",
-    createdAt: "2026-07-04T18:24:00",
-    updatedAt: "2026-07-05T17:52:00",
-    lastInteractionAt: "2026-07-05T17:52:00",
-    nextFollowUpAt: "2026-07-06T11:30:00",
-    priority: "medium",
-    attempts: 2,
-    notes: "Enviar cobertura do bairro.",
-    trackingCode: "NBX-CHT-091",
-    chatmixId: "chatmix-2043",
-    rdId: "rd-1003",
-    sgpId: "",
-    history: [
-      "04/07/2026 18:24 - Lead criado via Chatmix",
-      "05/07/2026 17:52 - Apresentacao enviada",
-    ],
-    tasks: [
-      {
-        id: "task-3",
-        title: "Conferir cobertura",
-        status: "pending",
-        dueAt: "2026-07-06T11:30:00",
-      },
-    ],
-  },
-  {
-    id: "deal-4",
-    customerName: "THIAGO RODRIGUES DE SOUSA",
-    phone: "63992110004",
-    email: "thiago@email.com",
-    city: "Palmas",
-    neighborhood: "Aureny III",
-    address: "Rua Tocantins",
-    status: "waiting",
-    stageId: "apresentacao",
-    source: "Trafego pago",
-    affiliate: "Afiliado Sabrina",
-    campaign: "Meta Ads",
-    value: 0,
-    monthlyValue: 0,
-    plan: "A definir",
-    owner: "Carlos",
-    activity: "Retorno vencido",
-    createdAt: "2026-07-03T15:25:00",
-    updatedAt: "2026-07-03T15:25:00",
-    lastInteractionAt: "2026-07-03T15:25:00",
-    nextFollowUpAt: "2026-07-04T09:00:00",
-    priority: "urgent",
-    attempts: 2,
-    notes: "Lead parado, retorno vencido.",
-    trackingCode: "NBX-META-011",
-    chatmixId: "",
-    rdId: "rd-1004",
-    sgpId: "",
-    history: [
-      "03/07/2026 15:25 - Lead criado via Trafego pago",
-      "04/07/2026 09:00 - Retorno venceu",
-    ],
-    tasks: [
-      {
-        id: "task-4",
-        title: "Retorno urgente",
-        status: "overdue",
-        dueAt: "2026-07-04T09:00:00",
-      },
-    ],
-  },
-  {
-    id: "deal-5",
-    customerName: "JOSE VICTOR ALVES DA SILVA",
-    phone: "63992110005",
-    email: "jose@email.com",
-    city: "Porto Nacional",
-    neighborhood: "Jardim Municipal",
-    address: "Rua Principal",
-    status: "negotiation",
-    stageId: "informacoes",
-    source: "Indicacao de cliente",
-    affiliate: "Afiliado Pedro",
-    campaign: "Indicacao",
-    value: 149.9,
-    monthlyValue: 149.9,
-    plan: "Fibra 600 Mega",
-    owner: "Juliana",
-    activity: "Conferencia de dados",
-    createdAt: "2026-07-04T15:23:00",
-    updatedAt: "2026-07-05T12:10:00",
-    lastInteractionAt: "2026-07-05T12:10:00",
-    nextFollowUpAt: "2026-07-06T16:00:00",
-    priority: "high",
-    attempts: 2,
-    notes: "Dados cadastrais quase completos.",
-    trackingCode: "NBX-IND-082",
-    chatmixId: "",
-    rdId: "rd-1005",
-    sgpId: "",
-    history: [
-      "04/07/2026 15:23 - Lead criado via Indicacao",
-      "05/07/2026 12:10 - Dados cadastrais recebidos",
-    ],
-    tasks: [
-      {
-        id: "task-5",
-        title: "Validar CPF e endereco",
-        status: "pending",
-        dueAt: "2026-07-06T16:00:00",
-      },
-    ],
-  },
-  {
-    id: "deal-6",
-    customerName: "EDIVAN SILVANO ARRUDA",
-    phone: "63992110006",
-    email: "edivan@email.com",
-    city: "Palmas",
-    neighborhood: "Taquaralto",
-    address: "Av. Tocantins",
-    status: "won",
-    stageId: "venda-concluida",
-    source: "Afiliado",
-    affiliate: "Afiliado Guilherme",
-    campaign: "Afiliados Netbox",
-    value: 99.9,
-    monthlyValue: 99.9,
-    plan: "Fibra 300 Mega",
-    owner: "Mateus",
-    activity: "Instalacao agendada",
-    createdAt: "2026-07-04T11:16:00",
-    updatedAt: "2026-07-05T09:30:00",
-    lastInteractionAt: "2026-07-05T09:30:00",
-    nextFollowUpAt: "2026-07-07T09:00:00",
-    priority: "medium",
-    attempts: 1,
-    notes: "Venda concluida, aguardando instalacao.",
-    trackingCode: "NBX-AFI-700",
-    chatmixId: "",
-    rdId: "rd-1006",
-    sgpId: "sgp-7712",
-    sale: {
-      plan: "Fibra 300 Mega",
-      monthlyValue: 99.9,
-      installationFee: 0,
-      closedAt: "2026-07-05T09:30:00",
-      installationAt: "2026-07-07T09:00:00",
-      installationStatus: "Agendada",
-      commission: 30,
-    },
-    history: [
-      "04/07/2026 11:16 - Lead criado via Afiliado Guilherme",
-      "05/07/2026 09:30 - Venda concluida",
-      "05/07/2026 09:31 - Comissao do afiliado gerada",
-    ],
-    tasks: [
-      {
-        id: "task-6",
-        title: "Acompanhar instalacao",
-        status: "pending",
-        dueAt: "2026-07-07T09:00:00",
-      },
-    ],
-  },
-  {
-    id: "deal-7",
-    customerName: "VALDIVINA GOMES",
-    phone: "63992110007",
-    email: "valdivina@email.com",
-    city: "Palmas",
-    neighborhood: "Santa Fe",
-    address: "Rua 12",
-    status: "lost",
-    stageId: "venda-perdida",
-    source: "Sem cobertura",
-    affiliate: "Afiliado Natalia",
-    campaign: "Campanha Julho",
-    value: 89.9,
-    monthlyValue: 89.9,
-    plan: "Fibra 300 Mega",
-    owner: "Carlos",
-    activity: "Venda perdida",
-    createdAt: "2026-07-03T14:20:00",
-    updatedAt: "2026-07-03T16:03:00",
-    lastInteractionAt: "2026-07-03T16:03:00",
-    nextFollowUpAt: "2026-07-03T16:03:00",
-    priority: "low",
-    attempts: 2,
-    notes: "Sem cobertura no endereco informado.",
-    trackingCode: "NBX-JUL-099",
-    chatmixId: "",
-    rdId: "rd-1007",
-    sgpId: "",
-    history: [
-      "03/07/2026 14:20 - Lead criado",
-      "03/07/2026 16:03 - Venda perdida: sem cobertura",
-    ],
-    tasks: [],
-  },
 ];
 
 const statusOptions: Array<{ id: DealStatus; name: string; color: string }> = [
@@ -752,6 +459,34 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
+function formatCardDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value || "-";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatDealPhone(value: string) {
+  const digits = value.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+
+  if (digits.length === 11) {
+    return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+  }
+
+  if (digits.length === 10) {
+    return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+  }
+
+  return value || "Nao informado";
+}
+
 function toTime(value: string) {
   const date = new Date(value).getTime();
 
@@ -971,6 +706,7 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
     notes: record.notes || "",
     trackingCode: record.trackingCode || "",
     chatmixId: record.chatmixId || "",
+    conversionId: record.conversionId,
     rdId: record.rdId || "",
     sgpId: record.sgpId || "",
     sale: record.sale
@@ -1116,10 +852,6 @@ function getDealBorderColor(deal: Deal) {
 }
 
 export default function Crm() {
-  const topBoardScrollRef = useRef<HTMLDivElement | null>(null);
-  const boardRef = useRef<HTMLElement | null>(null);
-  const syncingBoardScrollRef = useRef(false);
-
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [stages, setStages] = useState<KanbanColumn[]>(defaultStages);
   const [stageIcons, setStageIcons] = useState<Record<string, StageIcon>>({});
@@ -1207,7 +939,6 @@ export default function Crm() {
     teamCanEditCards: true,
     teamCanDeleteColumns: false,
   });
-  const [boardScrollWidth, setBoardScrollWidth] = useState(0);
   const [dealOutcome, setDealOutcome] = useState<{
     type: DealOutcome;
     dealName: string;
@@ -1307,24 +1038,6 @@ export default function Crm() {
 
     return () => window.clearTimeout(sync);
   }, [loadRdCrm]);
-
-  function syncBoardScroll(
-    sourceRef: { current: HTMLElement | null },
-    targetRef: { current: HTMLElement | null },
-  ) {
-    const source = sourceRef.current;
-    const target = targetRef.current;
-
-    if (!source || !target || syncingBoardScrollRef.current) {
-      return;
-    }
-
-    syncingBoardScrollRef.current = true;
-    target.scrollLeft = source.scrollLeft;
-    window.requestAnimationFrame(() => {
-      syncingBoardScrollRef.current = false;
-    });
-  }
 
   const selectedDeal = useMemo(
     () => deals.find((deal) => deal.id === selectedDealId) || null,
@@ -1503,24 +1216,6 @@ export default function Crm() {
     () => deals.filter((deal) => deal.status === "canceled"),
     [deals],
   );
-
-  useEffect(() => {
-    function measureBoardScroll() {
-      const board = boardRef.current;
-
-      if (!board || viewMode !== "kanban") {
-        setBoardScrollWidth(0);
-        return;
-      }
-
-      setBoardScrollWidth(board.scrollWidth);
-    }
-
-    measureBoardScroll();
-    window.addEventListener("resize", measureBoardScroll);
-
-    return () => window.removeEventListener("resize", measureBoardScroll);
-  }, [filteredDeals.length, stages.length, viewMode]);
 
   const syncLogs = useMemo(
     () => [
@@ -2441,6 +2136,19 @@ export default function Crm() {
     setCardEditOpen(true);
   }
 
+  function handleDealCardClick(event: MouseEvent<HTMLElement>, deal: Deal) {
+    const target = event.target;
+
+    if (
+      target instanceof Element &&
+      target.closest("button, a, input, select, textarea, label")
+    ) {
+      return;
+    }
+
+    openEditCardModal(deal);
+  }
+
   async function handleSaveCardEdit() {
     if (!cardEditForm) {
       return;
@@ -2605,6 +2313,10 @@ export default function Crm() {
         ? styles.dealCardWarning
         : "";
     const visualClass = getDealVisualClass(deal.status);
+    const serviceCode = deal.chatmixId || deal.id;
+    const conversionCode = deal.conversionId
+      ? String(deal.conversionId)
+      : deal.trackingCode || "Nao informado";
 
     return (
       <article
@@ -2617,14 +2329,55 @@ export default function Crm() {
           } as CSSProperties
         }
         draggable
+        onClick={(event) => handleDealCardClick(event, deal)}
         onDragStart={() => setDraggingDealId(deal.id)}
         onDragEnd={() => setDraggingDealId(null)}
       >
-        <div className={styles.cardMainButton}>
+        <header className={styles.dealCardHeader}>
+          <div className={styles.dealCustomer}>
+            <FiUser aria-hidden="true" />
+            <strong>{deal.customerName}</strong>
+          </div>
+          <time dateTime={deal.createdAt}>
+            <FiCalendar aria-hidden="true" />
+            {formatCardDate(deal.createdAt)}
+          </time>
+        </header>
+
+        <strong className={styles.dealServiceTitle}>
+          Negociacao Atendimento #{serviceCode}
+        </strong>
+
+        <div className={styles.dealInfoList}>
+          <div>
+            <FiUser aria-hidden="true" />
+            <span>
+              <small>Atendente Chatmix</small>
+              <strong>{deal.owner || "Nao informado"}</strong>
+            </span>
+          </div>
+          <div>
+            <FiPhone aria-hidden="true" />
+            <span>
+              <small>Cliente em atendimento</small>
+              <strong>{formatDealPhone(deal.phone)}</strong>
+            </span>
+          </div>
+          <div>
+            <FiHash aria-hidden="true" />
+            <span>
+              <small>Codigo de conversao</small>
+              <strong>{conversionCode}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.dealBadges}>
           <div className={styles.cardStatusWrap}>
             <button
               type="button"
               className={styles.cardStatus}
+              style={{ backgroundColor: statusColor }}
               onClick={() => {
                 setActiveCardMenuId(null);
                 setActiveStatusMenuId((current) =>
@@ -2662,54 +2415,21 @@ export default function Crm() {
               </div>
             )}
           </div>
-
           <button
             type="button"
-            className={styles.dealNameButton}
-            onClick={() => {
-              setSelectedDealId(deal.id);
-              setActiveDetailTab("lead");
-            }}
+            className={styles.dealDetailsButton}
+            aria-label="Ver detalhes da negociacao"
+            title="Ver detalhes da negociacao"
+            onClick={() => handleCardAction("details", deal)}
           >
-            <strong className={styles.dealName}>{deal.customerName}</strong>
+            <FiEye aria-hidden="true" />
           </button>
         </div>
 
-        <div className={styles.cardMeta}>
-          <label className={styles.prioritySelect}>
-            <FiStar aria-hidden="true" />
-            <select
-              value={deal.priority}
-              onChange={(event) =>
-                updateDeal(deal.id, {
-                  priority: event.target.value as Priority,
-                })
-              }
-            >
-              {Object.entries(priorityLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <span>
-            <FiUser aria-hidden="true" /> {deal.affiliate || deal.campaign}
-          </span>
-        </div>
-
-        <div className={styles.cardValueRow}>
-          <span>{deal.source}</span>
-          <strong>{formatCurrency(deal.monthlyValue)}/mes</strong>
-        </div>
-
-        <div
-          className={`${styles.activity} ${
-            isOverdue(deal) ? styles.activityDanger : ""
-          }`}
-        >
-          <span>{deal.activity}</span>
-          <time>{formatDateTime(deal.updatedAt)}</time>
+        <div className={styles.dealOrigin}>
+          <span aria-hidden="true">i</span>
+          <strong>Origem:</strong>
+          <p>{deal.source || "Nao informada"}</p>
         </div>
 
         <div className={styles.cardMenuWrap}>
@@ -3042,24 +2762,7 @@ export default function Crm() {
 
       {viewMode === "kanban" ? (
         <>
-          <div
-            ref={topBoardScrollRef}
-            className={styles.topBoardScroll}
-            aria-hidden="true"
-            onScroll={() => syncBoardScroll(topBoardScrollRef, boardRef)}
-          >
-            <div
-              className={styles.topBoardScrollContent}
-              style={{ width: boardScrollWidth }}
-            />
-          </div>
-
-          <section
-            ref={boardRef}
-            className={styles.board}
-            aria-label="Funil de vendas"
-            onScroll={() => syncBoardScroll(boardRef, topBoardScrollRef)}
-          >
+          <section className={styles.board} aria-label="Funil de vendas">
             {stages.map((stage, index) => {
               const stageDeals = filteredDeals.filter(
                 (deal) => deal.stageId === stage.id,
