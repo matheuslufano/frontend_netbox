@@ -328,6 +328,7 @@ export type CrmStage = {
   title: string;
   color: string;
   slaHours: number;
+  icon?: string | null;
   isFinal?: boolean;
   isWonStage?: boolean;
   isLostStage?: boolean;
@@ -366,7 +367,6 @@ export type CrmDeal = {
   notes: string;
   trackingCode: string;
   chatmixId: string;
-  rdId: string;
   sgpId: string;
   conversionId: number | null;
   linkId: number | null;
@@ -436,9 +436,7 @@ function normalizePromoLink(link: string) {
   return `${getApiBaseUrl()}${link}`;
 }
 
-function normalizeConversionEvent(
-  event: AffiliateConversionEvent
-) {
+function normalizeConversionEvent(event: AffiliateConversionEvent) {
   return {
     ...event,
     promoLink: normalizePromoLink(event.promoLink),
@@ -446,10 +444,7 @@ function normalizeConversionEvent(
   };
 }
 
-export function getApiErrorMessage(
-  error: unknown,
-  fallback: string
-) {
+export function getApiErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data;
     const status = error.response?.status;
@@ -479,7 +474,18 @@ export function getApiErrorMessage(
         }
       }
     } else if (typeof data === "string" && data.trim()) {
-      messages.push(data.trim());
+      const text = data.trim();
+      // Remove HTML tags when backend returns an error page (e.g. Express error)
+      const stripped = text.includes("<")
+        ? text
+            .replace(/<[^>]*>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+        : text;
+
+      if (stripped) {
+        messages.push(stripped);
+      }
     }
 
     if (messages.length > 0) {
@@ -518,12 +524,9 @@ export async function criarAfiliado(payload: CreateAffiliatePayload) {
 
 export async function editarAfiliado(
   id: number,
-  payload: UpdateAffiliatePayload
+  payload: UpdateAffiliatePayload,
 ) {
-  const { data } = await api.put<Affiliate>(
-    `/affiliate/${id}`,
-    payload
-  );
+  const { data } = await api.put<Affiliate>(`/affiliate/${id}`, payload);
 
   return {
     ...data,
@@ -546,10 +549,7 @@ export async function criarUsuario(payload: CreateUserPayload) {
   return data;
 }
 
-export async function editarUsuario(
-  id: number,
-  payload: UpdateUserPayload
-) {
+export async function editarUsuario(id: number, payload: UpdateUserPayload) {
   const { data } = await api.put<User>(`/users/${id}`, payload);
   return data;
 }
@@ -587,10 +587,7 @@ export async function listarLinks() {
     : [];
 }
 
-export async function editarLink(
-  id: number,
-  payload: UpdateLinkPayload
-) {
+export async function editarLink(id: number, payload: UpdateLinkPayload) {
   const { data } = await api.put<LinkItem>(`/links/${id}`, payload);
   return {
     ...data,
@@ -628,9 +625,7 @@ export async function criarCampanha(payload: CreateCampaignPayload) {
 
 export async function listarCampanhas() {
   const { data } = await api.get<Campaign[]>("/campaigns");
-  return Array.isArray(data)
-    ? data.map(normalizeCampaignLinks)
-    : [];
+  return Array.isArray(data) ? data.map(normalizeCampaignLinks) : [];
 }
 
 export async function apagarCampanha(id: number) {
@@ -643,11 +638,11 @@ export async function apagarLink(id: number) {
 
 export async function editarConversao(
   id: number,
-  payload: UpdateConversionPayload
+  payload: UpdateConversionPayload,
 ) {
   const { data } = await api.put<AffiliateConversionEvent>(
     `/conversions/${id}`,
-    payload
+    payload,
   );
 
   return data;
@@ -658,30 +653,25 @@ export async function apagarConversao(id: number) {
 }
 
 export async function buscarEstatisticasAfiliado(id: number) {
-  const { data } = await api.get<AffiliateStats>(
-    `/affiliate/${id}/stats`
-  );
+  const { data } = await api.get<AffiliateStats>(`/affiliate/${id}/stats`);
   return {
     ...data,
     conversionEvents: (data.conversionEvents ?? []).map(
-      normalizeConversionEvent
+      normalizeConversionEvent,
     ),
     links: data.links.map((link) => ({
       ...link,
       promoLink: normalizePromoLink(link.promoLink),
       whatsappLink: normalizePromoLink(link.whatsappLink),
       conversionEvents: (link.conversionEvents ?? []).map(
-        normalizeConversionEvent
+        normalizeConversionEvent,
       ),
     })),
   };
 }
 
 export async function fazerLogin(payload: LoginPayload) {
-  const { data } = await api.post<LoginResponse>(
-    "/auth/login",
-    payload
-  );
+  const { data } = await api.post<LoginResponse>("/auth/login", payload);
 
   return data;
 }
@@ -698,7 +688,7 @@ export async function consultarClienteSgp(query: string) {
       params: {
         query,
       },
-    }
+    },
   );
 
   return data;
@@ -712,7 +702,7 @@ async function consultarClienteSgpParaLista(query: string) {
         query,
       },
       timeout: 12000,
-    }
+    },
   );
 
   return data;
@@ -765,7 +755,7 @@ function readRawArray(value: unknown, key: string) {
   return Array.isArray(list)
     ? list.filter(
         (item): item is SgpRawRecord =>
-          Boolean(item) && typeof item === "object" && !Array.isArray(item)
+          Boolean(item) && typeof item === "object" && !Array.isArray(item),
       )
     : [];
 }
@@ -878,7 +868,7 @@ function summarizeSgpCustomers(customers: SgpCustomer[]): SgpCustomersSummary {
     }
     current.contracts += customer.contracts.length;
     current.activeContracts += customer.contracts.filter(
-      (contract) => contract.active === true
+      (contract) => contract.active === true,
     ).length;
 
     cityMap.set(city, current);
@@ -890,11 +880,16 @@ function summarizeSgpCustomers(customers: SgpCustomer[]): SgpCustomersSummary {
     inactive: customers.filter((customer) => customer.active === false).length,
     unknown: customers.filter((customer) => customer.active === null).length,
     totalContracts: allContracts.length,
-    activeContracts: allContracts.filter((contract) => contract.active === true).length,
-    inactiveContracts: allContracts.filter((contract) => contract.active === false).length,
-    unknownContracts: allContracts.filter((contract) => contract.active === null).length,
+    activeContracts: allContracts.filter((contract) => contract.active === true)
+      .length,
+    inactiveContracts: allContracts.filter(
+      (contract) => contract.active === false,
+    ).length,
+    unknownContracts: allContracts.filter(
+      (contract) => contract.active === null,
+    ).length,
     byCity: Array.from(cityMap.values()).sort(
-      (first, second) => second.total - first.total
+      (first, second) => second.total - first.total,
     ),
   };
 }
@@ -956,18 +951,20 @@ function buildSgpCustomersFromContracts(contracts: SgpRawRecord[]) {
   });
 
   return Array.from(customersByKey.values()).sort((first, second) =>
-    String(first.name || "").localeCompare(String(second.name || ""), "pt-BR")
+    String(first.name || "").localeCompare(String(second.name || ""), "pt-BR"),
   );
 }
 
 async function listarClientesSgpPorCidades() {
   const results = await Promise.allSettled(
-    SGP_CUSTOMER_LIST_QUERIES.map((query) => consultarClienteSgpParaLista(query))
+    SGP_CUSTOMER_LIST_QUERIES.map((query) =>
+      consultarClienteSgpParaLista(query),
+    ),
   );
   const contracts = results.flatMap((result) =>
     result.status === "fulfilled"
       ? readRawArray(result.value.result, "contratos")
-      : []
+      : [],
   );
   const customers = buildSgpCustomersFromContracts(contracts);
 
@@ -991,7 +988,7 @@ export async function listarClientesSgp() {
       "/integrations/sgp/clientes/list",
       {
         timeout: 10000,
-      }
+      },
     );
     data = response.data;
   } catch {
@@ -1031,7 +1028,7 @@ export async function listarChatmixWebhookLogs(limit = 50) {
       params: {
         limit,
       },
-    }
+    },
   );
 
   return Array.isArray(data) ? data : [];
@@ -1055,7 +1052,7 @@ export async function listarCrmDeals(syncConverted = true) {
 
 export async function atualizarCrmDeal(
   id: string | number,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ) {
   const { data } = await api.put(`/crm/deals/${id}`, payload);
   return data;
@@ -1064,7 +1061,7 @@ export async function atualizarCrmDeal(
 export async function criarCrmDeal(payload: Record<string, unknown>) {
   const { data } = await api.post<{ deal?: CrmDeal } | CrmDeal>(
     "/crm/deals",
-    payload
+    payload,
   );
 
   if (data && typeof data === "object" && "deal" in data) {
@@ -1085,6 +1082,7 @@ export type CrmStagePayload = {
   color?: string;
   slaHours?: number;
   position?: number;
+  icon?: string;
   isFinal?: boolean;
   isWonStage?: boolean;
   isLostStage?: boolean;
@@ -1097,13 +1095,22 @@ export async function criarCrmStage(payload: CrmStagePayload) {
 
 export async function atualizarCrmStage(
   id: string | number,
-  payload: CrmStagePayload
+  payload: CrmStagePayload,
 ) {
   const { data } = await api.put<{ stage: CrmStage }>(
     `/crm/stages/${id}`,
-    payload
+    payload,
   );
   return data.stage;
+}
+
+export async function apagarCrmStage(id: string | number) {
+  const { data } = await api.delete<{
+    deletedStageId: string;
+    fallbackStageId: string;
+    movedDeals: number;
+  }>(`/crm/stages/${id}`);
+  return data;
 }
 
 export default api;

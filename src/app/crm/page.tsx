@@ -2,10 +2,12 @@
 
 import {
   type CSSProperties,
+  type DragEvent as ReactDragEvent,
   type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -23,6 +25,7 @@ import {
   FiHash,
   FiList,
   FiMoreVertical,
+  FiMove,
   FiPhone,
   FiPlus,
   FiRefreshCw,
@@ -34,15 +37,32 @@ import {
 } from "react-icons/fi";
 import {
   apagarCrmDeal,
+  apagarCrmStage,
   atualizarCrmDeal,
   atualizarCrmStage,
+  criarAfiliado,
+  criarCampanha,
   criarCrmStage,
   criarCrmDeal,
+  editarConversao,
+  getApiErrorMessage,
+  listarAfiliados,
+  listarCampanhas,
   listarChatmixWebhookLogs,
   listarClientesSgp,
+  listarCidadesTocantins,
   listarCrmDeals,
+  listarLinks,
+  type Affiliate,
+  type Campaign,
+  type City,
   type CrmDeal as BackendCrmDeal,
+  type LinkItem,
 } from "@/lib/api";
+import {
+  useRealtimeEvents,
+  type RealtimeEventName,
+} from "@/lib/useRealtimeEvents";
 import styles from "./crm.module.css";
 
 type DealStatus =
@@ -94,8 +114,21 @@ type DetailTab =
 type OptionsModal = "import" | "funnel" | "stages" | "permissions";
 type DealOutcome = "won" | "lost";
 type StageIcon = string;
+type CrmLoadOptions = {
+  incomingAttendanceId?: string;
+  placeNewDeals?: boolean;
+};
+type ChatmixRealtimeMessage = {
+  attendanceId?: string | number | null;
+  attendance_id?: string | number | null;
+  payload?: {
+    attendanceId?: string | number | null;
+    attendance_id?: string | number | null;
+  };
+};
 
 const STAGE_ICONS_STORAGE_KEY = "crm-stage-icons-v1";
+const CRM_REALTIME_EVENTS: RealtimeEventName[] = ["chatmix-webhook"];
 const stageIconOptions = [
   { value: "", label: "Sem icone" },
   { value: "/conversion-icons/whatsapp.png", label: "WhatsApp" },
@@ -133,7 +166,6 @@ type Deal = {
   trackingCode: string;
   chatmixId: string;
   conversionId?: number | null;
-  rdId: string;
   sgpId: string;
   sale?: {
     plan: string;
@@ -163,30 +195,6 @@ type KanbanColumn = {
   isLostStage?: boolean;
 };
 
-type RdDeal = {
-  id: string;
-  name?: string;
-  customerName?: string;
-  status: DealStatus;
-  value: number;
-  source: string;
-  affiliate: string;
-  activity: string;
-  updatedAt: string;
-  stageId?: string;
-  pipelineId?: string;
-  stageName?: string;
-};
-
-type RdPipeline = {
-  id: string;
-  name: string;
-  stages: Array<{
-    id: string;
-    name: string;
-  }>;
-};
-
 const funnels = [
   "Funil Vendas Chatmix",
   "Funil Afiliados",
@@ -199,7 +207,7 @@ const funnels = [
 const defaultStages: KanbanColumn[] = [
   {
     id: "sem-contato",
-    title: "Sem contato",
+    title: "Novo contato",
     color: "#64748b",
     slaHours: 24,
   },
@@ -300,12 +308,49 @@ const detailTabs: Array<{ id: DetailTab; name: string }> = [
   { id: "integrations", name: "Integracoes" },
 ];
 
-const quickStatusOptions: Array<{
+type QuickStatusOption = {
   id: DealStatus;
   name: string;
   cardColor: string;
   dotColor: string;
-}> = [
+};
+
+type CardOptionCatalog = {
+  attendants: string[];
+  phones: string[];
+  emails: string[];
+  cities: string[];
+  neighborhoods: string[];
+  addresses: string[];
+  sources: string[];
+  conversionCodes: string[];
+  affiliates: string[];
+  campaigns: string[];
+  plans: string[];
+  estimatedValues: string[];
+  statuses: QuickStatusOption[];
+};
+
+type CardTextCatalogKey = Exclude<keyof CardOptionCatalog, "statuses">;
+
+const CRM_CARD_OPTIONS_STORAGE_KEY = "afiliados-netbox:crm:card-options-v1";
+const emptyCardOptionCatalog: CardOptionCatalog = {
+  attendants: [],
+  phones: [],
+  emails: [],
+  cities: [],
+  neighborhoods: [],
+  addresses: [],
+  sources: [],
+  conversionCodes: [],
+  affiliates: [],
+  campaigns: [],
+  plans: [],
+  estimatedValues: [],
+  statuses: [],
+};
+
+const quickStatusOptions: QuickStatusOption[] = [
   {
     id: "new",
     name: "Nova",
@@ -410,6 +455,12 @@ type CardEditForm = {
   phone: string;
   email: string;
   city: string;
+  neighborhood: string;
+  address: string;
+  createdAt: string;
+  owner: string;
+  trackingCode: string;
+  status: DealStatus;
   source: string;
   affiliate: string;
   campaign: string;
@@ -473,6 +524,20 @@ function formatCardDate(value: string) {
   }).format(date);
 }
 
+function formatCardTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "--:--";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
 function formatDealPhone(value: string) {
   const digits = value.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
 
@@ -507,6 +572,79 @@ function toDateTimeInputValue(value: string | null) {
   const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
 
   return offsetDate.toISOString().slice(0, 16);
+}
+
+function normalizeTextOptions(values: unknown) {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      values
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ).sort((first, second) => first.localeCompare(second, "pt-BR"));
+}
+
+function mergeStatusOptions(
+  ...groups: Array<QuickStatusOption[]>
+): QuickStatusOption[] {
+  const options = new Map<string, QuickStatusOption>();
+
+  groups.flat().forEach((option) => {
+    if (option.id && option.name && !options.has(option.id)) {
+      options.set(option.id, option);
+    }
+  });
+
+  return Array.from(options.values());
+}
+
+function readCardOptionCatalog(): CardOptionCatalog {
+  if (typeof window === "undefined") {
+    return emptyCardOptionCatalog;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CRM_CARD_OPTIONS_STORAGE_KEY);
+
+    if (!raw) {
+      return emptyCardOptionCatalog;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<CardOptionCatalog>;
+    const statuses = Array.isArray(parsed.statuses)
+      ? parsed.statuses.filter(
+          (status): status is QuickStatusOption =>
+            Boolean(status) &&
+            typeof status.id === "string" &&
+            typeof status.name === "string" &&
+            typeof status.cardColor === "string" &&
+            typeof status.dotColor === "string",
+        )
+      : [];
+
+    return {
+      attendants: normalizeTextOptions(parsed.attendants),
+      phones: normalizeTextOptions(parsed.phones),
+      emails: normalizeTextOptions(parsed.emails),
+      cities: normalizeTextOptions(parsed.cities),
+      neighborhoods: normalizeTextOptions(parsed.neighborhoods),
+      addresses: normalizeTextOptions(parsed.addresses),
+      sources: normalizeTextOptions(parsed.sources),
+      conversionCodes: normalizeTextOptions(parsed.conversionCodes),
+      affiliates: normalizeTextOptions(parsed.affiliates),
+      campaigns: normalizeTextOptions(parsed.campaigns),
+      plans: normalizeTextOptions(parsed.plans),
+      estimatedValues: normalizeTextOptions(parsed.estimatedValues),
+      statuses,
+    };
+  } catch {
+    return emptyCardOptionCatalog;
+  }
 }
 
 function isOverdue(deal: Deal) {
@@ -545,6 +683,51 @@ function getQuickStatusCardColor(status: DealStatus) {
 
 function normalizeTitle(value: string) {
   return value.trim() || "Sem etapa";
+}
+
+function isNewContactStage(stage: Pick<KanbanColumn, "id" | "title">) {
+  const title = stage.title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+  return title === "novo contato";
+}
+
+function getNewContactStageId(stages: KanbanColumn[]) {
+  return (
+    stages.find(isNewContactStage)?.id ||
+    stages[0]?.id ||
+    stages.find((stage) => !stage.isFinal)?.id ||
+    "sem-contato"
+  );
+}
+
+function getVisibleStageTitle(stage: Pick<KanbanColumn, "id" | "title">) {
+  return stage.title;
+}
+
+function placeStageAtPosition(
+  stages: KanbanColumn[],
+  stage: KanbanColumn,
+  position?: number,
+) {
+  const currentIndex = stages.findIndex((item) => item.id === stage.id);
+  const withoutStage = stages.filter((item) => item.id !== stage.id);
+  const requestedIndex = Number.isFinite(position)
+    ? Number(position) - 1
+    : currentIndex >= 0
+      ? currentIndex
+      : withoutStage.length;
+  const targetIndex = Math.max(
+    0,
+    Math.min(requestedIndex, withoutStage.length),
+  );
+  const nextStages = [...withoutStage];
+
+  nextStages.splice(targetIndex, 0, stage);
+  return nextStages;
 }
 
 function darkenHexColor(value: string, amount = 48) {
@@ -596,6 +779,29 @@ function readLocalDealEdits(): LocalDealEdits {
   }
 }
 
+function persistLocalDealEdit(dealId: string, patch: Partial<Deal>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const edits = readLocalDealEdits();
+
+    window.localStorage.setItem(
+      CRM_LOCAL_DEAL_EDITS_KEY,
+      JSON.stringify({
+        ...edits,
+        [dealId]: {
+          ...edits[dealId],
+          ...patch,
+        },
+      }),
+    );
+  } catch {
+    // A edicao continua aplicada na tela quando o armazenamento esta indisponivel.
+  }
+}
+
 function mergeLocalDealEdits(sourceDeals: Deal[]) {
   const edits = readLocalDealEdits();
 
@@ -618,50 +824,8 @@ function mergeLocalDealEdits(sourceDeals: Deal[]) {
   });
 }
 
-function createDealFromRd(record: RdDeal, fallbackStageId: string): Deal {
-  const id = record.id || `rd-${Date.now()}`;
-  const name = record.customerName || record.name || "Negociacao sem nome";
-  const now = new Date().toISOString();
-
-  return {
-    id,
-    customerName: name,
-    phone: "",
-    email: "",
-    city: "",
-    neighborhood: "",
-    address: "",
-    status: record.status || "ongoing",
-    stageId: record.stageId || fallbackStageId,
-    pipelineId: record.pipelineId,
-    source: record.source || "RD Station CRM",
-    affiliate: record.affiliate || "RD Station CRM",
-    campaign: "RD Station",
-    value: record.value || 0,
-    monthlyValue: record.value || 0,
-    plan: "A definir",
-    owner: record.affiliate || "RD Station CRM",
-    activity: record.activity || "Criar tarefa",
-    createdAt: record.updatedAt || now,
-    updatedAt: record.updatedAt || now,
-    lastInteractionAt: record.updatedAt || now,
-    nextFollowUpAt: record.updatedAt || now,
-    priority: "medium",
-    attempts: 0,
-    notes: "Sincronizado do RD Station CRM.",
-    trackingCode: "",
-    chatmixId: "",
-    rdId: id,
-    sgpId: "",
-    history: [`${formatDateTime(now)} - Negociacao sincronizada do RD`],
-    tasks: [],
-  };
-}
-
 function normalizeBackendStatus(value: string): DealStatus {
-  return statusOptions.some((status) => status.id === value)
-    ? (value as DealStatus)
-    : "ongoing";
+  return value?.trim() ? (value as DealStatus) : "ongoing";
 }
 
 function normalizeBackendPriority(value: string): Priority {
@@ -707,7 +871,6 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
     trackingCode: record.trackingCode || "",
     chatmixId: record.chatmixId || "",
     conversionId: record.conversionId,
-    rdId: record.rdId || "",
     sgpId: record.sgpId || "",
     sale: record.sale
       ? {
@@ -759,7 +922,6 @@ function createBackendDealPayload(deal: Deal) {
     notes: deal.notes,
     trackingCode: deal.trackingCode,
     chatmixId: deal.chatmixId,
-    rdId: deal.rdId,
     sgpId: deal.sgpId,
   };
 }
@@ -771,36 +933,6 @@ function createBackendTaskPayload(deal: Deal) {
     tasks: deal.tasks,
     history: deal.history,
   };
-}
-
-function buildStagesFromRd(pipelines: RdPipeline[]) {
-  const firstPipeline = pipelines[0];
-  const colors = [
-    "#64748b",
-    "#0891b2",
-    "#2563eb",
-    "#7c3aed",
-    "#16a34a",
-    "#6b7280",
-  ];
-
-  if (!firstPipeline?.stages?.length) {
-    return defaultStages;
-  }
-
-  return firstPipeline.stages.map((stage, index) => {
-    const title = normalizeTitle(stage.name);
-    const normalized = title.toLowerCase();
-
-    return {
-      id: stage.id,
-      title,
-      color: colors[index % colors.length],
-      slaHours: 24,
-      isWonStage: normalized.includes("conclu") || normalized.includes("vend"),
-      isLostStage: normalized.includes("perd") || normalized.includes("nao"),
-    };
-  });
 }
 
 function isDemoDeal(id: string) {
@@ -856,10 +988,22 @@ export default function Crm() {
   const [stages, setStages] = useState<KanbanColumn[]>(defaultStages);
   const [stageIcons, setStageIcons] = useState<Record<string, StageIcon>>({});
   const [stageIconsLoaded, setStageIconsLoaded] = useState(false);
+  const [cardOptionCatalog, setCardOptionCatalog] =
+    useState<CardOptionCatalog>(emptyCardOptionCatalog);
+  const [cardOptionCatalogLoaded, setCardOptionCatalogLoaded] = useState(false);
+  const [databaseAffiliates, setDatabaseAffiliates] = useState<Affiliate[]>([]);
+  const [databaseCampaigns, setDatabaseCampaigns] = useState<Campaign[]>([]);
+  const [databaseCities, setDatabaseCities] = useState<City[]>([]);
+  const [databaseLinks, setDatabaseLinks] = useState<LinkItem[]>([]);
   const [deals, setDeals] = useState<Deal[]>(() =>
     mergeLocalDealEdits(demoDeals),
   );
+  const dealsRef = useRef<Deal[]>(deals);
+  const initialCrmLoadedRef = useRef(false);
+  const knownAttendanceIdsRef = useRef<Set<string>>(new Set());
   const [draggingDealId, setDraggingDealId] = useState<string | null>(null);
+  const [draggingStageId, setDraggingStageId] = useState<string | null>(null);
+  const [deletingStageId, setDeletingStageId] = useState<string | null>(null);
   const [selectedFunnel, setSelectedFunnel] = useState(funnels[0]);
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<DealStatus | "all">("all");
@@ -881,7 +1025,7 @@ export default function Crm() {
   const [activeStatusMenuId, setActiveStatusMenuId] = useState<string | null>(
     null,
   );
-  const [loadingRd, setLoadingRd] = useState(false);
+  const [loadingCrm, setLoadingCrm] = useState(false);
   const [syncMessage, setSyncMessage] = useState(
     "Kanban demonstrativo. Configure o token do RD para sincronizar.",
   );
@@ -931,6 +1075,72 @@ export default function Crm() {
       JSON.stringify(stageIcons),
     );
   }, [stageIcons, stageIconsLoaded]);
+
+  useEffect(() => {
+    const storedCatalog = readCardOptionCatalog();
+
+    queueMicrotask(() => {
+      setCardOptionCatalog(storedCatalog);
+      setCardOptionCatalogLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!cardOptionCatalogLoaded) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        CRM_CARD_OPTIONS_STORAGE_KEY,
+        JSON.stringify(cardOptionCatalog),
+      );
+    } catch {
+      // As opcoes continuam disponiveis durante a sessao atual.
+    }
+  }, [cardOptionCatalog, cardOptionCatalogLoaded]);
+
+  useEffect(() => {
+    let active = true;
+
+    void Promise.allSettled([
+      listarAfiliados(),
+      listarCampanhas(),
+      listarCidadesTocantins(),
+      listarLinks(),
+    ]).then(([affiliates, campaigns, cities, links]) => {
+      if (!active) {
+        return;
+      }
+
+      if (affiliates.status === "fulfilled") {
+        setDatabaseAffiliates(affiliates.value);
+      }
+      if (campaigns.status === "fulfilled") {
+        setDatabaseCampaigns(campaigns.value);
+      }
+      if (cities.status === "fulfilled") {
+        setDatabaseCities(cities.value);
+      }
+      if (links.status === "fulfilled") {
+        setDatabaseLinks(links.value);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    dealsRef.current = deals;
+    deals.forEach((deal) => {
+      if (deal.chatmixId) {
+        knownAttendanceIdsRef.current.add(String(deal.chatmixId));
+      }
+    });
+  }, [deals]);
+
   const [cardEditForm, setCardEditForm] = useState<CardEditForm | null>(null);
   const [taskForm, setTaskForm] = useState<TaskForm>(defaultTaskForm);
   const [importLeadsText, setImportLeadsText] = useState("");
@@ -944,100 +1154,279 @@ export default function Crm() {
     dealName: string;
   } | null>(null);
 
-  const loadRdCrm = useCallback(async () => {
-    setLoadingRd(true);
+  const loadCrm = useCallback(async (options: CrmLoadOptions = {}) => {
+    const placeIncomingWebhookDeals = options.placeNewDeals ?? false;
+    const incomingAttendanceId = options.incomingAttendanceId?.trim() || "";
+    setLoadingCrm(true);
     setSyncStatus("info");
     setSyncMessage("Sincronizando CRM com clientes convertidos...");
 
     try {
       const crmData = await listarCrmDeals(true);
 
+      if (crmData.statuses.length > 0) {
+        const apiStatuses: QuickStatusOption[] = crmData.statuses.map(
+          (status) => ({
+            id: status.id as DealStatus,
+            name: status.name,
+            cardColor: "#e0f2fe",
+            dotColor: status.color || "#0369a1",
+          }),
+        );
+
+        setCardOptionCatalog((current) => ({
+          ...current,
+          statuses: mergeStatusOptions(current.statuses, apiStatuses),
+        }));
+      }
+
       if (crmData.deals.length > 0) {
-        if (crmData.stages.length > 0) {
-          setStages(
-            crmData.stages.map((stage) => ({
-              id: stage.id,
-              title: stage.title,
-              color: stage.color,
-              slaHours: stage.slaHours,
-              isFinal: stage.isFinal,
-              isWonStage: stage.isWonStage,
-              isLostStage: stage.isLostStage,
-            })),
+        const nextStages =
+          crmData.stages.length > 0
+            ? crmData.stages.map((stage) => ({
+                id: stage.id,
+                title: getVisibleStageTitle(stage),
+                color: stage.color,
+                slaHours: stage.slaHours,
+                isFinal: stage.isFinal,
+                isWonStage: stage.isWonStage,
+                isLostStage: stage.isLostStage,
+              }))
+            : defaultStages;
+        const backendStageIcons = Object.fromEntries(
+          crmData.stages
+            .filter((stage) => Boolean(stage.icon))
+            .map((stage) => [stage.id, stage.icon as string]),
+        );
+        const newContactStageId = getNewContactStageId(nextStages);
+        const knownDealIds = new Set(
+          dealsRef.current.map((deal) => deal.id),
+        );
+        const mappedDeals = mergeLocalDealEdits(
+          crmData.deals.map(createDealFromBackend),
+        );
+        const incomingWebhookDeals = placeIncomingWebhookDeals
+          ? mappedDeals.filter(
+              (deal) =>
+                (incomingAttendanceId !== "" &&
+                  String(deal.chatmixId) === incomingAttendanceId) ||
+                !knownDealIds.has(deal.id),
+            )
+          : [];
+        const incomingWebhookIds = new Set(
+          incomingWebhookDeals.map((deal) => deal.id),
+        );
+        const nextDeals = mappedDeals.map((deal) =>
+          incomingWebhookIds.has(deal.id)
+            ? {
+                ...deal,
+                stageId: newContactStageId,
+                status: "new" as DealStatus,
+                activity: "Novo atendimento recebido via webhook",
+              }
+            : deal,
+        );
+
+        setStages(nextStages);
+        if (Object.keys(backendStageIcons).length > 0) {
+          setStageIcons((current) => ({
+            ...current,
+            ...backendStageIcons,
+          }));
+        }
+        setDeals(nextDeals);
+        dealsRef.current = nextDeals;
+        initialCrmLoadedRef.current = true;
+
+        if (incomingWebhookDeals.length > 0) {
+          await Promise.allSettled(
+            incomingWebhookDeals
+              .filter((deal) => /^\d+$/.test(deal.id))
+              .map((deal) =>
+                atualizarCrmDeal(deal.id, {
+                  stageId: newContactStageId,
+                  status: "new",
+                  activity: "Novo atendimento recebido via webhook",
+                }),
+              ),
           );
         }
 
-        setDeals(crmData.deals.map(createDealFromBackend));
         setSyncStatus("success");
         setSyncMessage(
-          crmData.sync
+          incomingWebhookDeals.length > 0
+            ? `${incomingWebhookDeals.length} novo(s) atendimento(s) recebido(s) em Novo contato.`
+            : crmData.sync
             ? `${crmData.sync.total} cliente(s) convertido(s) sincronizados do relatorio.`
             : "CRM carregado do banco de dados.",
         );
-        return;
+        setLoadingCrm(false);
+        return incomingWebhookDeals.length;
       }
-    } catch {
+    } catch (error) {
       setSyncStatus("warning");
       setSyncMessage(
-        "Nao foi possivel carregar o CRM do banco. Tentando RD Station.",
-      );
-    }
-
-    try {
-      const [pipelinesResponse, dealsResponse] = await Promise.all([
-        fetch("/api/rdstation/pipelines"),
-        fetch("/api/rdstation/deals"),
-      ]);
-
-      if (!pipelinesResponse.ok || !dealsResponse.ok) {
-        setSyncStatus("warning");
-        setSyncMessage(
-          "Nao foi possivel sincronizar com o RD. Exibindo dados locais.",
-        );
-        return;
-      }
-
-      const pipelinesData = await pipelinesResponse.json();
-      const dealsData = await dealsResponse.json();
-      const pipelines = Array.isArray(pipelinesData?.pipelines)
-        ? pipelinesData.pipelines
-        : [];
-      const rdDeals = Array.isArray(dealsData?.deals) ? dealsData.deals : [];
-      const nextStages = buildStagesFromRd(pipelines);
-
-      if (rdDeals.length === 0) {
-        setSyncStatus("success");
-        setSyncMessage(
-          "RD conectado, mas nenhuma negociacao foi encontrada no filtro atual.",
-        );
-        return;
-      }
-
-      setStages(nextStages);
-      setDeals(
-        rdDeals.map((deal: RdDeal) =>
-          createDealFromRd(deal, nextStages[0]?.id || "sem-contato"),
-        ),
-      );
-      setSyncStatus("success");
-      setSyncMessage("Dados atualizados com sucesso.");
-    } catch {
-      setSyncStatus("warning");
-      setSyncMessage(
-        "Nao foi possivel sincronizar com o RD. Exibindo dados locais.",
+        getApiErrorMessage(error, "Nao foi possivel carregar o CRM do banco."),
       );
     } finally {
-      setLoadingRd(false);
+      setLoadingCrm(false);
     }
   }, []);
 
   useEffect(() => {
     const sync = window.setTimeout(() => {
-      loadRdCrm();
+      void loadCrm().finally(() => {
+        initialCrmLoadedRef.current = true;
+      });
     }, 0);
 
     return () => window.clearTimeout(sync);
-  }, [loadRdCrm]);
+  }, [loadCrm]);
+
+  const refreshCrmFromWebhook = useCallback(
+    (event: MessageEvent<string>) => {
+      let attendanceId = "";
+
+      try {
+        const message = JSON.parse(event.data) as ChatmixRealtimeMessage;
+        const rawAttendanceId =
+          message.payload?.attendanceId ??
+          message.payload?.attendance_id ??
+          message.attendanceId ??
+          message.attendance_id;
+        attendanceId =
+          rawAttendanceId == null ? "" : String(rawAttendanceId).trim();
+      } catch {
+        // Sem identificador, ainda atualiza os novos cartoes do webhook.
+      }
+
+      const isNewAttendance = Boolean(
+        attendanceId && !knownAttendanceIdsRef.current.has(attendanceId),
+      );
+      const options: CrmLoadOptions = {
+        incomingAttendanceId: isNewAttendance ? attendanceId : undefined,
+        placeNewDeals: attendanceId
+          ? isNewAttendance
+          : initialCrmLoadedRef.current,
+      };
+
+      void loadCrm(options).then((placedDeals) => {
+        if (isNewAttendance && !placedDeals) {
+          window.setTimeout(() => {
+            void loadCrm({
+              incomingAttendanceId: attendanceId,
+              placeNewDeals: true,
+            });
+          }, 900);
+        }
+      });
+    },
+    [loadCrm],
+  );
+
+  useRealtimeEvents(refreshCrmFromWebhook, CRM_REALTIME_EVENTS);
+
+  const cardFieldOptions = useMemo(
+    () => ({
+      attendants: normalizeTextOptions([
+        ...cardOptionCatalog.attendants,
+        ...deals.map((deal) => deal.owner),
+      ]),
+      phones: normalizeTextOptions([
+        ...cardOptionCatalog.phones,
+        ...deals.map((deal) => deal.phone),
+      ]),
+      emails: normalizeTextOptions([
+        ...cardOptionCatalog.emails,
+        ...deals.map((deal) => deal.email),
+      ]),
+      cities: normalizeTextOptions([
+        ...cardOptionCatalog.cities,
+        ...databaseCities.map((city) => city.name),
+        ...deals.map((deal) => deal.city),
+      ]),
+      neighborhoods: normalizeTextOptions([
+        ...cardOptionCatalog.neighborhoods,
+        ...deals.map((deal) => deal.neighborhood),
+      ]),
+      addresses: normalizeTextOptions([
+        ...cardOptionCatalog.addresses,
+        ...deals.map((deal) => deal.address),
+      ]),
+      sources: normalizeTextOptions([
+        ...cardOptionCatalog.sources,
+        ...deals.map((deal) => deal.source),
+      ]),
+      conversionCodes: normalizeTextOptions([
+        ...cardOptionCatalog.conversionCodes,
+        ...databaseLinks.map((link) => link.shortCode),
+        ...deals.flatMap((deal) => [
+          deal.trackingCode,
+          deal.conversionId ? String(deal.conversionId) : "",
+        ]),
+      ]),
+      affiliates: normalizeTextOptions([
+        ...cardOptionCatalog.affiliates,
+        ...databaseAffiliates
+          .filter((affiliate) => affiliate.active)
+          .map((affiliate) => affiliate.name),
+        ...deals.map((deal) => deal.affiliate),
+      ]),
+      campaigns: normalizeTextOptions([
+        ...cardOptionCatalog.campaigns,
+        ...databaseCampaigns.map((campaign) => campaign.name),
+        ...deals.map((deal) => deal.campaign),
+      ]),
+      plans: normalizeTextOptions([
+        ...cardOptionCatalog.plans,
+        ...deals.map((deal) => deal.plan),
+      ]),
+      estimatedValues: normalizeTextOptions([
+        ...cardOptionCatalog.estimatedValues,
+        ...deals
+          .filter((deal) => deal.monthlyValue > 0)
+          .map((deal) => String(deal.monthlyValue)),
+      ]),
+    }),
+    [
+      cardOptionCatalog,
+      databaseAffiliates,
+      databaseCampaigns,
+      databaseCities,
+      databaseLinks,
+      deals,
+    ],
+  );
+
+  const attendantOptions = cardFieldOptions.attendants;
+  const conversionCodeOptions = cardFieldOptions.conversionCodes;
+  const affiliateOptions = cardFieldOptions.affiliates;
+
+  const allStatusOptions = useMemo(() => {
+    const catalogStatuses = mergeStatusOptions(
+      quickStatusOptions,
+      cardOptionCatalog.statuses,
+    );
+    const knownIds = new Set(catalogStatuses.map((status) => status.id));
+    const statusesFromDeals = deals
+      .filter((deal) => !knownIds.has(deal.status))
+      .map((deal) => ({
+        id: deal.status,
+        name: deal.activity || deal.status,
+        cardColor: deal.cardColor || "#e0f2fe",
+        dotColor: "#0369a1",
+      }));
+
+    return mergeStatusOptions(catalogStatuses, statusesFromDeals);
+  }, [cardOptionCatalog.statuses, deals]);
+
+  function getVisibleStatusMeta(status: DealStatus) {
+    const option = allStatusOptions.find((item) => item.id === status);
+
+    return option
+      ? { id: option.id, name: option.name, color: option.dotColor }
+      : getStatusMeta(status);
+  }
 
   const selectedDeal = useMemo(
     () => deals.find((deal) => deal.id === selectedDealId) || null,
@@ -1220,7 +1609,7 @@ export default function Crm() {
   const syncLogs = useMemo(
     () => [
       {
-        integration: "RD Station",
+        integration: "Banco do CRM",
         date: formatDateTime(new Date().toISOString()),
         status: syncStatus === "warning" ? "Falha" : "Sucesso",
         message: syncMessage,
@@ -1461,31 +1850,6 @@ export default function Crm() {
       return;
     }
 
-    if (!isDemoDeal(dealId)) {
-      try {
-        const response = await fetch(`/api/rdstation/deals/${dealId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            stage_id: targetStageId,
-          }),
-        });
-
-        setSyncStatus(response.ok ? "success" : "warning");
-        setSyncMessage(
-          response.ok
-            ? "Etapa atualizada no RD Station CRM."
-            : "Card movido localmente, mas o RD recusou a atualizacao.",
-        );
-      } catch {
-        setSyncStatus("warning");
-        setSyncMessage(
-          "Card movido localmente, mas nao foi possivel atualizar o RD.",
-        );
-      }
-    }
   }
 
   function handleDrop(targetStageId: string) {
@@ -1495,6 +1859,115 @@ export default function Crm() {
 
     moveDeal(draggingDealId, targetStageId);
     setDraggingDealId(null);
+  }
+
+  function getEdgeScrollDelta(
+    pointerPosition: number,
+    start: number,
+    end: number,
+    edgeSize: number,
+    maxSpeed: number,
+  ) {
+    if (pointerPosition < start + edgeSize) {
+      const intensity = Math.min(
+        1,
+        Math.max(0, (start + edgeSize - pointerPosition) / edgeSize),
+      );
+      return -Math.max(4, Math.ceil(maxSpeed * intensity));
+    }
+
+    if (pointerPosition > end - edgeSize) {
+      const intensity = Math.min(
+        1,
+        Math.max(0, (pointerPosition - (end - edgeSize)) / edgeSize),
+      );
+      return Math.max(4, Math.ceil(maxSpeed * intensity));
+    }
+
+    return 0;
+  }
+
+  function handleBoardDragOver(event: ReactDragEvent<HTMLElement>) {
+    event.preventDefault();
+
+    if (!draggingDealId && !draggingStageId) {
+      return;
+    }
+
+    const board = event.currentTarget;
+    const bounds = board.getBoundingClientRect();
+    const edgeSize = Math.min(110, Math.max(64, bounds.width * 0.12));
+    const delta = getEdgeScrollDelta(
+      event.clientX,
+      bounds.left,
+      bounds.right,
+      edgeSize,
+      30,
+    );
+
+    if (delta !== 0) {
+      board.scrollLeft += delta;
+    }
+  }
+
+  function handleCardsDragOver(event: ReactDragEvent<HTMLDivElement>) {
+    event.preventDefault();
+
+    if (!draggingDealId) {
+      return;
+    }
+
+    const cards = event.currentTarget;
+    const bounds = cards.getBoundingClientRect();
+    const edgeSize = Math.min(92, Math.max(52, bounds.height * 0.18));
+    const delta = getEdgeScrollDelta(
+      event.clientY,
+      bounds.top,
+      bounds.bottom,
+      edgeSize,
+      24,
+    );
+
+    if (delta !== 0) {
+      cards.scrollTop += delta;
+    }
+  }
+
+  async function handleStageDrop(targetStageId: string) {
+    if (!draggingStageId || draggingStageId === targetStageId) {
+      setDraggingStageId(null);
+      return;
+    }
+
+    const sourceIndex = stages.findIndex(
+      (stage) => stage.id === draggingStageId,
+    );
+    const targetIndex = stages.findIndex((stage) => stage.id === targetStageId);
+
+    if (sourceIndex < 0 || targetIndex < 0) {
+      setDraggingStageId(null);
+      return;
+    }
+
+    const reorderedStages = [...stages];
+    const [movedStage] = reorderedStages.splice(sourceIndex, 1);
+    reorderedStages.splice(targetIndex, 0, movedStage);
+    setStages(reorderedStages);
+    setDraggingStageId(null);
+
+    const results = await Promise.allSettled(
+      reorderedStages.map((stage, index) =>
+        atualizarCrmStage(stage.id, { position: index + 1 }),
+      ),
+    );
+    const failed = results.some((result) => result.status === "rejected");
+
+    setSyncStatus(failed ? "warning" : "success");
+    setSyncMessage(
+      failed
+        ? "Colunas reordenadas na tela, mas alguma posicao nao foi salva."
+        : "Ordem das colunas atualizada com sucesso.",
+    );
   }
 
   async function handleCreateDeal(saveAndTask = false) {
@@ -1531,7 +2004,6 @@ export default function Crm() {
       notes: newDeal.notes,
       trackingCode: `NBX-MAN-${String(Date.now()).slice(-4)}`,
       chatmixId: "",
-      rdId: "",
       sgpId: "",
       history: [`${formatDateTime(now)} - Negociacao criada manualmente`],
       tasks: saveAndTask
@@ -1690,7 +2162,7 @@ export default function Crm() {
       deal.phone,
       deal.email,
       deal.city,
-      getStatusMeta(deal.status).name,
+      getVisibleStatusMeta(deal.status).name,
       getStage(stages, deal.stageId)?.title || "",
       deal.source,
       deal.affiliate,
@@ -1761,7 +2233,6 @@ export default function Crm() {
         notes: "Lead importado pelo menu de opcoes.",
         trackingCode: `NBX-IMP-${String(Date.now()).slice(-4)}-${index + 1}`,
         chatmixId: "",
-        rdId: "",
         sgpId: "",
         history: [`${formatDateTime(now)} - Lead importado manualmente`],
         tasks: [],
@@ -1874,8 +2345,8 @@ export default function Crm() {
       return;
     }
 
-    if (label === "Sincronizar com RD") {
-      loadRdCrm();
+    if (label === "Atualizar CRM") {
+      loadCrm();
       return;
     }
 
@@ -1976,6 +2447,7 @@ export default function Crm() {
     const payload = {
       name,
       color: stageForm.color,
+      icon: stageForm.icon,
       slaHours: Number.isFinite(slaHours) && slaHours >= 0 ? slaHours : 0,
       position:
         Number.isFinite(position) && position > 0 ? position : undefined,
@@ -2002,58 +2474,58 @@ export default function Crm() {
     try {
       if (stageForm.id) {
         const updatedStage = await atualizarCrmStage(stageForm.id, payload);
-        setStages((current) =>
-          current
-            .map((stage) =>
-              stage.id === updatedStage.id
-                ? {
-                    id: updatedStage.id,
-                    title: updatedStage.title,
-                    color: updatedStage.color,
-                    slaHours: updatedStage.slaHours,
-                    isFinal: updatedStage.isFinal,
-                    isWonStage: updatedStage.isWonStage,
-                    isLostStage: updatedStage.isLostStage,
-                  }
-                : stage,
-            )
-            .sort((first, second) => {
-              const firstPosition =
-                first.id === updatedStage.id
-                  ? (payload.position ??
-                    stages.findIndex((item) => item.id === first.id) + 1)
-                  : stages.findIndex((item) => item.id === first.id) + 1;
-              const secondPosition =
-                second.id === updatedStage.id
-                  ? (payload.position ??
-                    stages.findIndex((item) => item.id === second.id) + 1)
-                  : stages.findIndex((item) => item.id === second.id) + 1;
-
-              return firstPosition - secondPosition;
-            }),
+        const updatedColumn: KanbanColumn = {
+          id: updatedStage.id,
+          title: updatedStage.title,
+          color: updatedStage.color,
+          slaHours: updatedStage.slaHours,
+          isFinal: updatedStage.isFinal,
+          isWonStage: updatedStage.isWonStage,
+          isLostStage: updatedStage.isLostStage,
+        };
+        const nextStages = placeStageAtPosition(
+          stages,
+          updatedColumn,
+          payload.position,
         );
+
+        await Promise.all(
+          nextStages.map((stage, index) =>
+            atualizarCrmStage(stage.id, { position: index + 1 }),
+          ),
+        );
+        setStages(nextStages);
         setStageIcons((current) => ({
           ...current,
-          [updatedStage.id]: stageForm.icon,
+          [updatedStage.id]: updatedStage.icon ?? stageForm.icon,
         }));
         setSyncMessage("Coluna atualizada com sucesso.");
       } else {
         const createdStage = await criarCrmStage(payload);
-        setStages((current) => [
-          ...current,
-          {
-            id: createdStage.id,
-            title: createdStage.title,
-            color: createdStage.color,
-            slaHours: createdStage.slaHours,
-            isFinal: createdStage.isFinal,
-            isWonStage: createdStage.isWonStage,
-            isLostStage: createdStage.isLostStage,
-          },
-        ]);
+        const createdColumn: KanbanColumn = {
+          id: createdStage.id,
+          title: createdStage.title,
+          color: createdStage.color,
+          slaHours: createdStage.slaHours,
+          isFinal: createdStage.isFinal,
+          isWonStage: createdStage.isWonStage,
+          isLostStage: createdStage.isLostStage,
+        };
+        const nextStages = placeStageAtPosition(
+          stages,
+          createdColumn,
+          payload.position,
+        );
+
+        await Promise.all(
+          nextStages.map((stage, index) =>
+            atualizarCrmStage(stage.id, { position: index + 1 }),
+          ),
+        );
+        setStages(nextStages);
         setStageIcons((current) => ({
           ...current,
-          [createdStage.id]: stageForm.icon,
+          [createdStage.id]: createdStage.icon ?? stageForm.icon,
         }));
         setSyncMessage("Coluna criada com sucesso.");
       }
@@ -2061,19 +2533,20 @@ export default function Crm() {
       setSyncStatus("success");
       setStageModalOpen(false);
       setStageForm(defaultStageForm);
-      await loadRdCrm();
     } catch {
       setSyncStatus("warning");
       setSyncMessage("Nao foi possivel salvar a configuracao da coluna.");
     }
   }
 
-  function handleDeleteStage() {
-    if (!stageForm.id) {
+  async function handleDeleteStage() {
+    const stageId = stageForm.id;
+
+    if (!stageId || deletingStageId) {
       return;
     }
 
-    const remainingStages = stages.filter((stage) => stage.id !== stageForm.id);
+    const remainingStages = stages.filter((stage) => stage.id !== stageId);
 
     if (remainingStages.length === 0) {
       setSyncStatus("warning");
@@ -2082,38 +2555,220 @@ export default function Crm() {
     }
 
     const fallbackStage = remainingStages[0];
-    const movedDeals = deals.filter(
-      (deal) => deal.stageId === stageForm.id,
-    ).length;
-
-    setStages(remainingStages);
-    setStageIcons((current) => {
-      const next = { ...current };
-      delete next[stageForm.id as string];
-      return next;
-    });
-    setDeals((current) =>
-      current.map((deal) =>
-        deal.stageId === stageForm.id
-          ? {
-              ...deal,
-              stageId: fallbackStage.id,
-              updatedAt: new Date().toISOString(),
-              history: [
-                `${formatDateTime(new Date().toISOString())} - Coluna removida; negociacao movida para ${fallbackStage.title}`,
-                ...deal.history,
-              ],
-            }
-          : deal,
-      ),
+    const dealsToMove = deals.filter(
+      (deal) => deal.stageId === stageId,
     );
-    setStageModalOpen(false);
-    setStageForm(defaultStageForm);
-    setSyncStatus("warning");
-    setSyncMessage(
-      movedDeals > 0
-        ? `Coluna apagada. ${movedDeals} negociacao(oes) movida(s) para ${fallbackStage.title}.`
-        : "Coluna apagada.",
+    setDeletingStageId(stageId);
+
+    try {
+      setSyncStatus("info");
+      setSyncMessage("Apagando coluna no backend do CRM...");
+
+      const deleteResult = await apagarCrmStage(stageId);
+      const persistedFallbackStage =
+        remainingStages.find(
+          (stage) => stage.id === deleteResult.fallbackStageId,
+        ) || fallbackStage;
+
+      dealsToMove.forEach((deal) =>
+        persistLocalDealEdit(deal.id, { stageId: persistedFallbackStage.id }),
+      );
+      setStages(remainingStages);
+      setStageIcons((current) => {
+        const next = { ...current };
+        delete next[stageId];
+        return next;
+      });
+      setDeals((current) =>
+        current.map((deal) =>
+          deal.stageId === stageId
+            ? {
+                ...deal,
+                stageId: persistedFallbackStage.id,
+                updatedAt: new Date().toISOString(),
+                history: [
+                  `${formatDateTime(new Date().toISOString())} - Coluna removida; negociacao movida para ${persistedFallbackStage.title}`,
+                  ...deal.history,
+                ],
+              }
+            : deal,
+        ),
+      );
+      setStageModalOpen(false);
+      setStageForm(defaultStageForm);
+      setSyncStatus("success");
+      setSyncMessage(
+        deleteResult.movedDeals > 0
+          ? `Coluna apagada no backend. ${deleteResult.movedDeals} negociacao(oes) movida(s) para ${persistedFallbackStage.title}.`
+          : "Coluna apagada do backend do CRM.",
+      );
+    } catch (error) {
+      setSyncStatus("warning");
+      setSyncMessage(
+        getApiErrorMessage(error, "O backend recusou a exclusao da coluna."),
+      );
+    } finally {
+      setDeletingStageId(null);
+    }
+  }
+
+  async function addCardTextOption(catalogKey: CardTextCatalogKey) {
+    const prompts = {
+      attendants: "Nome do novo atendente Chatmix:",
+      phones: "Novo telefone:",
+      emails: "Novo e-mail:",
+      cities: "Nova cidade:",
+      neighborhoods: "Novo bairro:",
+      addresses: "Novo endereco:",
+      sources: "Nova origem:",
+      conversionCodes: "Novo codigo de rastreio:",
+      affiliates: "Nome do novo afiliado:",
+      campaigns: "Nome da nova campanha:",
+      plans: "Novo plano de interesse:",
+      estimatedValues: "Novo valor estimado:",
+    } as const;
+    const formFields = {
+      attendants: "owner",
+      phones: "phone",
+      emails: "email",
+      cities: "city",
+      neighborhoods: "neighborhood",
+      addresses: "address",
+      sources: "source",
+      conversionCodes: "trackingCode",
+      affiliates: "affiliate",
+      campaigns: "campaign",
+      plans: "plan",
+      estimatedValues: "monthlyValue",
+    } as const;
+    let value = window.prompt(prompts[catalogKey])?.trim();
+
+    if (!value) {
+      return;
+    }
+
+    if (catalogKey === "affiliates") {
+      const email = window.prompt("E-mail do novo afiliado:")?.trim();
+
+      if (!email) {
+        setSyncStatus("warning");
+        setSyncMessage("Informe o e-mail para cadastrar o afiliado no banco.");
+        return;
+      }
+
+      try {
+        const affiliate = await criarAfiliado({ name: value, email });
+        value = affiliate.name;
+        setDatabaseAffiliates((current) => [...current, affiliate]);
+      } catch (error) {
+        setSyncStatus("warning");
+        setSyncMessage(
+          getApiErrorMessage(error, "Nao foi possivel cadastrar o afiliado."),
+        );
+        return;
+      }
+    }
+
+    if (catalogKey === "campaigns") {
+      const affiliate = databaseAffiliates.find(
+        (item) => item.name === cardEditForm?.affiliate && item.active,
+      );
+      const destinationUrl = window
+        .prompt("URL de destino da nova campanha:", window.location.origin)
+        ?.trim();
+
+      if (!affiliate || !destinationUrl) {
+        setSyncStatus("warning");
+        setSyncMessage(
+          "Selecione um afiliado cadastrado e informe a URL da campanha.",
+        );
+        return;
+      }
+
+      try {
+        const campaign = await criarCampanha({
+          name: value,
+          destinationUrl,
+          affiliateIds: [affiliate.id],
+        });
+        value = campaign.name;
+        setDatabaseCampaigns((current) => [...current, campaign]);
+      } catch (error) {
+        setSyncStatus("warning");
+        setSyncMessage(
+          getApiErrorMessage(error, "Nao foi possivel cadastrar a campanha."),
+        );
+        return;
+      }
+    }
+
+    setCardOptionCatalog((current) => ({
+      ...current,
+      [catalogKey]: normalizeTextOptions([...current[catalogKey], value]),
+    }));
+    setCardEditForm((current) =>
+      current
+        ? {
+            ...current,
+            [formFields[catalogKey]]: value,
+          }
+        : current,
+    );
+  }
+
+  function addCardStatusOption() {
+    const name = window.prompt("Nome do novo status do atendimento:")?.trim();
+
+    if (!name) {
+      return;
+    }
+
+    const existing = allStatusOptions.find(
+      (option) => option.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"),
+    );
+
+    if (existing) {
+      setCardEditForm((current) =>
+        current
+          ? {
+              ...current,
+              status: existing.id,
+              cardColor: existing.cardColor,
+            }
+          : current,
+      );
+      return;
+    }
+
+    const slug = name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    const baseId = `custom_${slug || "status"}`;
+    const id = allStatusOptions.some((option) => option.id === baseId)
+      ? `${baseId}_${Date.now().toString(36)}`
+      : baseId;
+    const option: QuickStatusOption = {
+      id: id as DealStatus,
+      name,
+      cardColor: "#e0f2fe",
+      dotColor: "#0369a1",
+    };
+
+    setCardOptionCatalog((current) => ({
+      ...current,
+      statuses: mergeStatusOptions(current.statuses, [option]),
+    }));
+    setCardEditForm((current) =>
+      current
+        ? {
+            ...current,
+            status: option.id,
+            cardColor: option.cardColor,
+          }
+        : current,
     );
   }
 
@@ -2124,6 +2779,14 @@ export default function Crm() {
       phone: deal.phone,
       email: deal.email,
       city: deal.city,
+      neighborhood: deal.neighborhood,
+      address: deal.address,
+      createdAt: toDateTimeInputValue(deal.createdAt),
+      owner: deal.owner,
+      trackingCode:
+        deal.trackingCode ||
+        (deal.conversionId ? String(deal.conversionId) : ""),
+      status: deal.status,
       source: deal.source,
       affiliate: deal.affiliate,
       campaign: deal.campaign,
@@ -2155,11 +2818,31 @@ export default function Crm() {
     }
 
     const monthlyValue = Number(cardEditForm.monthlyValue.replace(",", "."));
+    const originalDeal = deals.find((deal) => deal.id === cardEditForm.id);
+    const createdAtDate = new Date(cardEditForm.createdAt);
+    const createdAt = Number.isNaN(createdAtDate.getTime())
+      ? originalDeal?.createdAt || new Date().toISOString()
+      : createdAtDate.toISOString();
+    const selectedStatus = allStatusOptions.find(
+      (option) => option.id === cardEditForm.status,
+    );
+    const selectedAffiliate = databaseAffiliates.find(
+      (affiliate) => affiliate.name === cardEditForm.affiliate,
+    );
+    const selectedCampaign = databaseCampaigns.find(
+      (campaign) => campaign.name === cardEditForm.campaign,
+    );
     const patch: Partial<Deal> = {
       customerName: cardEditForm.customerName.trim() || "NEGOCIACAO SEM NOME",
       phone: cardEditForm.phone.trim(),
       email: cardEditForm.email.trim(),
       city: cardEditForm.city.trim(),
+      neighborhood: cardEditForm.neighborhood.trim(),
+      address: cardEditForm.address.trim(),
+      createdAt,
+      owner: cardEditForm.owner.trim(),
+      trackingCode: cardEditForm.trackingCode.trim(),
+      status: cardEditForm.status,
       source: cardEditForm.source.trim(),
       affiliate: cardEditForm.affiliate.trim(),
       campaign: cardEditForm.campaign.trim(),
@@ -2171,12 +2854,30 @@ export default function Crm() {
         cardEditForm.cardColor.toLowerCase() === "#ffffff"
           ? ""
           : cardEditForm.cardColor,
+      activity: selectedStatus?.name || originalDeal?.activity || "",
       notes: cardEditForm.notes.trim(),
     };
 
     updateDeal(cardEditForm.id, patch);
+    persistLocalDealEdit(cardEditForm.id, patch);
     setCardEditOpen(false);
     setCardEditForm(null);
+
+    let conversionSyncFailed = false;
+
+    if (originalDeal?.conversionId) {
+      try {
+        await editarConversao(originalDeal.conversionId, {
+          visitorName: patch.customerName,
+          visitorPhone: patch.phone,
+          visitorCity: patch.city,
+          product: patch.plan,
+          source: patch.source,
+        });
+      } catch {
+        conversionSyncFailed = true;
+      }
+    }
 
     if (/^\d+$/.test(cardEditForm.id)) {
       try {
@@ -2185,66 +2886,50 @@ export default function Crm() {
           phone: patch.phone,
           email: patch.email,
           city: patch.city,
+          neighborhood: patch.neighborhood,
+          address: patch.address,
+          createdAt: patch.createdAt,
+          owner: patch.owner,
+          trackingCode: patch.trackingCode,
+          status: patch.status,
+          source: patch.source,
+          affiliate: patch.affiliate,
+          affiliateId: selectedAffiliate?.id ?? null,
+          campaign: patch.campaign,
+          campaignId: selectedCampaign?.id ?? null,
+          activity: patch.activity,
           plan: patch.plan,
+          value: patch.value,
           monthlyValue: patch.monthlyValue,
           priorityLevel: patch.priority,
           cardColor: patch.cardColor,
           notes: patch.notes,
         });
-        setSyncStatus("success");
-        setSyncMessage("Cartao atualizado com sucesso.");
+        setSyncStatus(conversionSyncFailed ? "warning" : "success");
+        setSyncMessage(
+          conversionSyncFailed
+            ? "Cartao salvo, mas nao foi possivel sincronizar a conversao."
+            : "Cartao e dados da conversao atualizados com sucesso.",
+        );
       } catch {
         setSyncStatus("warning");
         setSyncMessage(
           "Cartao atualizado na tela, mas nao foi possivel salvar no banco.",
         );
       }
-    } else if (!isDemoDeal(cardEditForm.id)) {
-      try {
-        const response = await fetch(
-          `/api/rdstation/deals/${cardEditForm.id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              customerName: patch.customerName,
-              phone: patch.phone,
-              email: patch.email,
-              source: patch.source,
-              affiliate: patch.affiliate,
-              campaign: patch.campaign,
-              plan: patch.plan,
-              monthlyValue: patch.monthlyValue,
-              priority: patch.priority,
-              cardColor: patch.cardColor,
-              notes: patch.notes,
-            }),
-          },
-        );
-
-        setSyncStatus(response.ok ? "success" : "warning");
-        setSyncMessage(
-          response.ok
-            ? "Cartao atualizado no RD Station CRM."
-            : "Cartao atualizado na tela, mas o RD recusou a atualizacao.",
-        );
-      } catch {
-        setSyncStatus("warning");
-        setSyncMessage(
-          "Cartao atualizado na tela, mas nao foi possivel salvar no RD.",
-        );
-      }
     } else {
-      setSyncStatus("success");
-      setSyncMessage("Cartao atualizado na tela.");
+      setSyncStatus(conversionSyncFailed ? "warning" : "success");
+      setSyncMessage(
+        conversionSyncFailed
+          ? "Cartao atualizado, mas nao foi possivel sincronizar a conversao."
+          : "Cartao e dados da conversao atualizados.",
+      );
     }
   }
 
   async function handleQuickStatusChange(
     deal: Deal,
-    option: (typeof quickStatusOptions)[number],
+    option: QuickStatusOption,
   ) {
     setActiveStatusMenuId(null);
     updateDeal(deal.id, {
@@ -2267,29 +2952,11 @@ export default function Crm() {
     }
 
     try {
-      if (/^\d+$/.test(deal.id)) {
-        await atualizarCrmDeal(deal.id, {
-          status: option.id,
-          cardColor: option.cardColor,
-          activity: option.name,
-        });
-      } else {
-        const response = await fetch(`/api/rdstation/deals/${deal.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            status: option.id,
-            cardColor: option.cardColor,
-            activity: option.name,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("RD recusou a atualizacao.");
-        }
-      }
+      await atualizarCrmDeal(deal.id, {
+        status: option.id,
+        cardColor: option.cardColor,
+        activity: option.name,
+      });
 
       setSyncStatus("success");
       setSyncMessage(`Status ${option.name} salvo no CRM.`);
@@ -2302,9 +2969,9 @@ export default function Crm() {
   }
 
   function renderDealCard(deal: Deal) {
-    const status = getStatusMeta(deal.status);
+    const status = getVisibleStatusMeta(deal.status);
     const quickStatus =
-      quickStatusOptions.find((option) => option.id === deal.status) || null;
+      allStatusOptions.find((option) => option.id === deal.status) || null;
     const statusLabel = quickStatus?.name || status.name;
     const statusColor = quickStatus?.dotColor || status.color;
     const alertClass = isOverdue(deal)
@@ -2314,9 +2981,11 @@ export default function Crm() {
         : "";
     const visualClass = getDealVisualClass(deal.status);
     const serviceCode = deal.chatmixId || deal.id;
-    const conversionCode = deal.conversionId
-      ? String(deal.conversionId)
-      : deal.trackingCode || "Nao informado";
+    const conversionCode =
+      deal.trackingCode ||
+      (deal.conversionId ? String(deal.conversionId) : "Nao informado");
+    const notes = deal.notes.trim();
+    const notesTooltipId = `deal-notes-${String(deal.id).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
     return (
       <article
@@ -2329,6 +2998,8 @@ export default function Crm() {
           } as CSSProperties
         }
         draggable
+        tabIndex={notes ? 0 : undefined}
+        aria-describedby={notes ? notesTooltipId : undefined}
         onClick={(event) => handleDealCardClick(event, deal)}
         onDragStart={() => setDraggingDealId(deal.id)}
         onDragEnd={() => setDraggingDealId(null)}
@@ -2336,7 +3007,7 @@ export default function Crm() {
         <header className={styles.dealCardHeader}>
           <div className={styles.dealCustomer}>
             <FiUser aria-hidden="true" />
-            <strong>{deal.customerName}</strong>
+            <strong>#{serviceCode}</strong>
           </div>
           <time dateTime={deal.createdAt}>
             <FiCalendar aria-hidden="true" />
@@ -2345,7 +3016,7 @@ export default function Crm() {
         </header>
 
         <strong className={styles.dealServiceTitle}>
-          Negociacao Atendimento #{serviceCode}
+          Cliente: {deal.customerName}
         </strong>
 
         <div className={styles.dealInfoList}>
@@ -2396,7 +3067,7 @@ export default function Crm() {
 
             {activeStatusMenuId === deal.id && (
               <div className={styles.statusMiniMenu}>
-                {quickStatusOptions.map((option) => (
+                {allStatusOptions.map((option) => (
                   <button
                     key={option.id}
                     type="button"
@@ -2426,11 +3097,31 @@ export default function Crm() {
           </button>
         </div>
 
-        <div className={styles.dealOrigin}>
-          <span aria-hidden="true">i</span>
-          <strong>Origem:</strong>
-          <p>{deal.source || "Nao informada"}</p>
+        <div className={styles.dealCardFooter}>
+          <div className={styles.dealOrigin}>
+            <span aria-hidden="true">i</span>
+            <strong>Origem:</strong>
+            <p>{deal.affiliate || "Afiliado nao informado"}</p>
+          </div>
+          <time
+            className={styles.dealCreatedTime}
+            dateTime={deal.createdAt}
+            title={`Atendimento criado em ${formatDateTime(deal.createdAt)}`}
+          >
+            {formatCardTime(deal.createdAt)}
+          </time>
         </div>
+
+        {notes && (
+          <div
+            id={notesTooltipId}
+            className={styles.dealNotesTooltip}
+            role="tooltip"
+          >
+            <strong>Observacao</strong>
+            <p>{notes}</p>
+          </div>
+        )}
 
         <div className={styles.cardMenuWrap}>
           <button
@@ -2588,7 +3279,7 @@ export default function Crm() {
                   ["Configurar funil", FiSliders],
                   ["Configurar etapas", FiList],
                   ["Ver historico de sincronizacao", FiClock],
-                  ["Sincronizar com RD", FiRefreshCw],
+                  ["Atualizar CRM", FiRefreshCw],
                   ["Sincronizar com Chatmix", FiRefreshCw],
                   ["Sincronizar com SGP", FiRefreshCw],
                   ["Configurar permissoes", FiUser],
@@ -2640,11 +3331,11 @@ export default function Crm() {
             type="button"
             className={styles.iconButton}
             title="Atualizar"
-            onClick={loadRdCrm}
+            onClick={() => void loadCrm()}
           >
             <FiRefreshCw
               aria-hidden="true"
-              className={loadingRd ? styles.spin : ""}
+              className={loadingCrm ? styles.spin : ""}
             />
           </button>
           <button
@@ -2742,7 +3433,7 @@ export default function Crm() {
         ) : (
           <FiCheckCircle aria-hidden="true" />
         )}
-        <span>{loadingRd ? "Sincronizando RD..." : syncMessage}</span>
+        <span>{loadingCrm ? "Atualizando CRM..." : syncMessage}</span>
         <FiChevronDown aria-hidden="true" />
       </button>
 
@@ -2762,7 +3453,11 @@ export default function Crm() {
 
       {viewMode === "kanban" ? (
         <>
-          <section className={styles.board} aria-label="Funil de vendas">
+          <section
+            className={styles.board}
+            aria-label="Funil de vendas"
+            onDragOver={handleBoardDragOver}
+          >
             {stages.map((stage, index) => {
               const stageDeals = filteredDeals.filter(
                 (deal) => deal.stageId === stage.id,
@@ -2775,9 +3470,18 @@ export default function Crm() {
               return (
                 <section
                   key={stage.id}
-                  className={styles.column}
+                  className={`${styles.column} ${
+                    draggingStageId === stage.id ? styles.columnDragging : ""
+                  }`}
                   onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => handleDrop(stage.id)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    if (draggingStageId) {
+                      void handleStageDrop(stage.id);
+                    } else {
+                      handleDrop(stage.id);
+                    }
+                  }}
                 >
                   <header className={styles.columnHeader}>
                     <div className={styles.columnIdentity}>
@@ -2799,6 +3503,23 @@ export default function Crm() {
                       <span>{formatCurrency(amount)}</span>
                       <button
                         type="button"
+                        className={styles.columnDragHandle}
+                        draggable
+                        title="Mover coluna"
+                        aria-label={`Mover coluna ${stage.title}`}
+                        onDragStart={(event) => {
+                          event.stopPropagation();
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData("text/plain", stage.id);
+                          setDraggingDealId(null);
+                          setDraggingStageId(stage.id);
+                        }}
+                        onDragEnd={() => setDraggingStageId(null)}
+                      >
+                        <FiMove aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
                         title="Atualizar etapa"
                         onClick={() => {
                           setSyncStatus("success");
@@ -2817,7 +3538,10 @@ export default function Crm() {
                     </div>
                   </header>
 
-                  <div className={styles.cards}>
+                  <div
+                    className={styles.cards}
+                    onDragOver={handleCardsDragOver}
+                  >
                     {stageDeals.length > 0 ? (
                       stageDeals.map(renderDealCard)
                     ) : (
@@ -2873,10 +3597,11 @@ export default function Crm() {
                     <span className={styles.tableStatus}>
                       <span
                         style={{
-                          backgroundColor: getStatusMeta(deal.status).color,
+                          backgroundColor:
+                            getVisibleStatusMeta(deal.status).color,
                         }}
                       />
-                      {getStatusMeta(deal.status).name}
+                      {getVisibleStatusMeta(deal.status).name}
                     </span>
                   </td>
                   <td>{deal.source}</td>
@@ -3332,9 +4057,12 @@ export default function Crm() {
                 <button
                   type="button"
                   className={styles.deleteAction}
-                  onClick={handleDeleteStage}
+                  disabled={deletingStageId === stageForm.id}
+                  onClick={() => void handleDeleteStage()}
                 >
-                  Apagar coluna
+                  {deletingStageId === stageForm.id
+                    ? "Apagando..."
+                    : "Apagar coluna"}
                 </button>
               )}
               <button
@@ -3478,40 +4206,175 @@ export default function Crm() {
 
               <label>
                 <span>Telefone</span>
-                <input
-                  value={cardEditForm.phone}
-                  onChange={(event) =>
-                    setCardEditForm((current) =>
-                      current
-                        ? { ...current, phone: event.target.value }
-                        : current,
-                    )
-                  }
-                />
+                <div className={styles.catalogField}>
+                  <input
+                    type="tel"
+                    list="crm-phone-options"
+                    placeholder="Digite o telefone"
+                    value={cardEditForm.phone}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, phone: event.target.value }
+                          : current,
+                      )
+                    }
+                  />
+                  <datalist id="crm-phone-options">
+                    {cardFieldOptions.phones.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("phones")}
+                    aria-label="Adicionar telefone"
+                    title="Adicionar telefone"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
               </label>
 
               <label>
                 <span>E-mail</span>
-                <input
-                  value={cardEditForm.email}
-                  onChange={(event) =>
-                    setCardEditForm((current) =>
-                      current
-                        ? { ...current, email: event.target.value }
-                        : current,
-                    )
-                  }
-                />
+                <div className={styles.catalogField}>
+                  <input
+                    type="email"
+                    list="crm-email-options"
+                    placeholder="Digite o e-mail"
+                    value={cardEditForm.email}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, email: event.target.value }
+                          : current,
+                      )
+                    }
+                  />
+                  <datalist id="crm-email-options">
+                    {cardFieldOptions.emails.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("emails")}
+                    aria-label="Adicionar e-mail"
+                    title="Adicionar e-mail"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
               </label>
 
               <label>
                 <span>Cidade</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.city}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, city: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informada</option>
+                    {cardFieldOptions.cities.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("cities")}
+                    aria-label="Adicionar cidade"
+                    title="Adicionar cidade"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Bairro</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.neighborhood}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, neighborhood: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informado</option>
+                    {cardFieldOptions.neighborhoods.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("neighborhoods")}
+                    aria-label="Adicionar bairro"
+                    title="Adicionar bairro"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label className={styles.fullField}>
+                <span>Endereco</span>
+                <div className={styles.catalogField}>
+                  <input
+                    list="crm-address-options"
+                    placeholder="Digite o endereco"
+                    value={cardEditForm.address}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, address: event.target.value }
+                          : current,
+                      )
+                    }
+                  />
+                  <datalist id="crm-address-options">
+                    {cardFieldOptions.addresses.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("addresses")}
+                    aria-label="Adicionar endereco"
+                    title="Adicionar endereco"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Data</span>
                 <input
-                  value={cardEditForm.city}
+                  type="datetime-local"
+                  value={cardEditForm.createdAt}
                   onChange={(event) =>
                     setCardEditForm((current) =>
                       current
-                        ? { ...current, city: event.target.value }
+                        ? { ...current, createdAt: event.target.value }
                         : current,
                     )
                   }
@@ -3519,31 +4382,268 @@ export default function Crm() {
               </label>
 
               <label>
-                <span>Plano</span>
-                <input
-                  value={cardEditForm.plan}
-                  onChange={(event) =>
-                    setCardEditForm((current) =>
-                      current
-                        ? { ...current, plan: event.target.value }
-                        : current,
-                    )
-                  }
-                />
+                <span>Atendente Chatmix</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.owner}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, owner: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informado</option>
+                    {attendantOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => addCardTextOption("attendants")}
+                    aria-label="Adicionar atendente Chatmix"
+                    title="Adicionar atendente Chatmix"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
               </label>
 
               <label>
-                <span>Valor mensal</span>
-                <input
-                  value={cardEditForm.monthlyValue}
-                  onChange={(event) =>
-                    setCardEditForm((current) =>
-                      current
-                        ? { ...current, monthlyValue: event.target.value }
-                        : current,
-                    )
-                  }
-                />
+                <span>Codigo de rastreio</span>
+                <div className={styles.catalogField}>
+                  <input
+                    list="crm-tracking-code-options"
+                    placeholder="Digite o codigo"
+                    value={cardEditForm.trackingCode}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, trackingCode: event.target.value }
+                          : current,
+                      )
+                    }
+                  />
+                  <datalist id="crm-tracking-code-options">
+                    {conversionCodeOptions.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("conversionCodes")}
+                    aria-label="Adicionar codigo de rastreio"
+                    title="Adicionar codigo de rastreio"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Status do atendimento</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.status}
+                    onChange={(event) => {
+                      const status = event.target.value as DealStatus;
+                      const option = allStatusOptions.find(
+                        (item) => item.id === status,
+                      );
+
+                      setCardEditForm((current) =>
+                        current
+                          ? {
+                              ...current,
+                              status,
+                              cardColor:
+                                option?.cardColor || current.cardColor,
+                            }
+                          : current,
+                      );
+                    }}
+                  >
+                    {allStatusOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={addCardStatusOption}
+                    aria-label="Adicionar status de atendimento"
+                    title="Adicionar status de atendimento"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Origem</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.source}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, source: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informada</option>
+                    {cardFieldOptions.sources.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("sources")}
+                    aria-label="Adicionar origem"
+                    title="Adicionar origem"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Afiliado</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.affiliate}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, affiliate: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informado</option>
+                    {affiliateOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("affiliates")}
+                    aria-label="Adicionar afiliado"
+                    title="Adicionar afiliado"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Campanha</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.campaign}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, campaign: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informada</option>
+                    {cardFieldOptions.campaigns.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("campaigns")}
+                    aria-label="Adicionar campanha"
+                    title="Adicionar campanha"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Plano de interesse</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.plan}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, plan: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informado</option>
+                    {cardFieldOptions.plans.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("plans")}
+                    aria-label="Adicionar plano de interesse"
+                    title="Adicionar plano de interesse"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                <span>Valor estimado</span>
+                <div className={styles.catalogField}>
+                  <select
+                    value={cardEditForm.monthlyValue}
+                    onChange={(event) =>
+                      setCardEditForm((current) =>
+                        current
+                          ? { ...current, monthlyValue: event.target.value }
+                          : current,
+                      )
+                    }
+                  >
+                    <option value="">Nao informado</option>
+                    {cardFieldOptions.estimatedValues.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catalogAddButton}
+                    onClick={() => void addCardTextOption("estimatedValues")}
+                    aria-label="Adicionar valor estimado"
+                    title="Adicionar valor estimado"
+                  >
+                    <FiPlus aria-hidden="true" />
+                  </button>
+                </div>
               </label>
 
               <label>
@@ -3682,10 +4782,11 @@ export default function Crm() {
                         <span
                           className={styles.statusDot}
                           style={{
-                            backgroundColor: getStatusMeta(deal.status).color,
+                            backgroundColor:
+                              getVisibleStatusMeta(deal.status).color,
                           }}
                         />
-                        <span>{getStatusMeta(deal.status).name}</span>
+                        <span>{getVisibleStatusMeta(deal.status).name}</span>
                         <FiClock aria-hidden="true" />
                       </span>
                       <strong className={styles.dealName}>
@@ -3792,7 +4893,7 @@ export default function Crm() {
           >
           <header>
             <div>
-              <span>{getStatusMeta(selectedDeal.status).name}</span>
+              <span>{getVisibleStatusMeta(selectedDeal.status).name}</span>
               <h2>{selectedDeal.customerName}</h2>
             </div>
             <button type="button" onClick={() => setSelectedDealId(null)}>
@@ -3844,7 +4945,7 @@ export default function Crm() {
             {activeDetailTab === "service" && (
               <dl>
                 <dt>Status</dt>
-                <dd>{getStatusMeta(selectedDeal.status).name}</dd>
+                <dd>{getVisibleStatusMeta(selectedDeal.status).name}</dd>
                 <dt>Etapa atual</dt>
                 <dd>{getStage(stages, selectedDeal.stageId)?.title}</dd>
                 <dt>Responsavel</dt>
@@ -3957,8 +5058,6 @@ export default function Crm() {
               <dl>
                 <dt>ID no Chatmix</dt>
                 <dd>{selectedDeal.chatmixId || "-"}</dd>
-                <dt>ID no RD</dt>
-                <dd>{selectedDeal.rdId || "-"}</dd>
                 <dt>ID no SGP</dt>
                 <dd>{selectedDeal.sgpId || "-"}</dd>
                 <dt>Ultima sincronizacao</dt>
