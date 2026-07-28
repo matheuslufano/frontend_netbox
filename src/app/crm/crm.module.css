@@ -1,8 +1,11 @@
 .page {
   position: relative;
-  min-height: calc(100vh - 74px);
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 0;
   background:
     radial-gradient(circle at 16% 6%, rgba(14, 165, 233, 0.16), transparent 31%),
     radial-gradient(circle at 88% 0%, rgba(34, 197, 94, 0.1), transparent 28%),
@@ -342,8 +345,9 @@
   grid-auto-columns: 286px;
   grid-auto-flow: column;
   gap: 12px;
-  height: calc(100vh - 238px);
-  min-height: 430px;
+  height: auto;
+  min-height: 0;
+  flex: 1 1 auto;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0 14px 14px;
@@ -689,6 +693,41 @@
   min-width: 0;
 }
 
+.ownerAvatar {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #dbeef6;
+  color: #075e7d;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.ownerAvatarPhoto {
+  border: 1px solid rgba(7, 94, 125, 0.2);
+  background-color: #dbeef6;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.16);
+}
+
+.ownerSelect {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #123247;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .dealInfoList > div {
   display: flex;
   min-width: 0;
@@ -889,6 +928,120 @@
   transition:
     background 0.16s ease,
     color 0.16s ease;
+}
+
+.dealObservationButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #7c8ca2;
+  border-radius: 5px;
+  padding: 0;
+  background: #ffffff;
+  color: #506987;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.dealObservationButton:hover,
+.dealObservationButton:focus-visible {
+  border-color: #075e7d;
+  background: #e7f5fa;
+  color: #075e7d;
+  outline: none;
+}
+
+.observationOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: block;
+  padding: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.observationPopup {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: inherit;
+  background: rgba(18, 50, 71, 0.98);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
+  color: #f8fafc;
+  animation: softEnter 0.16s ease-out;
+}
+
+.observationPopup header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 10px 11px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.observationPopup header > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.observationPopup header span {
+  color: #93c5d8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.observationPopup header strong {
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.observationPopup header button {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  cursor: pointer;
+}
+
+.observationPopup header button:focus-visible {
+  outline: 3px solid rgba(14, 116, 144, 0.24);
+  outline-offset: 2px;
+}
+
+.observationPopup p {
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 11px;
+  color: #f8fafc;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .dealDetailsButton svg {
@@ -1212,7 +1365,8 @@
 }
 
 .listView {
-  min-height: calc(100vh - 280px);
+  min-height: 0;
+  flex: 1 1 auto;
   overflow: auto;
   padding: 0 14px 18px;
 }
@@ -2226,8 +2380,9 @@
 
   .board {
     grid-auto-columns: clamp(260px, 34vw, 320px);
-    height: calc(100vh - 270px);
-    min-height: 390px;
+    height: auto;
+    min-height: 0;
+    flex: 1 1 auto;
     padding-inline: 12px;
   }
 
@@ -2248,7 +2403,8 @@
 
 @media (max-width: 768px) {
   .page {
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
     border-radius: 0;
     overflow: hidden;
   }
@@ -2498,7 +2654,8 @@
 
 @media (max-width: 480px) {
   .page {
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
   }
 
   .toolbar,

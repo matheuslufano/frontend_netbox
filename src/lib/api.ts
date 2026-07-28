@@ -17,6 +17,9 @@ export type User = {
   city: string | null;
   photoUrl: string | null;
   createdAt: string;
+  role: "ADMIN" | "MANAGER" | "USER";
+  active: boolean;
+  teamId: number | null;
 };
 
 export type City = {
@@ -241,6 +244,8 @@ export type LoginResponse = {
     email: string;
     city: string | null;
     photoUrl: string | null;
+    role: "ADMIN" | "MANAGER" | "USER";
+    teamId: number | null;
   };
 };
 
@@ -334,6 +339,13 @@ export type CrmStage = {
   isLostStage?: boolean;
 };
 
+export type CrmFunnel = {
+  id: string;
+  name: string;
+  description: string | null;
+  stages: CrmStage[];
+};
+
 export type CrmDeal = {
   id: string;
   customerName: string;
@@ -357,6 +369,12 @@ export type CrmDeal = {
   plan: string;
   cardColor: string;
   owner: string;
+  createdByUserId: number | null;
+  createdByUserName: string;
+  responsibleUserId: number | null;
+  responsibleUserName: string;
+  responsibleUserPhotoUrl: string | null;
+  updatedByUserId: number | null;
   activity: string;
   createdAt: string;
   updatedAt: string;
@@ -408,6 +426,15 @@ export type CrmDealsResponse = {
     isFinal: boolean;
   }[];
   deals: CrmDeal[];
+  currentUser: {
+    id: number;
+    name: string;
+    email: string;
+    photoUrl: string | null;
+    role: "ADMIN" | "MANAGER" | "USER";
+    teamId: number | null;
+  };
+  permissions: CrmPermissions;
   sync: {
     created: number;
     updated: number;
@@ -423,6 +450,55 @@ const defaultApiUrl =
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || defaultApiUrl,
 });
+
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = window.localStorage.getItem("afiliados_netbox_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+export type CrmPermissions = {
+  canViewAll: boolean;
+  canViewTeam: boolean;
+  canViewUnassigned: boolean;
+  canShareFilters: boolean;
+  canTransfer: boolean;
+};
+
+export type CrmFilterCondition = {
+  id?: string;
+  field: string;
+  operator: string;
+  value: string | number | Array<string | number> | null;
+};
+
+export type SavedCrmFilter = {
+  id: string;
+  name: string;
+  ownerUserId: number;
+  ownerName?: string;
+  funnelId: string | null;
+  conditions: CrmFilterCondition[];
+  sort: { mode: string } | null;
+  visibility: "PRIVATE" | "SHARED";
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CrmQuery = {
+  syncConverted?: boolean;
+  funnelId?: string;
+  scope?: string;
+  responsibleUserId?: number;
+  status?: string;
+  sort?: string;
+  filters?: CrmFilterCondition[];
+};
 
 function getApiBaseUrl() {
   return String(api.defaults.baseURL || "").replace(/\/+$/, "");
@@ -1034,12 +1110,30 @@ export async function listarChatmixWebhookLogs(limit = 50) {
   return Array.isArray(data) ? data : [];
 }
 
-export async function listarCrmDeals(syncConverted = true) {
+export async function listarCrmDeals(
+  query: boolean | CrmQuery = true,
+  signal?: AbortSignal,
+) {
+  const params: Record<string, unknown> =
+    typeof query === "boolean"
+      ? { syncConverted: query }
+      : {
+          ...query,
+          filters: query.filters?.length
+            ? JSON.stringify(query.filters)
+            : undefined,
+        };
   const { data } = await api.get<CrmDealsResponse>("/crm/deals", {
-    params: {
-      syncConverted,
-    },
+    params,
+    signal,
   });
+  const defaultPermissions: CrmPermissions = {
+    canViewAll: false,
+    canViewTeam: false,
+    canViewUnassigned: false,
+    canShareFilters: false,
+    canTransfer: true,
+  };
 
   return {
     ...data,
@@ -1047,7 +1141,76 @@ export async function listarCrmDeals(syncConverted = true) {
     stages: Array.isArray(data.stages) ? data.stages : [],
     statuses: Array.isArray(data.statuses) ? data.statuses : [],
     funnels: Array.isArray(data.funnels) ? data.funnels : [],
+    permissions: {
+      ...defaultPermissions,
+      ...(data.permissions || {}),
+    },
   };
+}
+
+export async function listarUsuariosAtribuiveis() {
+  const { data } = await api.get<User[]>("/crm/assignable-users");
+  return data;
+}
+
+export async function criarCrmFunnel(payload: {
+  name: string;
+  description?: string;
+  sourceFunnelId?: string;
+}) {
+  const { data } = await api.post<CrmFunnel>("/crm/funnels", payload);
+  return data;
+}
+
+export async function transferirCrmDeal(
+  id: string | number,
+  responsibleUserId: number | null,
+  responsibleUserName = "",
+) {
+  const { data } = await api.put(`/crm/deals/${id}`, {
+    responsibleUserId,
+    // Compatibilidade com o backend anterior à migração de responsáveis.
+    owner: responsibleUserName,
+  });
+  return data;
+}
+
+export async function listarFiltrosCrmSalvos() {
+  const { data } = await api.get<SavedCrmFilter[]>("/crm/saved-filters");
+  return data;
+}
+
+export async function criarFiltroCrmSalvo(
+  payload: Omit<SavedCrmFilter, "id" | "ownerUserId" | "createdAt" | "updatedAt">,
+) {
+  const { data } = await api.post<SavedCrmFilter>("/crm/saved-filters", payload);
+  return data;
+}
+
+export async function atualizarFiltroCrmSalvo(
+  id: string,
+  payload: Partial<SavedCrmFilter>,
+) {
+  const { data } = await api.put<SavedCrmFilter>(
+    `/crm/saved-filters/${id}`,
+    payload,
+  );
+  return data;
+}
+
+export async function duplicarFiltroCrmSalvo(id: string) {
+  const { data } = await api.post<SavedCrmFilter>(
+    `/crm/saved-filters/${id}/duplicate`,
+  );
+  return data;
+}
+
+export async function apagarFiltroCrmSalvo(id: string) {
+  await api.delete(`/crm/saved-filters/${id}`);
+}
+
+export async function definirFiltroCrmPadrao(id: string) {
+  await api.put(`/crm/saved-filters/${id}/default`);
 }
 
 export async function atualizarCrmDeal(

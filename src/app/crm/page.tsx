@@ -52,18 +52,25 @@ import {
   listarClientesSgp,
   listarCidadesTocantins,
   listarCrmDeals,
+  listarUsuarios,
+  listarUsuariosAtribuiveis,
   listarLinks,
+  transferirCrmDeal,
+  type CrmFilterCondition,
+  type CrmPermissions,
   type Affiliate,
   type Campaign,
   type City,
   type CrmDeal as BackendCrmDeal,
   type LinkItem,
+  type User,
 } from "@/lib/api";
 import {
   useRealtimeEvents,
   type RealtimeEventName,
 } from "@/lib/useRealtimeEvents";
 import styles from "./crm.module.css";
+import CrmFilterHeader from "./CrmFilterHeader";
 
 type DealStatus =
   | "new"
@@ -155,6 +162,12 @@ type Deal = {
   plan: string;
   cardColor?: string;
   owner: string;
+  createdByUserId: number | null;
+  createdByUserName: string;
+  responsibleUserId: number | null;
+  responsibleUserName: string;
+  responsibleUserPhotoUrl: string | null;
+  updatedByUserId: number | null;
   activity: string;
   createdAt: string;
   updatedAt: string;
@@ -258,28 +271,6 @@ const statusOptions: Array<{ id: DealStatus; name: string; color: string }> = [
   { id: "won", name: "Venda concluida", color: "#16a34a" },
   { id: "lost", name: "Venda perdida", color: "#6b7280" },
   { id: "canceled", name: "Cancelada", color: "#991b1b" },
-];
-
-const scopeOptions: Array<{ id: ScopeFilter; name: string }> = [
-  { id: "all", name: "Todas as negociacoes" },
-  { id: "mine", name: "Minhas negociacoes" },
-  { id: "team", name: "Negociacoes da equipe" },
-  { id: "unassigned", name: "Negociacoes sem responsavel" },
-  { id: "overdue", name: "Negociacoes atrasadas" },
-  { id: "open", name: "Negociacoes abertas" },
-  { id: "won", name: "Negociacoes ganhas" },
-  { id: "lost", name: "Negociacoes perdidas" },
-];
-
-const sortOptions: Array<{ id: SortMode; name: string }> = [
-  { id: "created-desc", name: "Criadas por ultimo" },
-  { id: "created-asc", name: "Criadas primeiro" },
-  { id: "updated-desc", name: "Atualizadas por ultimo" },
-  { id: "value-desc", name: "Maior valor" },
-  { id: "value-asc", name: "Menor valor" },
-  { id: "oldest-no-contact", name: "Mais antigas sem contato" },
-  { id: "next-follow-up", name: "Proximo contato mais proximo" },
-  { id: "overdue-first", name: "Leads atrasados primeiro" },
 ];
 
 const periodOptions: Array<{ id: PeriodFilter; name: string }> = [
@@ -459,6 +450,7 @@ type CardEditForm = {
   address: string;
   createdAt: string;
   owner: string;
+  responsibleUserId: number | null;
   trackingCode: string;
   status: DealStatus;
   source: string;
@@ -806,6 +798,11 @@ function mergeLocalDealEdits(sourceDeals: Deal[]) {
   const edits = readLocalDealEdits();
 
   return sourceDeals.map((deal) => {
+    // Cartoes persistidos sempre usam o backend como fonte de verdade.
+    if (/^\d+$/.test(deal.id)) {
+      return deal;
+    }
+
     const localEdit = edits[deal.id];
 
     if (!localEdit) {
@@ -859,7 +856,17 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
     monthlyValue: Number(record.monthlyValue) || 0,
     plan: record.plan || "A definir",
     cardColor: record.cardColor || "",
-    owner: record.owner || "Equipe Netbox",
+    owner:
+      record.responsibleUserName ||
+      (!record.responsibleUserId ? record.owner || "" : ""),
+    createdByUserId: record.createdByUserId,
+    createdByUserName: record.createdByUserName || "",
+    responsibleUserId: record.responsibleUserId ?? null,
+    responsibleUserName:
+      record.responsibleUserName ||
+      (!record.responsibleUserId ? record.owner || "" : ""),
+    responsibleUserPhotoUrl: record.responsibleUserPhotoUrl,
+    updatedByUserId: record.updatedByUserId,
     activity: record.activity || "1o contato - 24 horas",
     createdAt: record.createdAt || now,
     updatedAt: record.updatedAt || now,
@@ -914,6 +921,7 @@ function createBackendDealPayload(deal: Deal) {
     plan: deal.plan,
     cardColor: deal.cardColor || "",
     owner: deal.owner,
+    responsibleUserId: deal.responsibleUserId,
     activity: deal.activity,
     lastInteractionAt: deal.lastInteractionAt,
     nextFollowUpAt: deal.nextFollowUpAt,
@@ -995,17 +1003,56 @@ export default function Crm() {
   const [databaseCampaigns, setDatabaseCampaigns] = useState<Campaign[]>([]);
   const [databaseCities, setDatabaseCities] = useState<City[]>([]);
   const [databaseLinks, setDatabaseLinks] = useState<LinkItem[]>([]);
+  const [assignableUsers, setAssignableUsers] = useState<User[]>([]);
+  const [availableFunnels, setAvailableFunnels] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [selectedFunnelId, setSelectedFunnelId] = useState("");
+  const [responsibleUserId, setResponsibleUserId] = useState<number | null>(
+    null,
+  );
+  const [filterConditions, setFilterConditions] = useState<
+    CrmFilterCondition[]
+  >([]);
+  const [crmPermissions, setCrmPermissions] = useState<CrmPermissions>({
+    canViewAll: false,
+    canViewTeam: false,
+    canViewUnassigned: false,
+    canShareFilters: false,
+    canTransfer: true,
+  });
+  const [currentCrmUser, setCurrentCrmUser] = useState<{
+    id: number;
+    name: string;
+  } | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    try {
+      const stored = window.localStorage.getItem("afiliados_netbox_user");
+      if (!stored) return null;
+      const user = JSON.parse(stored) as { id?: unknown; name?: unknown };
+      const id = Number(user.id);
+      return Number.isInteger(id) && typeof user.name === "string"
+        ? { id, name: user.name }
+        : null;
+    } catch {
+      return null;
+    }
+  });
   const [deals, setDeals] = useState<Deal[]>(() =>
     mergeLocalDealEdits(demoDeals),
   );
   const dealsRef = useRef<Deal[]>(deals);
   const initialCrmLoadedRef = useRef(false);
+  const crmRequestRef = useRef<AbortController | null>(null);
   const knownAttendanceIdsRef = useRef<Set<string>>(new Set());
   const [draggingDealId, setDraggingDealId] = useState<string | null>(null);
   const [draggingStageId, setDraggingStageId] = useState<string | null>(null);
   const [deletingStageId, setDeletingStageId] = useState<string | null>(null);
   const [selectedFunnel, setSelectedFunnel] = useState(funnels[0]);
-  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
+  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("mine");
   const [statusFilter, setStatusFilter] = useState<DealStatus | "all">("all");
   const [sortMode, setSortMode] = useState<SortMode>("created-desc");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("last-30");
@@ -1023,6 +1070,9 @@ export default function Crm() {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("lead");
   const [activeCardMenuId, setActiveCardMenuId] = useState<string | null>(null);
   const [activeStatusMenuId, setActiveStatusMenuId] = useState<string | null>(
+    null,
+  );
+  const [observationDealId, setObservationDealId] = useState<string | null>(
     null,
   );
   const [loadingCrm, setLoadingCrm] = useState(false);
@@ -1108,7 +1158,8 @@ export default function Crm() {
       listarCampanhas(),
       listarCidadesTocantins(),
       listarLinks(),
-    ]).then(([affiliates, campaigns, cities, links]) => {
+      listarUsuariosAtribuiveis().catch(() => listarUsuarios()),
+    ]).then(([affiliates, campaigns, cities, links, users]) => {
       if (!active) {
         return;
       }
@@ -1124,6 +1175,9 @@ export default function Crm() {
       }
       if (links.status === "fulfilled") {
         setDatabaseLinks(links.value);
+      }
+      if (users.status === "fulfilled") {
+        setAssignableUsers(users.value);
       }
     });
 
@@ -1155,6 +1209,9 @@ export default function Crm() {
   } | null>(null);
 
   const loadCrm = useCallback(async (options: CrmLoadOptions = {}) => {
+    crmRequestRef.current?.abort();
+    const requestController = new AbortController();
+    crmRequestRef.current = requestController;
     const placeIncomingWebhookDeals = options.placeNewDeals ?? false;
     const incomingAttendanceId = options.incomingAttendanceId?.trim() || "";
     setLoadingCrm(true);
@@ -1162,7 +1219,40 @@ export default function Crm() {
     setSyncMessage("Sincronizando CRM com clientes convertidos...");
 
     try {
-      const crmData = await listarCrmDeals(true);
+      const crmData = await listarCrmDeals({
+        syncConverted: !initialCrmLoadedRef.current,
+        funnelId: selectedFunnelId || undefined,
+        scope: scopeFilter,
+        responsibleUserId: responsibleUserId || undefined,
+        status: statusFilter,
+        sort: sortMode,
+        filters: filterConditions,
+      }, requestController.signal);
+
+      setAvailableFunnels(
+        crmData.funnels.map((funnel) => ({
+          id: funnel.id,
+          name: funnel.name,
+        })),
+      );
+      if (crmData.permissions) {
+        setCrmPermissions(crmData.permissions);
+      }
+      if (crmData.currentUser?.id) {
+        setCurrentCrmUser({
+          id: crmData.currentUser.id,
+          name: crmData.currentUser.name,
+        });
+      }
+      if (!selectedFunnelId && crmData.funnels[0]) {
+        setSelectedFunnelId(crmData.funnels[0].id);
+        setSelectedFunnel(crmData.funnels[0].name);
+      } else {
+        const activeFunnel = crmData.funnels.find(
+          (funnel) => funnel.id === selectedFunnelId,
+        );
+        if (activeFunnel) setSelectedFunnel(activeFunnel.name);
+      }
 
       if (crmData.statuses.length > 0) {
         const apiStatuses: QuickStatusOption[] = crmData.statuses.map(
@@ -1180,7 +1270,7 @@ export default function Crm() {
         }));
       }
 
-      if (crmData.deals.length > 0) {
+      {
         const nextStages =
           crmData.stages.length > 0
             ? crmData.stages.map((stage) => ({
@@ -1264,14 +1354,29 @@ export default function Crm() {
         return incomingWebhookDeals.length;
       }
     } catch (error) {
+      if (
+        requestController.signal.aborted ||
+        (error instanceof Error && error.name === "CanceledError")
+      ) {
+        return 0;
+      }
       setSyncStatus("warning");
       setSyncMessage(
         getApiErrorMessage(error, "Nao foi possivel carregar o CRM do banco."),
       );
     } finally {
-      setLoadingCrm(false);
+      if (crmRequestRef.current === requestController) {
+        setLoadingCrm(false);
+      }
     }
-  }, []);
+  }, [
+    filterConditions,
+    responsibleUserId,
+    scopeFilter,
+    selectedFunnelId,
+    sortMode,
+    statusFilter,
+  ]);
 
   useEffect(() => {
     const sync = window.setTimeout(() => {
@@ -1398,7 +1503,6 @@ export default function Crm() {
     ],
   );
 
-  const attendantOptions = cardFieldOptions.attendants;
   const conversionCodeOptions = cardFieldOptions.conversionCodes;
   const affiliateOptions = cardFieldOptions.affiliates;
 
@@ -1433,14 +1537,14 @@ export default function Crm() {
     [deals, selectedDealId],
   );
 
-  const activeFilterCount = useMemo(() => {
+  const legacyActiveFilterCount = useMemo(() => {
     return Object.values(advancedFilters).filter((value) =>
       typeof value === "boolean" ? value : Boolean(value),
     ).length;
   }, [advancedFilters]);
+  const activeFilterCount = filterConditions.length + legacyActiveFilterCount;
 
   const filteredDeals = useMemo(() => {
-    const currentUser = "Mateus";
     const filtered = deals.filter((deal) => {
       if (deal.status === "canceled" && statusFilter !== "canceled") {
         return false;
@@ -1450,7 +1554,28 @@ export default function Crm() {
         return false;
       }
 
-      if (scopeFilter === "mine" && deal.owner !== currentUser) {
+      if (
+        responsibleUserId !== null &&
+        deal.responsibleUserId !== responsibleUserId &&
+        !(
+          !deal.responsibleUserId &&
+          deal.owner ===
+            assignableUsers.find((user) => user.id === responsibleUserId)?.name
+        )
+      ) {
+        return false;
+      }
+
+      if (
+        scopeFilter === "mine" &&
+        currentCrmUser &&
+        deal.responsibleUserId !== currentCrmUser.id &&
+        !(
+          !deal.responsibleUserId &&
+          deal.owner.trim().toLocaleLowerCase("pt-BR") ===
+            currentCrmUser.name.trim().toLocaleLowerCase("pt-BR")
+        )
+      ) {
         return false;
       }
 
@@ -1588,7 +1713,16 @@ export default function Crm() {
 
       return toTime(b.createdAt) - toTime(a.createdAt);
     });
-  }, [advancedFilters, deals, scopeFilter, sortMode, statusFilter]);
+  }, [
+    advancedFilters,
+    assignableUsers,
+    currentCrmUser,
+    deals,
+    responsibleUserId,
+    scopeFilter,
+    sortMode,
+    statusFilter,
+  ]);
 
   const totals = useMemo(
     () => ({
@@ -1994,6 +2128,12 @@ export default function Crm() {
       monthlyValue: Number.isFinite(value) ? value : 0,
       plan: newDeal.plan,
       owner: newDeal.owner,
+      createdByUserId: null,
+      createdByUserName: "",
+      responsibleUserId: null,
+      responsibleUserName: newDeal.owner,
+      responsibleUserPhotoUrl: null,
+      updatedByUserId: null,
       activity: saveAndTask ? "Criar tarefa" : "1o contato - 24 horas",
       createdAt: now,
       updatedAt: now,
@@ -2039,6 +2179,45 @@ export default function Crm() {
       setSyncStatus("warning");
       setSyncMessage(
         "Nao foi possivel salvar a negociacao no backend. O cartao nao foi criado.",
+      );
+    }
+  }
+
+  async function handleTransferDeal(deal: Deal, nextUserId: number | null) {
+    const targetName =
+      assignableUsers.find((user) => user.id === nextUserId)?.name ||
+      "Sem responsável";
+    if (
+      !window.confirm(
+        `Transferir ${deal.customerName} para ${targetName}?`,
+      )
+    ) {
+      return;
+    }
+
+    const previous = deals;
+    setDeals((current) =>
+      current.map((item) =>
+        item.id === deal.id
+          ? {
+              ...item,
+              responsibleUserId: nextUserId,
+              responsibleUserName: targetName,
+              owner: nextUserId ? targetName : "",
+            }
+          : item,
+      ),
+    );
+    try {
+      await transferirCrmDeal(deal.id, nextUserId, targetName);
+      setSyncStatus("success");
+      setSyncMessage(`Negociação transferida para ${targetName}.`);
+      void loadCrm();
+    } catch (error) {
+      setDeals(previous);
+      setSyncStatus("warning");
+      setSyncMessage(
+        getApiErrorMessage(error, "Não foi possível transferir a negociação."),
       );
     }
   }
@@ -2223,6 +2402,12 @@ export default function Crm() {
         value: 0,
         monthlyValue: 0,
         owner: "Equipe Netbox",
+        createdByUserId: null,
+        createdByUserName: "",
+        responsibleUserId: null,
+        responsibleUserName: "",
+        responsibleUserPhotoUrl: null,
+        updatedByUserId: null,
         activity: "Lead importado",
         createdAt: now,
         updatedAt: now,
@@ -2783,6 +2968,16 @@ export default function Crm() {
       address: deal.address,
       createdAt: toDateTimeInputValue(deal.createdAt),
       owner: deal.owner,
+      responsibleUserId:
+        deal.responsibleUserId ??
+        assignableUsers.find(
+          (user) =>
+            user.name.trim().toLocaleLowerCase("pt-BR") ===
+            (deal.responsibleUserName || deal.owner)
+              .trim()
+              .toLocaleLowerCase("pt-BR"),
+        )?.id ??
+        null,
       trackingCode:
         deal.trackingCode ||
         (deal.conversionId ? String(deal.conversionId) : ""),
@@ -2832,6 +3027,9 @@ export default function Crm() {
     const selectedCampaign = databaseCampaigns.find(
       (campaign) => campaign.name === cardEditForm.campaign,
     );
+    const selectedResponsible = assignableUsers.find(
+      (user) => user.id === cardEditForm.responsibleUserId,
+    );
     const patch: Partial<Deal> = {
       customerName: cardEditForm.customerName.trim() || "NEGOCIACAO SEM NOME",
       phone: cardEditForm.phone.trim(),
@@ -2840,7 +3038,10 @@ export default function Crm() {
       neighborhood: cardEditForm.neighborhood.trim(),
       address: cardEditForm.address.trim(),
       createdAt,
-      owner: cardEditForm.owner.trim(),
+      owner: selectedResponsible?.name || "",
+      responsibleUserId: cardEditForm.responsibleUserId,
+      responsibleUserName: selectedResponsible?.name || "",
+      responsibleUserPhotoUrl: selectedResponsible?.photoUrl || null,
       trackingCode: cardEditForm.trackingCode.trim(),
       status: cardEditForm.status,
       source: cardEditForm.source.trim(),
@@ -2857,11 +3058,6 @@ export default function Crm() {
       activity: selectedStatus?.name || originalDeal?.activity || "",
       notes: cardEditForm.notes.trim(),
     };
-
-    updateDeal(cardEditForm.id, patch);
-    persistLocalDealEdit(cardEditForm.id, patch);
-    setCardEditOpen(false);
-    setCardEditForm(null);
 
     let conversionSyncFailed = false;
 
@@ -2889,7 +3085,6 @@ export default function Crm() {
           neighborhood: patch.neighborhood,
           address: patch.address,
           createdAt: patch.createdAt,
-          owner: patch.owner,
           trackingCode: patch.trackingCode,
           status: patch.status,
           source: patch.source,
@@ -2905,17 +3100,30 @@ export default function Crm() {
           cardColor: patch.cardColor,
           notes: patch.notes,
         });
+        if (
+          originalDeal?.responsibleUserId !== cardEditForm.responsibleUserId
+        ) {
+          await transferirCrmDeal(
+            cardEditForm.id,
+            cardEditForm.responsibleUserId,
+            selectedResponsible?.name || "",
+          );
+        }
         setSyncStatus(conversionSyncFailed ? "warning" : "success");
         setSyncMessage(
           conversionSyncFailed
             ? "Cartao salvo, mas nao foi possivel sincronizar a conversao."
             : "Cartao e dados da conversao atualizados com sucesso.",
         );
-      } catch {
+      } catch (error) {
         setSyncStatus("warning");
         setSyncMessage(
-          "Cartao atualizado na tela, mas nao foi possivel salvar no banco.",
+          getApiErrorMessage(
+            error,
+            "Não foi possível salvar ou vincular o responsável no banco.",
+          ),
         );
+        return;
       }
     } else {
       setSyncStatus(conversionSyncFailed ? "warning" : "success");
@@ -2925,6 +3133,17 @@ export default function Crm() {
           : "Cartao e dados da conversao atualizados.",
       );
     }
+
+    updateDeal(cardEditForm.id, patch);
+    if (!/^\d+$/.test(cardEditForm.id)) {
+      persistLocalDealEdit(cardEditForm.id, patch);
+    }
+    setCardEditOpen(false);
+    setCardEditForm(null);
+
+    if (/^\d+$/.test(cardEditForm.id)) {
+      void loadCrm();
+    }
   }
 
   async function handleQuickStatusChange(
@@ -2932,13 +3151,14 @@ export default function Crm() {
     option: QuickStatusOption,
   ) {
     setActiveStatusMenuId(null);
+    const previousDeals = deals;
     updateDeal(deal.id, {
       status: option.id,
       cardColor: option.cardColor,
       activity: option.name,
     });
-    setSyncStatus("success");
-    setSyncMessage(`Status do cartao alterado para ${option.name}.`);
+    setSyncStatus("info");
+    setSyncMessage(`Salvando status ${option.name}...`);
 
     if (
       (option.id === "won" || option.id === "lost") &&
@@ -2960,10 +3180,15 @@ export default function Crm() {
 
       setSyncStatus("success");
       setSyncMessage(`Status ${option.name} salvo no CRM.`);
-    } catch {
+      void loadCrm();
+    } catch (error) {
+      setDeals(previousDeals);
       setSyncStatus("warning");
       setSyncMessage(
-        `Status ${option.name} aplicado na tela, mas nao foi possivel salvar no CRM.`,
+        getApiErrorMessage(
+          error,
+          `Não foi possível salvar o status ${option.name}.`,
+        ),
       );
     }
   }
@@ -2985,7 +3210,21 @@ export default function Crm() {
       deal.trackingCode ||
       (deal.conversionId ? String(deal.conversionId) : "Nao informado");
     const notes = deal.notes.trim();
-    const notesTooltipId = `deal-notes-${String(deal.id).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+    const responsibleUser = assignableUsers.find(
+      (user) =>
+        user.id === deal.responsibleUserId ||
+        user.name.trim().toLocaleLowerCase("pt-BR") ===
+          (deal.responsibleUserName || deal.owner)
+            .trim()
+            .toLocaleLowerCase("pt-BR"),
+    );
+    const responsiblePhotoUrl =
+      deal.responsibleUserPhotoUrl || responsibleUser?.photoUrl || "";
+    const responsibleDisplayName =
+      responsibleUser?.name ||
+      deal.responsibleUserName ||
+      deal.owner ||
+      "Sem responsável";
 
     return (
       <article
@@ -2998,8 +3237,6 @@ export default function Crm() {
           } as CSSProperties
         }
         draggable
-        tabIndex={notes ? 0 : undefined}
-        aria-describedby={notes ? notesTooltipId : undefined}
         onClick={(event) => handleDealCardClick(event, deal)}
         onDragStart={() => setDraggingDealId(deal.id)}
         onDragEnd={() => setDraggingDealId(null)}
@@ -3021,10 +3258,64 @@ export default function Crm() {
 
         <div className={styles.dealInfoList}>
           <div>
-            <FiUser aria-hidden="true" />
+            <span
+              className={`${styles.ownerAvatar} ${
+                responsiblePhotoUrl ? styles.ownerAvatarPhoto : ""
+              }`}
+              style={
+                responsiblePhotoUrl
+                  ? { backgroundImage: `url("${responsiblePhotoUrl}")` }
+                  : undefined
+              }
+              title={responsibleDisplayName}
+              aria-label={`Responsável: ${responsibleDisplayName}`}
+            >
+              {!responsiblePhotoUrl &&
+                responsibleDisplayName
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")
+                  .toUpperCase()}
+            </span>
             <span>
-              <small>Atendente Chatmix</small>
-              <strong>{deal.owner || "Nao informado"}</strong>
+              <small>Responsável</small>
+              {crmPermissions.canTransfer ? (
+                <select
+                  className={styles.ownerSelect}
+                  value={
+                    deal.responsibleUserId ??
+                    assignableUsers.find(
+                      (user) =>
+                        user.name.trim().toLocaleLowerCase("pt-BR") ===
+                        (deal.responsibleUserName || deal.owner)
+                          .trim()
+                          .toLocaleLowerCase("pt-BR"),
+                    )?.id ??
+                    ""
+                  }
+                  aria-label={`Responsável por ${deal.customerName}`}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => {
+                    event.stopPropagation();
+                    void handleTransferDeal(
+                      deal,
+                      event.target.value ? Number(event.target.value) : null,
+                    );
+                  }}
+                >
+                  <option value="">Sem responsável</option>
+                  {assignableUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <strong>
+                  {deal.responsibleUserName || "Sem responsável"}
+                </strong>
+              )}
             </span>
           </div>
           <div>
@@ -3095,6 +3386,18 @@ export default function Crm() {
           >
             <FiEye aria-hidden="true" />
           </button>
+          <button
+            type="button"
+            className={styles.dealObservationButton}
+            aria-label={`Ver observação de ${deal.customerName}`}
+            title="Ver observação"
+            onClick={(event) => {
+              event.stopPropagation();
+              setObservationDealId(deal.id);
+            }}
+          >
+            <FiClipboard aria-hidden="true" />
+          </button>
         </div>
 
         <div className={styles.dealCardFooter}>
@@ -3112,14 +3415,42 @@ export default function Crm() {
           </time>
         </div>
 
-        {notes && (
+        {observationDealId === deal.id && (
           <div
-            id={notesTooltipId}
-            className={styles.dealNotesTooltip}
-            role="tooltip"
+            className={styles.observationOverlay}
+            role="presentation"
+            onMouseLeave={() => setObservationDealId(null)}
+            onClick={(event) => {
+              event.stopPropagation();
+              setObservationDealId(null);
+            }}
           >
-            <strong>Observacao</strong>
-            <p>{notes}</p>
+            <section
+              className={styles.observationPopup}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`observation-title-${deal.id}`}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header>
+                <div>
+                  <span>Negociação</span>
+                  <strong id={`observation-title-${deal.id}`}>
+                    Observação de {deal.customerName}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Fechar observação"
+                  onClick={() => setObservationDealId(null)}
+                >
+                  <FiX aria-hidden="true" />
+                </button>
+              </header>
+              <p>
+                {notes || "Nenhuma observação cadastrada para esta negociação."}
+              </p>
+            </section>
           </div>
         )}
 
@@ -3349,79 +3680,49 @@ export default function Crm() {
         </div>
       </header>
 
-      <section className={styles.filters} aria-label="Filtros do CRM">
-        <label className={styles.selectWrap}>
-          <FiFilter aria-hidden="true" />
-          <select
-            value={selectedFunnel}
-            onChange={(event) => setSelectedFunnel(event.target.value)}
-          >
-            {funnels.map((funnel) => (
-              <option key={funnel} value={funnel}>
-                {funnel.toUpperCase()}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className={styles.selectWrap}>
-          <FiUser aria-hidden="true" />
-          <select
-            value={scopeFilter}
-            onChange={(event) =>
-              setScopeFilter(event.target.value as ScopeFilter)
-            }
-          >
-            {scopeOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className={styles.selectWrap}>
-          <FiSliders aria-hidden="true" />
-          <select
-            value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.target.value as DealStatus | "all")
-            }
-          >
-            <option value="all">Todos os status</option>
-            {statusOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className={styles.selectWrap}>
-          <FiList aria-hidden="true" />
-          <select
-            value={sortMode}
-            onChange={(event) => setSortMode(event.target.value as SortMode)}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          type="button"
-          className={`${styles.filterButton} ${
-            activeFilterCount > 0 ? styles.filterButtonActive : ""
-          }`}
-          onClick={() => setAdvancedFiltersOpen(true)}
-        >
-          <FiFilter aria-hidden="true" />
-          <span>Filtros ({activeFilterCount})</span>
-        </button>
-      </section>
+      <CrmFilterHeader
+        funnels={availableFunnels}
+        funnelId={selectedFunnelId}
+        onFunnelChange={(value) => {
+          setSelectedFunnelId(value);
+          const funnel = availableFunnels.find((item) => item.id === value);
+          if (funnel) setSelectedFunnel(funnel.name);
+        }}
+        onFunnelCreated={(funnel) => {
+          setAvailableFunnels((current) => [
+            ...current.filter((item) => item.id !== funnel.id),
+            funnel,
+          ]);
+          setSelectedFunnelId(funnel.id);
+          setSelectedFunnel(funnel.name);
+        }}
+        scope={scopeFilter}
+        onScopeChange={(value) => setScopeFilter(value as ScopeFilter)}
+        responsibleUserId={responsibleUserId}
+        onResponsibleUserChange={setResponsibleUserId}
+        statuses={allStatusOptions.map((item) => ({
+          id: item.id,
+          name: item.name,
+        }))}
+        status={statusFilter}
+        onStatusChange={(value) =>
+          setStatusFilter(value as DealStatus | "all")
+        }
+        stages={stages.map((stage) => ({
+          id: stage.id,
+          name: stage.title,
+        }))}
+        sort={sortMode}
+        onSortChange={(value) => setSortMode(value as SortMode)}
+        users={assignableUsers}
+        permissions={crmPermissions}
+        conditions={filterConditions}
+        onConditionsChange={setFilterConditions}
+        onResultMessage={(message) => {
+          setSyncStatus("info");
+          setSyncMessage(message);
+        }}
+      />
 
       <button
         type="button"
@@ -3801,7 +4102,7 @@ export default function Crm() {
               </label>
 
               <label className={styles.fullField}>
-                <span>Observacao</span>
+                <span>Observação</span>
                 <textarea
                   value={newDeal.notes}
                   onChange={(event) =>
@@ -4177,7 +4478,7 @@ export default function Crm() {
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <section className={styles.cardEditModal}>
             <header>
-              <h2>Editar cartao</h2>
+              <h2>Editar cartão</h2>
               <button
                 type="button"
                 onClick={() => {
@@ -4382,35 +4683,35 @@ export default function Crm() {
               </label>
 
               <label>
-                <span>Atendente Chatmix</span>
-                <div className={styles.catalogField}>
-                  <select
-                    value={cardEditForm.owner}
-                    onChange={(event) =>
-                      setCardEditForm((current) =>
-                        current
-                          ? { ...current, owner: event.target.value }
-                          : current,
-                      )
-                    }
-                  >
-                    <option value="">Nao informado</option>
-                    {attendantOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className={styles.catalogAddButton}
-                    onClick={() => addCardTextOption("attendants")}
-                    aria-label="Adicionar atendente Chatmix"
-                    title="Adicionar atendente Chatmix"
-                  >
-                    <FiPlus aria-hidden="true" />
-                  </button>
-                </div>
+                <span>Responsável pela negociação</span>
+                <select
+                  value={cardEditForm.responsibleUserId ?? ""}
+                  onChange={(event) => {
+                    const nextId = event.target.value
+                      ? Number(event.target.value)
+                      : null;
+                    const nextUser = assignableUsers.find(
+                      (user) => user.id === nextId,
+                    );
+                    setCardEditForm((current) =>
+                      current
+                        ? {
+                            ...current,
+                            responsibleUserId: nextId,
+                            owner: nextUser?.name || "",
+                          }
+                        : current,
+                    );
+                  }}
+                >
+                  <option value="">Sem responsável</option>
+                  {assignableUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+                
               </label>
 
               <label>
@@ -4697,7 +4998,7 @@ export default function Crm() {
               </label>
 
               <label className={styles.fullField}>
-                <span>Observacao</span>
+                <span>Observação</span>
                 <textarea
                   value={cardEditForm.notes}
                   onChange={(event) =>
