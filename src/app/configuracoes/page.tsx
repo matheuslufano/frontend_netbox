@@ -17,6 +17,7 @@ import {
   listarChatmixWebhookLogs,
   listarCidadesTocantins,
   listarUsuarios,
+  listarUsuariosAtribuiveis,
 } from "@/lib/api";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./configuracoes.module.css";
@@ -154,6 +155,7 @@ export default function Configuracoes() {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshingProfiles, setRefreshingProfiles] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -234,16 +236,22 @@ export default function Configuracoes() {
     let cancelled = false;
 
     async function loadSettings() {
-      try {
-        const [userList, affiliateList, cityList] = await Promise.all([
-          listarUsuarios(),
+      const [usersResult, affiliatesResult, citiesResult] =
+        await Promise.allSettled([
+          listarUsuarios().catch(() => listarUsuariosAtribuiveis()),
           listarAfiliados(),
           listarCidadesTocantins(),
         ]);
 
-        if (!cancelled) {
-          setUsers(userList);
-          setAffiliates(affiliateList);
+      if (!cancelled) {
+        if (usersResult.status === "fulfilled") {
+          setUsers(usersResult.value);
+        }
+        if (affiliatesResult.status === "fulfilled") {
+          setAffiliates(affiliatesResult.value);
+        }
+        if (citiesResult.status === "fulfilled") {
+          const cityList = citiesResult.value;
           setCities(cityList);
           setNewUser((current) => ({
             ...current,
@@ -254,19 +262,19 @@ export default function Configuracoes() {
             city: current.city || cityList[0]?.name || "",
           }));
         }
-      } catch (err) {
-        if (!cancelled) {
+
+        const failures = [
+          usersResult.status === "rejected" ? "usuários" : "",
+          affiliatesResult.status === "rejected" ? "afiliados" : "",
+          citiesResult.status === "rejected" ? "cidades" : "",
+        ].filter(Boolean);
+
+        if (failures.length > 0) {
           setError(
-            getApiErrorMessage(
-              err,
-              "Nao foi possivel carregar as configuracoes.",
-            ),
+            `Não foi possível carregar: ${failures.join(", ")}. Tente atualizar a lista.`,
           );
         }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     }
 
@@ -369,9 +377,38 @@ export default function Configuracoes() {
     setShowAllProfileResults(false);
   }
 
-  function handleShowAllProfiles() {
+  async function handleShowAllProfiles() {
     resetStatus();
-    setShowAllProfileResults(true);
+    setRefreshingProfiles(true);
+
+    try {
+      const [usersResult, affiliatesResult] = await Promise.allSettled([
+        listarUsuarios().catch(() => listarUsuariosAtribuiveis()),
+        listarAfiliados(),
+      ]);
+
+      if (usersResult.status === "fulfilled") {
+        setUsers(usersResult.value);
+      }
+      if (affiliatesResult.status === "fulfilled") {
+        setAffiliates(affiliatesResult.value);
+      }
+
+      const failures = [
+        usersResult.status === "rejected" ? "usuários" : "",
+        affiliatesResult.status === "rejected" ? "afiliados" : "",
+      ].filter(Boolean);
+
+      if (failures.length > 0) {
+        setError(
+          `Não foi possível atualizar: ${failures.join(", ")}. Tente novamente.`,
+        );
+      }
+
+      setShowAllProfileResults(true);
+    } finally {
+      setRefreshingProfiles(false);
+    }
   }
 
   function backToProfileSearch() {
@@ -1320,7 +1357,8 @@ export default function Configuracoes() {
                             className={styles.profileSearchButton}
                             aria-label="Listar usuarios existentes"
                             title="Listar usuarios existentes"
-                            onClick={handleShowAllProfiles}
+                            onClick={() => void handleShowAllProfiles()}
+                            disabled={refreshingProfiles}
                           >
                             <span
                               className={styles.searchIcon}

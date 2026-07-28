@@ -1052,7 +1052,7 @@ export default function Crm() {
   const [draggingStageId, setDraggingStageId] = useState<string | null>(null);
   const [deletingStageId, setDeletingStageId] = useState<string | null>(null);
   const [selectedFunnel, setSelectedFunnel] = useState(funnels[0]);
-  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("mine");
+  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<DealStatus | "all">("all");
   const [sortMode, setSortMode] = useState<SortMode>("created-desc");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("last-30");
