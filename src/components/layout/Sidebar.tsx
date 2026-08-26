@@ -4,10 +4,10 @@
 
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BsClipboardDataFill } from "react-icons/bs";
-import { FiDatabase, FiGitBranch } from "react-icons/fi";
+import { FiDatabase, FiGitBranch, FiShare2 } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
 import { ImUsers } from "react-icons/im";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
@@ -48,11 +48,12 @@ function getStoredUserPhoto(user: StoredUser) {
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userPhoto, setUserPhoto] = useState<UserPhoto>(logo1);
-  const [userName, setUserName] = useState("usuario");
+  const [userName, setUserName] = useState("usuário");
 
   useEffect(() => {
     function loadStoredUser() {
@@ -60,7 +61,7 @@ export default function Sidebar() {
 
       if (!storedUser) {
         setUserPhoto(logo1);
-        setUserName("usuario");
+        setUserName("usuário");
         return;
       }
 
@@ -68,11 +69,11 @@ export default function Sidebar() {
         const parsedUser = JSON.parse(storedUser) as StoredUser;
         const photo = getStoredUserPhoto(parsedUser);
 
-        setUserName(parsedUser.name || "usuario");
+        setUserName(parsedUser.name || "usuário");
         setUserPhoto(photo || logo1);
       } catch {
         setUserPhoto(logo1);
-        setUserName("usuario");
+        setUserName("usuário");
       }
     }
 
@@ -192,7 +193,7 @@ export default function Sidebar() {
             <Link
               href="/fluxograma-conversoes"
               className={styles.menuItem}
-              aria-label="Fluxograma de conversoes"
+              aria-label="Fluxograma de conversões"
             >
               <FiGitBranch className={styles.icon} />
               <span className={styles.itemLabel}>Fluxograma</span>
@@ -214,6 +215,22 @@ export default function Sidebar() {
             <Link href="/sgp" className={styles.menuItem} aria-label="SGP">
               <FiDatabase className={styles.icon} />
               <span className={styles.itemLabel}>SGP</span>
+            </Link>
+          </li>
+
+          <li className={styles.button}>
+            <Link
+              href="/integracoes"
+              className={`${styles.menuItem} ${
+                pathname === "/integracoes"
+                  ? styles.menuItemActive
+                  : ""
+              }`}
+              aria-label="Integrações"
+              aria-current={pathname === "/integracoes" ? "page" : undefined}
+            >
+              <FiShare2 className={styles.icon} />
+              <span className={styles.itemLabel}>Integrações</span>
             </Link>
           </li>
 
@@ -263,7 +280,7 @@ export default function Sidebar() {
 
             <div className={styles.logoutModalText}>
               <h2 id="logout-modal-title">Sair da conta?</h2>
-              <p>Voce precisa entrar novamente para acessar o painel.</p>
+              <p>Você precisa entrar novamente para acessar o painel.</p>
             </div>
 
             <div className={styles.logoutModalActions}>

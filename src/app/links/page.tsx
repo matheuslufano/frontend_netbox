@@ -122,7 +122,7 @@ export default function Links() {
       setError(
         getApiErrorMessage(
           err,
-          "Nao foi possivel criar o link. Tente novamente."
+          "Não foi possível criar o link. Tente novamente."
         )
       );
     } finally {
@@ -135,9 +135,9 @@ export default function Links() {
 
     try {
       await navigator.clipboard.writeText(createdLink);
-      setCopyHint("Copiado para a area de transferencia.");
+      setCopyHint("Copiado para a área de transferencia.");
     } catch {
-      setCopyHint("Nao foi possivel copiar automaticamente.");
+      setCopyHint("Não foi possível copiar automaticamente.");
     }
   }
 
@@ -153,7 +153,7 @@ export default function Links() {
       setLinksError(
         getApiErrorMessage(
           err,
-          "Nao foi possivel carregar os links criados."
+          "Não foi possível carregar os links criados."
         )
       );
     } finally {
@@ -234,7 +234,7 @@ export default function Links() {
       setLinksMessage("Link atualizado com sucesso.");
     } catch (err) {
       setLinksError(
-        getApiErrorMessage(err, "Nao foi possivel atualizar o link.")
+        getApiErrorMessage(err, "Não foi possível atualizar o link.")
       );
     } finally {
       setSavingLinkId(null);
@@ -247,7 +247,7 @@ export default function Links() {
 
     const label = link.name || link.shortCode;
     const confirmed = window.confirm(
-      `Apagar o link "${label}"? Esta acao tambem remove cliques e conversoes relacionados.`
+      `Apagar o link "${label}"? Esta ação também remove cliques e conversões relacionados.`
     );
 
     if (!confirmed) {
@@ -268,7 +268,7 @@ export default function Links() {
       setLinksMessage("Link apagado com sucesso.");
     } catch (err) {
       setLinksError(
-        getApiErrorMessage(err, "Nao foi possivel apagar o link.")
+        getApiErrorMessage(err, "Não foi possível apagar o link.")
       );
     } finally {
       setDeletingLinkId(null);
@@ -281,7 +281,7 @@ export default function Links() {
       setCopiedLinkId(link.id);
       window.setTimeout(() => setCopiedLinkId(null), 2000);
     } catch {
-      setLinksError("Nao foi possivel copiar o link.");
+      setLinksError("Não foi possível copiar o link.");
     }
   }
 
@@ -309,7 +309,7 @@ export default function Links() {
         URL.revokeObjectURL(objectUrl);
       }
     } catch {
-      setLinksError("Nao foi possivel baixar o QR code.");
+      setLinksError("Não foi possível baixar o QR code.");
     }
   }
 
@@ -322,10 +322,10 @@ export default function Links() {
 
         <header className={styles.header}>
           <span className={styles.badge}>Links e QR</span>
-          <h1>Crie rapido um link de afiliado</h1>
+          <h1>Crie rapidamente um link de afiliado</h1>
           <p>
             Nomeie campanhas, escolha um afiliado e gere um link curto para
-            acompanhar resultados no relatorio.
+            acompanhar resultados no relatório.
           </p>
         </header>
 
@@ -368,7 +368,7 @@ export default function Links() {
                 type="url"
                 name="url"
                 placeholder={
-                  defaultLandingPageUrl || "https://exemplo.com/pagina"
+                  defaultLandingPageUrl || "https://exemplo.com/página"
                 }
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -465,7 +465,7 @@ export default function Links() {
                     Links criados
                   </h2>
                   <p>
-                    Veja, copie, abra e use o QR code de cada link de divulgacao.
+                    Veja, copie, abra e use o QR code de cada link de divulgação.
                   </p>
                 </div>
 
@@ -590,7 +590,7 @@ export default function Links() {
                             </div>
 
                             <div className={styles.linkGroup}>
-                              <span>Divulgacao</span>
+                              <span>Divulgação</span>
                               <a
                                 href={link.promoLink}
                                 target="_blank"

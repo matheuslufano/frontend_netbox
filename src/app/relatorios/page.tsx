@@ -39,7 +39,7 @@ export default function Relatorios() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <h1>Relatorios</h1>
+        <h1>Relatórios</h1>
         <p>Carregando dados...</p>
       </div>
     );
@@ -48,7 +48,7 @@ export default function Relatorios() {
   if (error) {
     return (
       <div className={styles.page}>
-        <h1>Relatorios</h1>
+        <h1>Relatórios</h1>
         <p className={styles.error}>
           {error}
         </p>
@@ -59,7 +59,7 @@ export default function Relatorios() {
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>
-        Relatorios
+        Relatórios
       </h1>
 
       <div className={styles.searchBar}>

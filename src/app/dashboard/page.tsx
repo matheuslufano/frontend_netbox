@@ -210,7 +210,7 @@ export default function Dashboard() {
           setError(
             getApiErrorMessage(
               err,
-              "Nao foi possivel carregar o dashboard."
+              "Não foi possível carregar o dashboard."
             )
           );
         }
@@ -355,7 +355,7 @@ function TocantinsCoverageMap({
       <div className={styles.coverageHeader}>
         <div>
           <span>Nossa Cobertura</span>
-          <h2>Mapa de vendas e conversoes por cidade</h2>
+          <h2>Mapa de vendas e conversões por cidade</h2>
           <p>
             Passe o mouse sobre uma cidade para ver o resumo. Clique no ponto do
             mapa para filtrar a lista lateral somente daquela cidade.
@@ -385,7 +385,7 @@ function TocantinsCoverageMap({
       <div className={styles.coverageGrid}>
         <div className={styles.tocantinsMapCard}>
           <div className={styles.mapLegend}>
-            <span className={styles.mapLegendActive}>Com vendas/conversoes</span>
+            <span className={styles.mapLegendActive}>Com vendas/conversões</span>
             <span className={styles.mapLegendEmpty}>Sem venda registrada</span>
           </div>
 

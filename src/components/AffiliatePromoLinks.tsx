@@ -34,10 +34,10 @@ export default function AffiliatePromoLinks({ links }: AffiliatePromoLinksProps)
           fontSize: 14,
         }}
       >
-        <strong>Links de divulgacao</strong>
+        <strong>Links de divulgação</strong>
         <p style={{ margin: "8px 0 0" }}>
-          A API nao retornou o campo <code>promoLink</code>. Atualize o backend e
-          recarregue a pagina.
+          A API não retornou o campo <code>promoLink</code>. Atualize o backend e
+          recarregue a página.
         </p>
       </div>
     );

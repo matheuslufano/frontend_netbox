@@ -109,7 +109,7 @@ export default function Afiliado() {
     setMessage(null);
 
     if (!name.trim() || !email.trim()) {
-      setError("Nome e e-mail sao obrigatorios.");
+      setError("Nome e e-mail são obrigatorios.");
       return;
     }
 
@@ -119,7 +119,7 @@ export default function Afiliado() {
     );
 
     if (emailAlreadyExists) {
-      setError("E-mail ja cadastrado.");
+      setError("E-mail já cadastrado.");
       return;
     }
 
@@ -139,7 +139,7 @@ export default function Afiliado() {
       setCity(cities[0]?.name ?? "");
       setMessage("Afiliado criado com sucesso.");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao foi possivel criar o afiliado."));
+      setError(getApiErrorMessage(err, "Não foi possível criar o afiliado."));
     } finally {
       setSubmitting(false);
     }
@@ -168,7 +168,7 @@ export default function Afiliado() {
     setMessage(null);
 
     if (!editName.trim() || !editEmail.trim()) {
-      setError("Nome e e-mail sao obrigatorios.");
+      setError("Nome e e-mail são obrigatorios.");
       return;
     }
 
@@ -180,7 +180,7 @@ export default function Afiliado() {
     );
 
     if (emailAlreadyExists) {
-      setError("E-mail ja cadastrado.");
+      setError("E-mail já cadastrado.");
       return;
     }
 
@@ -202,7 +202,7 @@ export default function Afiliado() {
       setMessage("Afiliado atualizado com sucesso.");
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Nao foi possivel atualizar o afiliado."),
+        getApiErrorMessage(err, "Não foi possível atualizar o afiliado."),
       );
     } finally {
       setSavingId(null);
@@ -232,7 +232,7 @@ export default function Afiliado() {
 
       setMessage("Afiliado apagado com sucesso.");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao foi possivel apagar o afiliado."));
+      setError(getApiErrorMessage(err, "Não foi possível apagar o afiliado."));
       await refreshAffiliates();
     } finally {
       setDeletingId(null);
@@ -254,7 +254,7 @@ export default function Afiliado() {
 
           <div className={styles.row}>
             <div className={styles.field}>
-              <label>Numero</label>
+              <label>Número</label>
               <input
                 type="text"
                 value={phone}
@@ -353,7 +353,7 @@ export default function Afiliado() {
                         type="text"
                         value={editPhone}
                         onChange={(event) => setEditPhone(event.target.value)}
-                        aria-label="Numero do afiliado"
+                        aria-label="Número do afiliado"
                       />
 
                       <select

@@ -11,14 +11,15 @@ type ConnectionState = "checking" | "online" | "offline";
 const HEALTH_REFRESH_MS = 30000;
 
 const routeLabels: Record<string, string> = {
-  "/": "Inicio",
+  "/": "Início",
   "/links": "Links e QR",
   "/afiliado": "Afiliado",
   "/criar-campanha": "Criar Campanha",
   "/campanhas": "Campanhas",
   "/dashboard": "Dashboard",
-  "/relatorios": "Relatorios",
+  "/relatorios": "Relatórios",
   "/sgp": "SGP",
+  "/integracoes": "Integrações",
 };
 
 export default function CompactHeader() {
@@ -75,7 +76,7 @@ export default function CompactHeader() {
           type="button"
           className={styles.headerBackButton}
           onClick={() => router.back()}
-          aria-label="Voltar para a pagina anterior"
+          aria-label="Voltar para a página anterior"
           title="Voltar"
         >
           <FiArrowLeft aria-hidden="true" />

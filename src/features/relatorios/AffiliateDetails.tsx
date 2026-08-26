@@ -115,12 +115,12 @@ type SaleStatusInfo = {
   description: string;
 };
 
-const DEFAULT_EMPTY_MESSAGE = "Nenhum afiliado encontrado no relatorio.";
+const DEFAULT_EMPTY_MESSAGE = "Nenhum afiliado encontrado no relatório.";
 
 const AFFILIATE_VIEW_OPTIONS: SelectOption<AffiliateViewMode>[] = [
-  { value: "compact", label: "Visualizacao compacta", icon: FiList },
-  { value: "medium", label: "Visualizacao media", icon: FiCreditCard },
-  { value: "detailed", label: "Visualizacao detalhada", icon: FiGrid },
+  { value: "compact", label: "Visualização compacta", icon: FiList },
+  { value: "medium", label: "Visualização média", icon: FiCreditCard },
+  { value: "detailed", label: "Visualização detalhada", icon: FiGrid },
 ];
 
 const DETAIL_TAB_OPTIONS: SelectOption<DetailTab>[] = [
@@ -192,7 +192,7 @@ export default function AffiliateDetails({
   async function handleDeleteLink(id: number, name?: string | null) {
     const label = name || `ID #${id}`;
     const confirmed = window.confirm(
-      `Deseja apagar o link "${label}"? Essa acao tambem remove os cliques desse link.`,
+      `Deseja apagar o link "${label}"? Essa ação também remove os cliques desse link.`,
     );
 
     if (!confirmed) return;
@@ -203,7 +203,7 @@ export default function AffiliateDetails({
       await apagarLink(id);
       refresh();
     } catch (error) {
-      alert(getApiErrorMessage(error, "Nao foi possivel apagar o link."));
+      alert(getApiErrorMessage(error, "Não foi possível apagar o link."));
     } finally {
       setDeletingLinkId(null);
     }
@@ -299,7 +299,7 @@ function DetailsHeader({
 
         {activeTab === "links" && (
           <SegmentedControl
-            ariaLabel="Visualizacao dos afiliados"
+            ariaLabel="Visualização dos afiliados"
             role="group"
             options={AFFILIATE_VIEW_OPTIONS}
             value={activeViewMode}
@@ -431,7 +431,7 @@ function ConversionSummary({
       <div className={styles.conversionHero}>
         <span>Conv. WhatsApp</span>
         <strong>{totalConversions}</strong>
-        <p>Cliques no botao da landing que vieram de links de divulgacao.</p>
+        <p>Cliques no botao da landing que vieram de links de divulgação.</p>
       </div>
 
       <div className={styles.conversionRanking}>
@@ -442,7 +442,7 @@ function ConversionSummary({
 
         {ranking.length === 0 ? (
           <p className={styles.emptyText}>
-            Nenhum afiliado gerou conversao ainda.
+            Nenhum afiliado gerou conversão ainda.
           </p>
         ) : (
           <div className={styles.rankingList}>
@@ -573,7 +573,7 @@ function AffiliateMediumCard({
       />
 
       <div className={styles.linkPreviewHeader}>
-        <h4>Links de divulgacao</h4>
+        <h4>Links de divulgação</h4>
         <span>{block.links.length} links</span>
       </div>
 
@@ -668,7 +668,7 @@ function AffiliateDetailedCard({
             <span>{block.totalClicks}</span>
           </div>
           <div>
-            <strong>Conversoes</strong>
+            <strong>Conversões</strong>
             <span>{block.totalConversions ?? 0}</span>
           </div>
         </div>
@@ -757,7 +757,7 @@ function AffiliateShowcaseLink({
               styles.showcaseMetricButtonActive,
             )}
             onClick={() => onOpenConversions(link)}
-            aria-label={`Ver ${link.conversions} conversoes do link ${
+            aria-label={`Ver ${link.conversions} conversões do link ${
               link.name || link.shortCode
             }`}
             title="Ver fluxograma e dados coletados"
@@ -843,7 +843,7 @@ function AffiliateStats({
   const stats = [
     { label: "Links", value: links },
     { label: "Cliques", value: clicks },
-    { label: "Conversoes", value: conversions },
+    { label: "Conversões", value: conversions },
   ];
 
   if (compact) {
@@ -886,7 +886,7 @@ function AffiliateLinksTable({
           <tr className={styles.tableHead}>
             <th className={styles.smallCell}>Links dos afiliados</th>
             <th className={styles.smallCell}>Cliques</th>
-            <th className={styles.smallCell}>Conversoes</th>
+            <th className={styles.smallCell}>Conversões</th>
             <th className={styles.smallCell}>Copiar Link</th>
             <th className={styles.smallCell}>Apagar</th>
           </tr>
@@ -1115,7 +1115,7 @@ function RefreshReportButton({
   onRefresh: () => void;
   compact?: boolean;
 }) {
-  const label = refreshing ? "Atualizando..." : "Atualizar relatorio";
+  const label = refreshing ? "Atualizando..." : "Atualizar relatório";
 
   return (
     <button
@@ -1309,7 +1309,7 @@ function ConversionFlowPanel({
       onRefresh();
     } catch (error) {
       alert(
-        getApiErrorMessage(error, "Nao foi possivel atualizar a conversao."),
+        getApiErrorMessage(error, "Não foi possível atualizar a conversão."),
       );
     } finally {
       setSavingConversionId(null);
@@ -1318,7 +1318,7 @@ function ConversionFlowPanel({
 
   async function deleteConversion(conversion: ConversionWithAffiliate) {
     const confirmed = window.confirm(
-      `Apagar a conversao #${conversion.id}? Essa acao remove o pre-cadastro salvo.`,
+      `Apagar a conversão #${conversion.id}? Essa ação remove o pré-cadastro salvo.`,
     );
 
     if (!confirmed) return;
@@ -1329,7 +1329,7 @@ function ConversionFlowPanel({
       await apagarConversao(conversion.id);
       onRefresh();
     } catch (error) {
-      alert(getApiErrorMessage(error, "Nao foi possivel apagar a conversao."));
+      alert(getApiErrorMessage(error, "Não foi possível apagar a conversão."));
     } finally {
       setDeletingConversionId(null);
     }
@@ -1366,12 +1366,12 @@ function ConversionFlowPanel({
           [conversion.id]: {
             status: "error",
             document,
-            statusLabel: "CPF/CNPJ invalido",
+            statusLabel: "CPF/CNPJ inválido",
           },
         }));
         if (showAlert) {
           alert(
-            "Informe um CPF ou CNPJ valido no pre-cadastro para validar automaticamente no SGP.",
+            "Informe um CPF ou CNPJ válido no pré-cadastro para validar automaticamente no SGP.",
           );
         }
         return;
@@ -1397,7 +1397,7 @@ function ConversionFlowPanel({
             [conversion.id]: {
               status: "not_found",
               document,
-              statusLabel: "Nao cadastrado no SGP",
+              statusLabel: "Não cadastrado no SGP",
             },
           }));
           setStageStatusOverrides((current) => ({
@@ -1406,7 +1406,7 @@ function ConversionFlowPanel({
           }));
           if (showAlert) {
             alert(
-              "CPF/CNPJ do pre-cadastro ainda nao foi encontrado como cliente cadastrado no SGP.",
+              "CPF/CNPJ do pré-cadastro ainda não foi encontrado como cliente cadastrado no SGP.",
             );
           }
           return;
@@ -1430,8 +1430,8 @@ function ConversionFlowPanel({
             statusLabel: isActive
               ? "Ativo no SGP"
               : hasKnownInactiveStatus
-                ? response.customer.status || "Nao ativo no SGP"
-                : response.customer.status || "Status nao informado",
+                ? response.customer.status || "Não ativo no SGP"
+                : response.customer.status || "Status não informado",
             messages: validation.messages,
           },
         }));
@@ -1449,7 +1449,7 @@ function ConversionFlowPanel({
           },
         }));
         if (showAlert) {
-          alert(getApiErrorMessage(error, "Nao foi possivel validar no SGP."));
+          alert(getApiErrorMessage(error, "Não foi possível validar no SGP."));
         }
       } finally {
         if (showLoading) {
@@ -1544,7 +1544,7 @@ function ConversionFlowPanel({
 
         <div className={styles.conversionReportMain}>
           <div className={styles.conversionReportTitleRow}>
-            <h3>Conversoes de clientes</h3>
+            <h3>Conversões de clientes</h3>
             <div className={styles.conversionViewSwitcher}>
               <span>
                 {statusFilteredConversionEvents.length} exibidas
@@ -1582,7 +1582,7 @@ function ConversionFlowPanel({
               />
             )}
             <label>
-              <span>Codigo</span>
+              <span>Código</span>
               <select
                 value={effectiveCodeFilter}
                 onChange={(event) => {
@@ -1642,9 +1642,9 @@ function ConversionFlowPanel({
           {linkFilter && (
             <div className={styles.conversionFilterNotice}>
               <div>
-                <span>Conversoes do link</span>
+                <span>Conversões do link</span>
                 <strong>
-                  {linkFilter.name || "Link sem nome"} - codigo{" "}
+                  {linkFilter.name || "Link sem nome"} - código{" "}
                   {linkFilter.shortCode}
                 </strong>
               </div>
@@ -1944,9 +1944,9 @@ function AffiliateReportProfile({
 
       <div className={styles.reportProfileInfo}>
         <strong>Nome: {profileName}</strong>
-        <span>E-mail: Nao informado</span>
+        <span>E-mail: Não informado</span>
         <span>
-          Cidade: {selectedAffiliate ? "Nao informada" : "Varias cidades"}
+          Cidade: {selectedAffiliate ? "Não informada" : "Várias cidades"}
         </span>
       </div>
 
@@ -1961,7 +1961,7 @@ function AffiliateReportProfile({
           <b>{stats.clicks}</b>
         </div>
         <div>
-          <span>Conversoes:</span>
+          <span>Conversões:</span>
           <b>{stats.conversions}</b>
         </div>
         <div>
@@ -2026,7 +2026,7 @@ function ConversionObjectiveCard({
   return (
     <article className={styles.conversionObjectiveCard}>
       <div className={styles.objectiveConversionInfo}>
-        <strong>Conversao #{conversion.id}</strong>
+        <strong>Conversão #{conversion.id}</strong>
         <span>Nome do link: {conversion.linkName || "Link sem nome"}</span>
         <span>
           Destino:{" "}
@@ -2083,7 +2083,7 @@ function ConversionObjectiveCard({
         <button
           type="button"
           onClick={onOpenData}
-          aria-label={`Ver dados da conversao ${conversion.id}`}
+          aria-label={`Ver dados da conversão ${conversion.id}`}
           title="Ver dados"
         >
           <FiGrid aria-hidden="true" />
@@ -2092,8 +2092,8 @@ function ConversionObjectiveCard({
           type="button"
           onClick={onDelete}
           disabled={isDeleting}
-          aria-label={`Apagar conversao ${conversion.id}`}
-          title="Apagar conversao"
+          aria-label={`Apagar conversão ${conversion.id}`}
+          title="Apagar conversão"
         >
           <FiTrash2 aria-hidden="true" />
         </button>
@@ -2270,7 +2270,7 @@ function ConversionDataModal({
       <section id={id} className={styles.conversionDataModalCard}>
         <div className={styles.conversionDataModalHero}>
           <div>
-            <span>Dados da conversao</span>
+            <span>Dados da conversão</span>
             <h2 id={`${id}-title`}>
               {conversion.visitorName || "Cliente sem nome"}
             </h2>
@@ -2283,7 +2283,7 @@ function ConversionDataModal({
             type="button"
             className={styles.conversionDataModalClose}
             onClick={onClose}
-            aria-label="Fechar dados da conversao"
+            aria-label="Fechar dados da conversão"
             title="Fechar"
           >
             <FiX aria-hidden="true" />
@@ -2333,10 +2333,10 @@ function ConversionCardHeader({
   return (
     <div className={styles.conversionFlowHeader}>
       <div className={styles.conversionIdentity}>
-        <span>Conversao #{conversion.id}</span>
+        <span>Conversão #{conversion.id}</span>
         <h3>{conversion.affiliate}</h3>
         <p>
-          {conversion.linkName || "Link sem nome"} - codigo{" "}
+          {conversion.linkName || "Link sem nome"} - código{" "}
           {conversion.shortCode}
         </p>
       </div>
@@ -2346,11 +2346,11 @@ function ConversionCardHeader({
           type="button"
           className={styles.openConversionDataButton}
           onClick={onOpenDataModal}
-          aria-label={`Visualizar dados da conversao ${conversion.id}`}
-          title="Visualizar dados da conversao"
+          aria-label={`Visualizar dados da conversão ${conversion.id}`}
+          title="Visualizar dados da conversão"
         >
           <FiGrid aria-hidden="true" />
-          <span>Dados da conversao</span>
+          <span>Dados da conversão</span>
         </button>
 
         <span className={cx(styles.finalStatusBadge, finalStatus.className)}>
@@ -2362,8 +2362,8 @@ function ConversionCardHeader({
           className={styles.iconDeleteConversionButton}
           onClick={onDelete}
           disabled={isDeleting}
-          aria-label={`Apagar conversao ${conversion.id}`}
-          title="Apagar conversao"
+          aria-label={`Apagar conversão ${conversion.id}`}
+          title="Apagar conversão"
         >
           <FiTrash2 aria-hidden="true" />
         </button>
@@ -2392,7 +2392,7 @@ function ClientDataHeader({
   return (
     <div className={styles.clientDataHeader}>
       <div>
-        <span>Dados da conversao</span>
+        <span>Dados da conversão</span>
         <strong>{conversion.visitorName || "Cliente sem nome"}</strong>
       </div>
 
@@ -2544,54 +2544,54 @@ function ClientDataList({
   activeTab: ClientDataTab;
 }) {
   const mainItems = [
-    { label: "Nome", value: conversion.visitorName || "Nao informado" },
+    { label: "Nome", value: conversion.visitorName || "Não informado" },
     { label: "WhatsApp", value: formatPhone(conversion.visitorPhone) },
     { label: "CPF/CNPJ", value: formatDocument(conversion.visitorDocument) },
     {
       label: "Cidade coletada",
-      value: conversion.visitorCity || "Nao informado",
+      value: conversion.visitorCity || "Não informado",
     },
-    { label: "Produto", value: conversion.product || "Nao informado" },
+    { label: "Produto", value: conversion.product || "Não informado" },
     { label: "Data", value: formatDateTime(conversion.convertedAt) },
     {
       label: "Destino",
       value: conversion.destination
         ? formatDisplayLink(conversion.destination)
-        : "Nao informado",
+        : "Não informado",
       title: conversion.destination || undefined,
     },
   ];
 
   const accessItems = [
-    { label: "Origem", value: conversion.source || "Nao informado" },
-    { label: "UTM source", value: conversion.utmSource || "Nao informado" },
-    { label: "UTM medium", value: conversion.utmMedium || "Nao informado" },
-    { label: "UTM campanha", value: conversion.utmCampaign || "Nao informado" },
+    { label: "Origem", value: conversion.source || "Não informado" },
+    { label: "UTM source", value: conversion.utmSource || "Não informado" },
+    { label: "UTM medium", value: conversion.utmMedium || "Não informado" },
+    { label: "UTM campanha", value: conversion.utmCampaign || "Não informado" },
     {
-      label: "Referencia",
-      value: conversion.referrer || "Nao informado",
+      label: "Referência",
+      value: conversion.referrer || "Não informado",
       title: conversion.referrer || undefined,
     },
-    { label: "IP", value: conversion.ipAddress || "Nao informado" },
-    { label: "Pais", value: conversion.geoCountry || "Nao informado" },
-    { label: "Regiao", value: conversion.geoRegion || "Nao informado" },
-    { label: "Cidade IP", value: conversion.geoCity || "Nao informado" },
+    { label: "IP", value: conversion.ipAddress || "Não informado" },
+    { label: "País", value: conversion.geoCountry || "Não informado" },
+    { label: "Região", value: conversion.geoRegion || "Não informado" },
+    { label: "Cidade IP", value: conversion.geoCity || "Não informado" },
   ];
 
   const deviceItems = [
-    { label: "Dispositivo", value: conversion.deviceType || "Nao informado" },
-    { label: "Navegador", value: conversion.browser || "Nao informado" },
-    { label: "Sistema", value: conversion.operatingSystem || "Nao informado" },
-    { label: "Plataforma", value: conversion.platform || "Nao informado" },
-    { label: "Idioma", value: conversion.language || "Nao informado" },
-    { label: "Fuso", value: conversion.timezone || "Nao informado" },
+    { label: "Dispositivo", value: conversion.deviceType || "Não informado" },
+    { label: "Navegador", value: conversion.browser || "Não informado" },
+    { label: "Sistema", value: conversion.operatingSystem || "Não informado" },
+    { label: "Plataforma", value: conversion.platform || "Não informado" },
+    { label: "Idioma", value: conversion.language || "Não informado" },
+    { label: "Fuso", value: conversion.timezone || "Não informado" },
     {
       label: "Tela",
       value: formatScreenSize(conversion.screenWidth, conversion.screenHeight),
     },
     {
       label: "User agent",
-      value: conversion.userAgent || "Nao informado",
+      value: conversion.userAgent || "Não informado",
       title: conversion.userAgent || undefined,
     },
   ];
@@ -2753,7 +2753,7 @@ function SgpStageData({
   const status = isLoading ? "checking" : check?.status;
   const statusLabel = isLoading
     ? "Consultando SGP..."
-    : check?.statusLabel || "Nao consultado";
+    : check?.statusLabel || "Não consultado";
   const boxClassName = cx(
     styles.sgpStageBox,
     status === "active" && styles.sgpStageBoxActive,
@@ -2941,8 +2941,8 @@ function getConversionFlowSteps(
       dateLabel: visitDate,
     },
     {
-      title: "Pre-cadastro",
-      description: "Contato iniciado pelo WhatsApp com codigo do afiliado.",
+      title: "Pré-cadastro",
+      description: "Contato iniciado pelo WhatsApp com código do afiliado.",
       completed: hasWhatsapp,
       detail: hasWhatsapp
         ? getWhatsappStepDetail(conversion, eventDate)
@@ -2951,7 +2951,7 @@ function getConversionFlowSteps(
       dataItems: getPreCadastroStepItems(conversion),
     },
     {
-      title: "Validacao no Chatmix",
+      title: "Válidação no Chatmix",
       description: "Webhook confirmou o atendimento no Chatmix.",
       completed: hasChatmix,
       detail: hasChatmix ? "Atendimento validado" : "Aguardando webhook",
@@ -2959,7 +2959,7 @@ function getConversionFlowSteps(
     },
     {
       title: "Registro no SGP",
-      description: "CPF/CNPJ do pre-cadastro conferido no SGP.",
+      description: "CPF/CNPJ do pré-cadastro conferido no SGP.",
       completed: hasSgp,
       detail: hasSgp
         ? "CPF/CNPJ encontrado no SGP"
@@ -2974,8 +2974,8 @@ function getPreCadastroStepItems(
 ): ConversionStepDataItem[] {
   const items = [
     {
-      label: "Codigo",
-      value: conversion.shortCode || "Nao informado",
+      label: "Código",
+      value: conversion.shortCode || "Não informado",
     },
     {
       label: "Origem",
@@ -2983,7 +2983,7 @@ function getPreCadastroStepItems(
     },
     {
       label: "Cliente",
-      value: conversion.visitorName || "Nao informado",
+      value: conversion.visitorName || "Não informado",
     },
   ];
 
@@ -3023,7 +3023,7 @@ function getChatmixCollectedItems(conversion: ConversionWithAffiliate) {
   return [
     {
       label: "Nome",
-      value: conversion.visitorName || "Nao informado",
+      value: conversion.visitorName || "Não informado",
     },
     {
       label: "WhatsApp",
@@ -3035,16 +3035,21 @@ function getChatmixCollectedItems(conversion: ConversionWithAffiliate) {
     },
     {
       label: "Cidade",
-      value: conversion.visitorCity || "Nao informado",
+      value: conversion.visitorCity || "Não informado",
     },
     {
       label: "Origem",
-      value: conversion.source || "Nao informado",
+      value: conversion.source || "Não informado",
     },
     {
       label: "Evento",
-      value: conversion.type || "Nao informado",
+      value: conversion.type || "Não informado",
       title: conversion.type || undefined,
+    },
+    {
+      label: "Atendimento Chatmix",
+      value: conversion.attendanceId || "Não informado",
+      title: conversion.attendanceId || undefined,
     },
   ];
 }
@@ -3094,7 +3099,7 @@ function getSaleStatusInfo(
     return {
       kind: "lost",
       label: "Venda perdida",
-      description: "Cliente encontrado no SGP, mas nao esta ativo.",
+      description: "Cliente encontrado no SGP, mas não está ativo.",
     };
   }
 
@@ -3117,7 +3122,7 @@ function getSaleStatusInfo(
   return {
     kind: "pending",
     label: "Aguardando",
-    description: "Conversao ainda sem dados suficientes.",
+    description: "Conversão ainda sem dados suficientes.",
   };
 }
 
@@ -3195,6 +3200,8 @@ function isWhatsappEvent(conversion: ConversionWithAffiliate) {
 }
 
 function hasChatmixValidation(conversion: ConversionWithAffiliate) {
+  if (conversion.attendanceId) return true;
+
   const searchText = getConversionSearchText(conversion);
   const hasCollectedClientData = Boolean(
     conversion.visitorName ||
@@ -3239,7 +3246,7 @@ function formatDateTime(value?: string | null) {
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return "Data invalida";
+  if (Number.isNaN(date.getTime())) return "Data inválida";
 
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -3253,7 +3260,7 @@ function formatDateTime(value?: string | null) {
 function formatPhone(value?: string | null) {
   const digits = String(value || "").replace(/\D/g, "");
 
-  if (!digits) return "Nao informado";
+  if (!digits) return "Não informado";
 
   if (digits.length === 11) {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
@@ -3263,7 +3270,7 @@ function formatPhone(value?: string | null) {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   }
 
-  return value || "Nao informado";
+  return value || "Não informado";
 }
 
 function onlyDigits(value?: string | null) {
@@ -3273,7 +3280,7 @@ function onlyDigits(value?: string | null) {
 function formatDocument(value?: string | null) {
   const digits = onlyDigits(value);
 
-  if (!digits) return "Nao informado";
+  if (!digits) return "Não informado";
 
   if (digits.length === 11) {
     return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
@@ -3283,11 +3290,11 @@ function formatDocument(value?: string | null) {
     return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
   }
 
-  return value || "Nao informado";
+  return value || "Não informado";
 }
 
 function formatScreenSize(width?: number | null, height?: number | null) {
-  if (!width || !height) return "Nao informado";
+  if (!width || !height) return "Não informado";
 
   return `${width} x ${height}`;
 }
@@ -3337,11 +3344,11 @@ function validatePreCadastroWithSgp(
     customerPhone &&
     !phoneNumbersMatch(conversionPhone, customerPhone)
   ) {
-    messages.push("numero de celular diferente");
+    messages.push("número de celular diferente");
   }
 
   if (conversionPhone && !customerPhone) {
-    messages.push("numero de celular nao encontrado no SGP");
+    messages.push("número de celular não encontrado no SGP");
   }
 
   if (

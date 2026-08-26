@@ -63,10 +63,10 @@ export default function Header() {
 
   const healthTitle = useMemo(() => {
     if (!lastCheckedAt) {
-      return "Verificando conexao";
+      return "Verificando conexão";
     }
 
-    return `Ultima verificacao: ${lastCheckedAt}`;
+    return `Última verificacao: ${lastCheckedAt}`;
   }, [lastCheckedAt]);
 
   return (
@@ -75,7 +75,7 @@ export default function Header() {
         type="button"
         className={styles.headerBackButton}
         onClick={() => router.back()}
-        aria-label="Voltar para a pagina anterior"
+        aria-label="Voltar para a página anterior"
         title="Voltar"
       >
         <FiArrowLeft aria-hidden="true" />

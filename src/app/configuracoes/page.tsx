@@ -6,6 +6,7 @@ import {
   ChatmixWebhookLogResponse,
   City,
   User,
+  UserRole,
   apagarAfiliado,
   apagarUsuario,
   criarAfiliado,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/api";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./configuracoes.module.css";
+import { FaAnglesLeft } from "react-icons/fa6";
 
 type UserForm = {
   name: string;
@@ -28,6 +30,7 @@ type UserForm = {
   password: string;
   city: string;
   photoUrl: string;
+  role: UserRole;
 };
 
 type AffiliateForm = {
@@ -93,6 +96,7 @@ const emptyUserForm: UserForm = {
   password: "",
   city: "",
   photoUrl: "",
+  role: "USER",
 };
 
 const emptyAffiliateForm: AffiliateForm = {
@@ -115,7 +119,7 @@ const userSettingsPanels: {
   },
   {
     id: "novoUsuario",
-    label: "Cadastrar novo usuario",
+    label: "Cadastrar novo usuário",
   },
   {
     id: "novoAfiliado",
@@ -130,24 +134,24 @@ const settingsSections: {
 }[] = [
   {
     id: "usuarios",
-    label: "Usuarios",
-    helper: "Gerenciar usuarios e afiliados",
+    label: "Usuários",
+    helper: "Gerenciar usuários e afiliados",
   },
   {
     id: "ambiente",
-    label: "Variaveis de Ambiente",
+    label: "Variáveis de Ambiente",
     helper: "Configurar chaves e URLs",
   },
   {
     id: "webhooks",
     label: "Webhooks Chatmix",
-    helper: "Monitorar requisicoes",
+    helper: "Monitorar requisições",
   },
   { id: "banco", label: "Banco de dados", helper: "Acessar banco e Prisma" },
   {
     id: "sistema",
-    label: "parametros do sistema",
-    helper: "Informacoes do painel",
+    label: "parâmetros do sistema",
+    helper: "Informações do painel",
   },
 ];
 export default function Configuracoes() {
@@ -183,6 +187,7 @@ export default function Configuracoes() {
   const [pendingPhotoCrops, setPendingPhotoCrops] = useState<PendingPhotoCrops>(
     {},
   );
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
 
   const activeAffiliates = useMemo(
     () => affiliates.filter((affiliate) => affiliate.active).length,
@@ -246,6 +251,24 @@ export default function Configuracoes() {
       if (!cancelled) {
         if (usersResult.status === "fulfilled") {
           setUsers(usersResult.value);
+
+          try {
+            const storedUser = window.localStorage.getItem(
+              "afiliados_netbox_user",
+            );
+            const storedId = storedUser
+              ? Number((JSON.parse(storedUser) as { id?: unknown }).id)
+              : null;
+            const authenticatedUser = usersResult.value.find(
+              (user) => user.id === storedId,
+            );
+
+            if (authenticatedUser) {
+              setCurrentUserRole(authenticatedUser.role);
+            }
+          } catch {
+            // Mantém o nível obtido no login quando o cadastro local é inválido.
+          }
         }
         if (affiliatesResult.status === "fulfilled") {
           setAffiliates(affiliatesResult.value);
@@ -300,7 +323,7 @@ export default function Configuracoes() {
           setError(
             getApiErrorMessage(
               err,
-              "Nao foi possivel carregar o historico de webhooks.",
+              "Não foi possível carregar o histórico de webhooks.",
             ),
           );
         }
@@ -428,6 +451,7 @@ export default function Configuracoes() {
       password: "",
       city: user.city ?? cities[0]?.name ?? "",
       photoUrl: getProfilePhotoUrl(user),
+      role: user.role,
     });
   }
 
@@ -448,7 +472,7 @@ export default function Configuracoes() {
     resetStatus();
 
     if (!file.type.startsWith("image/")) {
-      setError("Envie um arquivo de imagem valido.");
+      setError("Envie um arquivo de imagem válido.");
       return;
     }
 
@@ -560,7 +584,7 @@ export default function Configuracoes() {
     const password = newUser.password.trim();
 
     if (!newUser.name.trim() || !normalizedEmail || !password) {
-      setError("Informe nome, e-mail e senha do usuario.");
+      setError("Informe nome, e-mail e senha do usuário.");
       return;
     }
 
@@ -574,7 +598,7 @@ export default function Configuracoes() {
     );
 
     if (emailAlreadyExists) {
-      setError("Este e-mail ja esta cadastrado para outro usuario.");
+      setError("Este e-mail já está cadastrado para outro usuário.");
       return;
     }
 
@@ -601,9 +625,9 @@ export default function Configuracoes() {
         city: cities[0]?.name ?? "",
       });
       clearPendingPhotoCrop("newUser");
-      setMessage("Usuario cadastrado com sucesso.");
+      setMessage("Usuário cadastrado com sucesso.");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao foi possivel criar o usuario."));
+      setError(getApiErrorMessage(err, "Não foi possível criar o usuário."));
     } finally {
       setSaving(false);
     }
@@ -612,11 +636,18 @@ export default function Configuracoes() {
   async function handleSaveUser(id: number) {
     resetStatus();
 
+    if (currentUserRole !== "ADMIN") {
+      setError(
+        "Somente um usuário com nível Administrador pode alterar o nível de acesso.",
+      );
+      return;
+    }
+
     const normalizedEmail = userForm.email.trim().toLowerCase();
     const password = userForm.password.trim();
 
     if (!userForm.name.trim() || !normalizedEmail) {
-      setError("Nome e e-mail do usuario sao obrigatorios.");
+      setError("Nome e e-mail do usuário são obrigatorios.");
       return;
     }
 
@@ -630,7 +661,7 @@ export default function Configuracoes() {
     );
 
     if (emailAlreadyExists) {
-      setError("Este e-mail ja esta cadastrado para outro usuario.");
+      setError("Este e-mail já está cadastrado para outro usuário.");
       return;
     }
 
@@ -646,7 +677,15 @@ export default function Configuracoes() {
         city: userForm.city || undefined,
         password: password || undefined,
         photoUrl: photoUrl || undefined,
+        role: userForm.role,
       });
+
+      if (updated.role !== userForm.role) {
+        setError(
+          "A API não confirmou a alteração do nível de acesso. O cadastro não foi fechado.",
+        );
+        return;
+      }
 
       setUsers((current) =>
         current.map((user) =>
@@ -655,10 +694,10 @@ export default function Configuracoes() {
       );
       setEditingUserId(null);
       clearPendingPhotoCrop("editUser");
-      setMessage("Usuario atualizado com sucesso.");
+      setMessage("Usuário atualizado com sucesso.");
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Nao foi possivel atualizar o usuario."),
+        getApiErrorMessage(err, "Não foi possível atualizar o usuário."),
       );
     } finally {
       setSaving(false);
@@ -669,7 +708,7 @@ export default function Configuracoes() {
     resetStatus();
 
     const confirmed = window.confirm(
-      `Apagar o usuario ${user.name}? Links criados por ele tambem serao removidos.`,
+      `Apagar o usuário ${user.name}? Links criados por ele também serao removidos.`,
     );
 
     if (!confirmed) {
@@ -680,9 +719,9 @@ export default function Configuracoes() {
     try {
       await apagarUsuario(user.id);
       setUsers((current) => current.filter((item) => item.id !== user.id));
-      setMessage("Usuario apagado com sucesso.");
+      setMessage("Usuário apagado com sucesso.");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao foi possivel apagar o usuario."));
+      setError(getApiErrorMessage(err, "Não foi possível apagar o usuário."));
     } finally {
       setSaving(false);
     }
@@ -733,7 +772,7 @@ export default function Configuracoes() {
       clearPendingPhotoCrop("newAffiliate");
       setMessage("Afiliado cadastrado com sucesso.");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao foi possivel criar o afiliado."));
+      setError(getApiErrorMessage(err, "Não foi possível criar o afiliado."));
     } finally {
       setSaving(false);
     }
@@ -743,7 +782,7 @@ export default function Configuracoes() {
     resetStatus();
 
     if (!affiliateForm.name.trim() || !affiliateForm.email.trim()) {
-      setError("Nome e e-mail do afiliado sao obrigatorios.");
+      setError("Nome e e-mail do afiliado são obrigatorios.");
       return;
     }
 
@@ -774,7 +813,7 @@ export default function Configuracoes() {
       setMessage("Afiliado atualizado com sucesso.");
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Nao foi possivel atualizar o afiliado."),
+        getApiErrorMessage(err, "Não foi possível atualizar o afiliado."),
       );
     } finally {
       setSaving(false);
@@ -798,7 +837,7 @@ export default function Configuracoes() {
       );
       setMessage("Afiliado apagado com sucesso.");
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao foi possivel apagar o afiliado."));
+      setError(getApiErrorMessage(err, "Não foi possível apagar o afiliado."));
     } finally {
       setSaving(false);
     }
@@ -807,7 +846,7 @@ export default function Configuracoes() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <p>Carregando configuracoes...</p>
+        <p>Carregando configurações...</p>
       </div>
     );
   }
@@ -824,11 +863,11 @@ export default function Configuracoes() {
                   className={styles.backButton}
                   onClick={() => setActiveSettingsSection("inicio")}
                 >
-                  ←
+                  <FaAnglesLeft />
                 </button>
 
                 <div className={styles.userWorkspaceTitle}>
-                  <span>Usuarios e afiliados</span>
+                  <span>Usuários e afiliados</span>
                   <strong>Gerenciamento</strong>
                 </div>
 
@@ -924,14 +963,14 @@ export default function Configuracoes() {
                   >
                     <div className={styles.editorHeader}>
                       <div>
-                        <span>Cadastro de usuario</span>
-                        <h2>Novo usuario do painel</h2>
+                        <span>Cadastro de usuário</span>
+                        <h2>Novo usuário do painel</h2>
                       </div>
-                      <strong>{users.length} usuarios</strong>
+                      <strong>{users.length} usuários</strong>
                     </div>
 
                     <ProfilePhotoPicker
-                      label="Foto do usuario"
+                      label="Foto do usuário"
                       name={newUser.name}
                       photoUrl={newUser.photoUrl}
                       onSelectFile={(file) => openPhotoCropper(file, "newUser")}
@@ -983,7 +1022,7 @@ export default function Configuracoes() {
                         className={styles.primaryButton}
                         disabled={saving}
                       >
-                        Cadastrar usuario
+                        Cadastrar usuário
                       </button>
                     </div>
                   </form>
@@ -1091,7 +1130,7 @@ export default function Configuracoes() {
                             <span>Editar perfil</span>
                             <h2>
                               {editingUserId
-                                ? "Editar usuario"
+                                ? "Editar usuário"
                                 : "Editar afiliado"}
                             </h2>
                           </div>
@@ -1101,7 +1140,7 @@ export default function Configuracoes() {
                             onClick={backToProfileSearch}
                             disabled={saving}
                           >
-                            ← Voltar para busca
+                            <FaAnglesLeft />Voltar para busca
                           </button>
                         </div>
 
@@ -1114,12 +1153,12 @@ export default function Configuracoes() {
                                 onClick={backToProfileSearch}
                                 disabled={saving}
                               >
-                                ← Voltar
+                                <FaAnglesLeft />
                               </button>
                             </div>
 
                             <ProfilePhotoPicker
-                              label="Foto do usuario"
+                              label="Foto do usuário"
                               name={userForm.name}
                               photoUrl={userForm.photoUrl}
                               onSelectFile={(file) =>
@@ -1171,6 +1210,16 @@ export default function Configuracoes() {
                                   }))
                                 }
                               />
+                              <UserRoleSelect
+                                value={userForm.role}
+                                disabled={currentUserRole !== "ADMIN"}
+                                onChange={(role) =>
+                                  setUserForm((current) => ({
+                                    ...current,
+                                    role,
+                                  }))
+                                }
+                              />
                             </div>
 
                             <div className={styles.formActions}>
@@ -1207,7 +1256,7 @@ export default function Configuracoes() {
                                 onClick={() => handleSaveUser(editingUserId)}
                                 disabled={saving}
                               >
-                                Salvar alteracoes
+                                Salvar alterações
                               </button>
                             </div>
                           </section>
@@ -1222,7 +1271,7 @@ export default function Configuracoes() {
                                 onClick={backToProfileSearch}
                                 disabled={saving}
                               >
-                                ← Voltar
+                                ⬅️Voltar
                               </button>
                             </div>
 
@@ -1333,7 +1382,7 @@ export default function Configuracoes() {
                                 }
                                 disabled={saving}
                               >
-                                Salvar alteracoes
+                                Salvar alterações
                               </button>
                             </div>
                           </section>
@@ -1355,8 +1404,8 @@ export default function Configuracoes() {
                           <button
                             type="button"
                             className={styles.profileSearchButton}
-                            aria-label="Listar usuarios existentes"
-                            title="Listar usuarios existentes"
+                            aria-label="Listar usuários existentes"
+                            title="Listar usuários existentes"
                             onClick={() => void handleShowAllProfiles()}
                             disabled={refreshingProfiles}
                           >
@@ -1378,7 +1427,7 @@ export default function Configuracoes() {
                           <>
                             <div className={styles.profileStats}>
                               <div>
-                                <span>Usuarios</span>
+                                <span>Usuários</span>
                                 <strong>{users.length}</strong>
                               </div>
                               <div>
@@ -1425,7 +1474,7 @@ export default function Configuracoes() {
                                   />
                                   <div className={styles.profileResultText}>
                                     <span className={styles.profileBadge}>
-                                      Usuario
+                                      Usuário
                                     </span>
                                     <strong>{user.name}</strong>
                                     <small>{user.email}</small>
@@ -1485,7 +1534,7 @@ export default function Configuracoes() {
                 <div className={styles.summaryCard}>
                   <span>Backend</span>
                   <strong>
-                    {process.env.NEXT_PUBLIC_API_URL ? "Online" : "Padrao"}
+                    {process.env.NEXT_PUBLIC_API_URL ? "Online" : "Padrão"}
                   </strong>
                 </div>
                 <div className={styles.summaryCard}>
@@ -1660,7 +1709,7 @@ function connectionStatusLabel(status: RealtimeConnectionStatus) {
   }
 
   if (status === "error") {
-    return "Erro na conexao";
+    return "Erro na conexão";
   }
 
   return "Conectando";
@@ -1719,7 +1768,7 @@ function WebhookMonitor({
           </strong>
           <span>
             Configure a URL http://72.62.8.85:3001/webhooks/chatmix no Chatmix e
-            deixe esta pagina aberta durante o teste.
+            deixe esta página aberta durante o teste.
           </span>
         </div>
       )}
@@ -2056,6 +2105,36 @@ function CitySelect({
           </option>
         ))}
       </select>
+    </label>
+  );
+}
+
+function UserRoleSelect({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: UserRole;
+  disabled: boolean;
+  onChange: (value: UserRole) => void;
+}) {
+  return (
+    <label className={styles.field}>
+      <span>Nível de acesso</span>
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value as UserRole)}
+      >
+        <option value="USER">Usuário</option>
+        <option value="MANAGER">Gerente</option>
+        <option value="ADMIN">Administrador</option>
+      </select>
+      {disabled && (
+        <small>
+          Entre com uma conta Administrador para alterar este nível.
+        </small>
+      )}
     </label>
   );
 }

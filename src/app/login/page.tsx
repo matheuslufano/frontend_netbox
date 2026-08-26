@@ -12,8 +12,8 @@ import styles from "./login.module.css";
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@netbox.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,27 +25,16 @@ export default function Login() {
     try {
       const data = await fazerLogin({
         email,
-        password
+        password,
       });
 
-      localStorage.setItem(
-        "afiliados_netbox_token",
-        data.token
-      );
+      localStorage.setItem("afiliados_netbox_token", data.token);
 
-      localStorage.setItem(
-        "afiliados_netbox_user",
-        JSON.stringify(data.user)
-      );
+      localStorage.setItem("afiliados_netbox_user", JSON.stringify(data.user));
 
       router.push("/dashboard");
     } catch (err) {
-      setError(
-        getApiErrorMessage(
-          err,
-          "Nao foi possivel fazer login."
-        )
-      );
+      setError(getApiErrorMessage(err, "Não foi possível fazer login."));
     } finally {
       setLoading(false);
     }
@@ -65,7 +54,9 @@ export default function Login() {
           <div>
             <span className={styles.eyebrow}>Afiliados Netbox</span>
             <h1 id="login-title">Entrar na sua conta</h1>
-            <p>Acesse o painel para acompanhar afiliados, links e relatorios.</p>
+            <p>
+              Acesse o painel para acompanhar afiliados, links e relatórios.
+            </p>
           </div>
         </div>
 
@@ -120,11 +111,7 @@ export default function Login() {
             <IoArrowForward aria-hidden="true" />
           </button>
 
-          {error && (
-            <p className={styles.error}>
-              {error}
-            </p>
-          )}
+          {error && <p className={styles.error}>{error}</p>}
         </form>
       </section>
     </main>

@@ -153,7 +153,7 @@ function buildSearchSuggestions({
     const detailParts = [
       customer.document ? formatDocument(customer.document) : "",
       phone !== "Sem telefone" ? phone : "",
-      city !== "Cidade nao informada" ? city : "",
+      city !== "Cidade não informada" ? city : "",
     ].filter(Boolean);
 
     suggestions.set(`customer-${customer.id || value}`, {
@@ -307,14 +307,14 @@ export default function SgpPage() {
           setConnectionLabel(
             status.configured
               ? `Conectado em ${status.baseUrl} (${status.app})`
-              : status.error || "SGP nao configurado",
+              : status.error || "SGP não configurado",
           );
         }
       } catch (err) {
         if (!cancelled) {
           setConfigured(false);
           setConnectionLabel(
-            getApiErrorMessage(err, "Nao foi possivel verificar o SGP."),
+            getApiErrorMessage(err, "Não foi possível verificar o SGP."),
           );
         }
       } finally {
@@ -356,7 +356,7 @@ export default function SgpPage() {
           setError(
             getApiErrorMessage(
               err,
-              "Nao foi possivel consultar o cliente no SGP.",
+              "Não foi possível consultar o cliente no SGP.",
             ),
           );
         }
@@ -386,7 +386,7 @@ export default function SgpPage() {
       setCustomersLoaded(true);
     } catch (err) {
       setListError(
-        getApiErrorMessage(err, "Nao foi possivel listar os clientes no SGP."),
+        getApiErrorMessage(err, "Não foi possível listar os clientes no SGP."),
       );
       setCustomersLoaded(true);
     } finally {
@@ -466,7 +466,7 @@ export default function SgpPage() {
       setCustomer(response.customer);
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Nao foi possivel consultar o cliente no SGP."),
+        getApiErrorMessage(err, "Não foi possível consultar o cliente no SGP."),
       );
     } finally {
       setSearching(false);
@@ -493,7 +493,7 @@ export default function SgpPage() {
           <div>
             <strong>
               {loadingStatus
-                ? "Verificando conexao"
+                ? "Verificando conexão"
                 : configured
                   ? "SGP conectado"
                   : "SGP indisponivel"}
@@ -524,14 +524,14 @@ export default function SgpPage() {
                 <div className={styles.preCadastroCard}>
                   <div>
                     <span className={styles.cardKicker}>
-                      Pre-cadastro do relatorio
+                      Pré-cadastro do relatório
                     </span>
                     <strong>{preCadastro.name || "Cliente sem nome"}</strong>
                   </div>
 
                   <div className={styles.preCadastroGrid}>
                     <InfoItem
-                      label="Conversao"
+                      label="Conversão"
                       value={preCadastro.conversionId || "-"}
                     />
                     <InfoItem
@@ -900,7 +900,7 @@ function TocantinsCitiesMap({
         <h3>Contratos por cidade</h3>
         <p>
           Pontos proporcionais ao total de contratos encontrados no SGP por
-          municipio.
+          município.
         </p>
 
         {selected && (
@@ -954,7 +954,7 @@ function ActiveChart({ summary }: { summary: SgpCustomersSummary }) {
   const activePercent = Math.round((activeTotal / total) * 100);
 
   return (
-    <div className={styles.activeChart} aria-label="Grafico de contratos ativos">
+    <div className={styles.activeChart} aria-label="Gráfico de contratos ativos">
       <div className={styles.activeChartRing}>
         <span>{activePercent}%</span>
       </div>

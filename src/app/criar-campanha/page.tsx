@@ -102,7 +102,7 @@ export default function CriarProjetos() {
       });
 
       setMessage(
-        `Campanha criada com ${campaign.totalLinks} links de divulgacao.`
+        `Campanha criada com ${campaign.totalLinks} links de divulgação.`
       );
       setName("");
       setDestinationUrl(defaultLandingPageUrl);
@@ -111,7 +111,7 @@ export default function CriarProjetos() {
       setError(
         getApiErrorMessage(
           err,
-          "Nao foi possivel criar a campanha."
+          "Não foi possível criar a campanha."
         )
       );
     } finally {
@@ -157,7 +157,7 @@ export default function CriarProjetos() {
             <div>
               <strong>Grupo de afiliados</strong>
               <p>
-                Cada afiliado selecionado recebe um link de divulgacao unico.
+                Cada afiliado selecionado recebe um link de divulgação único.
               </p>
             </div>
 
@@ -167,7 +167,7 @@ export default function CriarProjetos() {
               onClick={toggleAllAffiliates}
               disabled={loadingAffiliates || activeAffiliates.length === 0}
             >
-              {allSelected ? "Limpar selecao" : "Selecionar todos"}
+              {allSelected ? "Limpar seleção" : "Selecionar todos"}
             </button>
           </div>
 

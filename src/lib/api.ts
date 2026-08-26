@@ -10,6 +10,8 @@ export type Affiliate = {
   active: boolean;
 };
 
+export type UserRole = "ADMIN" | "MANAGER" | "USER";
+
 export type User = {
   id: number;
   name: string;
@@ -17,7 +19,7 @@ export type User = {
   city: string | null;
   photoUrl: string | null;
   createdAt: string;
-  role: "ADMIN" | "MANAGER" | "USER";
+  role: UserRole;
   active: boolean;
   teamId: number | null;
 };
@@ -43,6 +45,7 @@ export type DashboardData = {
 
 export type AffiliateConversionEvent = {
   id: number;
+  attendanceId?: string | null;
   type: string;
   product: string | null;
   destination: string | null;
@@ -129,6 +132,7 @@ export type UpdateUserPayload = {
   password?: string;
   city?: string;
   photoUrl?: string;
+  role?: UserRole;
 };
 
 export type CreateLinkPayload = {
@@ -326,6 +330,13 @@ export type ChatmixWebhookLogResponse = {
   raw: unknown;
   query: Record<string, unknown>;
   result: Record<string, unknown>;
+};
+
+export type ChatmixAttendanceMessagesResponse = {
+  attendanceId: string;
+  count: number;
+  messages: unknown[];
+  raw: unknown;
 };
 
 export type CrmStage = {
@@ -897,7 +908,7 @@ function buildSgpAddress(contract: SgpRawRecord) {
 function normalizeSgpContract(contract: SgpRawRecord): SgpContract {
   const status =
     readString(contract, ["contratoStatusDisplay", "status"]) ||
-    "Status nao identificado";
+    "Status não identificado";
 
   return {
     id: readString(contract, ["contratoId", "id"]) || null,
@@ -929,7 +940,7 @@ function summarizeSgpCustomers(customers: SgpCustomer[]): SgpCustomersSummary {
   const allContracts = customers.flatMap((customer) => customer.contracts);
 
   customers.forEach((customer) => {
-    const city = customer.city || "Cidade nao informada";
+    const city = customer.city || "Cidade não informada";
     const current = cityMap.get(city) ?? {
       city,
       total: 0,
@@ -996,7 +1007,7 @@ function buildSgpCustomersFromContracts(contracts: SgpRawRecord[]) {
         document,
         phone,
         city,
-        status: "Status nao identificado",
+        status: "Status não identificado",
         active: null,
         contracts: [],
         raw: contract,
@@ -1018,7 +1029,7 @@ function buildSgpCustomersFromContracts(contracts: SgpRawRecord[]) {
       ? "Ativo"
       : current.active === false
         ? "Inativo"
-        : "Status nao identificado";
+        : "Status não identificado";
     current.phone = current.phone || phone;
     current.city = current.city || city;
 
@@ -1108,6 +1119,32 @@ export async function listarChatmixWebhookLogs(limit = 50) {
   );
 
   return Array.isArray(data) ? data : [];
+}
+
+export async function buscarMensagensAtendimentoChatmix(
+  attendanceId: string,
+): Promise<ChatmixAttendanceMessagesResponse> {
+  const response = await fetch(
+    `/api/integrations/chatmix/attendances/${encodeURIComponent(attendanceId)}/messages`,
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    },
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data && typeof data === "object" && "message" in data
+        ? String((data as { message?: unknown }).message || "")
+        : "";
+
+    throw new Error(message || `Erro HTTP ${response.status} ao consultar o Chatmix.`);
+  }
+
+  return data as ChatmixAttendanceMessagesResponse;
 }
 
 export async function listarCrmDeals(

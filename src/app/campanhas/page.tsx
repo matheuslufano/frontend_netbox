@@ -76,7 +76,7 @@ export default function Campanhas() {
           setError(
             getApiErrorMessage(
               err,
-              "Nao foi possivel carregar as campanhas."
+              "Não foi possível carregar as campanhas."
             )
           );
         }
@@ -120,13 +120,13 @@ export default function Campanhas() {
       setCopyHint("Link copiado.");
       window.setTimeout(() => setCopyHint(null), 2200);
     } catch {
-      setCopyHint("Nao foi possivel copiar.");
+      setCopyHint("Não foi possível copiar.");
     }
   }
 
   async function deleteCampaign(campaign: Campaign) {
     const confirmed = window.confirm(
-      `Apagar a campanha "${campaign.name}"? Esta acao tambem remove os links e cliques relacionados.`
+      `Apagar a campanha "${campaign.name}"? Esta ação também remove os links e cliques relacionados.`
     );
 
     if (!confirmed) {
@@ -148,7 +148,7 @@ export default function Campanhas() {
       setCopyHint(
         getApiErrorMessage(
           err,
-          "Nao foi possivel apagar a campanha."
+          "Não foi possível apagar a campanha."
         )
       );
     } finally {
@@ -369,13 +369,13 @@ function CampaignDetail({
             </div>
 
             <div className={styles.infoBox}>
-              <span>Media</span>
+              <span>Média</span>
               <strong>{conversionLabel}</strong>
             </div>
           </div>
 
           <div className={styles.sectionTitle}>
-            <h2>Ranking de divulgacao</h2>
+            <h2>Ranking de divulgação</h2>
           </div>
 
           {ranking.length === 0 ? (
@@ -404,9 +404,9 @@ function CampaignDetail({
               <thead>
                 <tr>
                   <th>Afiliado</th>
-                  <th>Link de divulgacao</th>
+                  <th>Link de divulgação</th>
                   <th>Cliques</th>
-                  <th>Acao</th>
+                  <th>Ação</th>
                 </tr>
               </thead>
 

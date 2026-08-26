@@ -281,6 +281,18 @@
   box-shadow: 0 0 0 3px rgba(255, 98, 66, 0.18);
 }
 
+.field select:disabled {
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.field small {
+  color: #9a3412;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .checkRow {
   display: inline-flex;
   align-items: center;
@@ -1932,5 +1944,4 @@
 .profileEditorScreen .backButton {
   margin-bottom: 2px;
 }
-
 

@@ -118,7 +118,7 @@ export function useRelatorios() {
         setError(
           getApiErrorMessage(
             err,
-            "Nao foi possivel carregar os relatorios."
+            "Não foi possível carregar os relatórios."
           )
         );
       } finally {
