@@ -198,6 +198,78 @@ export type LinkItem = {
   } | null;
 };
 
+export type CampaignClickEvent = {
+  id: number;
+  clickedAt: string;
+  city: string | null;
+  source: string | null;
+};
+
+export type CampaignConversionStatus =
+  | "WHATSAPP_STARTED"
+  | "ATTENDANCE_STARTED"
+  | "LEAD_IDENTIFIED"
+  | "IN_NEGOTIATION"
+  | "CONVERTED"
+  | "LOST"
+  | "NOT_IDENTIFIED";
+
+export type CampaignConversionEvent = {
+  id: number;
+  customerName: string;
+  customerPhone: string | null;
+  customerDocument: string | null;
+  city: string | null;
+  plan: string | null;
+  seller: string | null;
+  attendanceId: string | null;
+  sgpCustomerId: string | null;
+  convertedAt: string;
+  sgpConvertedAt: string | null;
+  firstClickAt: string | null;
+  whatsappStartedAt: string | null;
+  attendanceStartedAt: string | null;
+  leadCreatedAt: string | null;
+  lastAttendanceAt: string | null;
+  status: CampaignConversionStatus;
+  statusName: string | null;
+  stageName: string | null;
+  convertedInSgp: boolean;
+  sgpStatus:
+    | "CONVERTED"
+    | "AWAITING_CONVERSION"
+    | "IN_NEGOTIATION"
+    | "NOT_CONVERTED"
+    | "NOT_VERIFIED";
+  attributionStatus: "VERIFIED" | "TRACKED" | "NOT_IDENTIFIED";
+  source: string | null;
+  history: {
+    id: number;
+    eventType: string;
+    message: string;
+    createdAt: string;
+  }[];
+};
+
+export type CampaignLink = {
+  id: number;
+  name: string | null;
+  originalUrl: string;
+  shortCode: string;
+  promoLink: string;
+  clicks: number;
+  clickEvents: CampaignClickEvent[];
+  conversions: number;
+  conversionEvents: CampaignConversionEvent[];
+  whatsappLink: string;
+  affiliate: {
+    id: number;
+    name: string;
+    email: string | null;
+    city: string | null;
+  } | null;
+};
+
 export type Campaign = {
   id: number;
   name: string;
@@ -213,52 +285,8 @@ export type Campaign = {
     email: string | null;
     city: string | null;
   } | null;
-  topLink: {
-    id: number;
-    name: string | null;
-    originalUrl: string;
-    shortCode: string;
-    promoLink: string;
-    clicks: number;
-    conversions: number;
-    conversionEvents: {
-      id: number;
-      customerName: string;
-      customerPhone: string | null;
-      convertedAt: string;
-      convertedInSgp: boolean;
-    }[];
-    whatsappLink: string;
-    affiliate: {
-      id: number;
-      name: string;
-      email: string | null;
-      city: string | null;
-    } | null;
-  } | null;
-  links: {
-    id: number;
-    name: string | null;
-    originalUrl: string;
-    shortCode: string;
-    promoLink: string;
-    clicks: number;
-    conversions: number;
-    conversionEvents: {
-      id: number;
-      customerName: string;
-      customerPhone: string | null;
-      convertedAt: string;
-      convertedInSgp: boolean;
-    }[];
-    whatsappLink: string;
-    affiliate: {
-      id: number;
-      name: string;
-      email: string | null;
-      city: string | null;
-    } | null;
-  }[];
+  topLink: CampaignLink | null;
+  links: CampaignLink[];
 };
 
 export type CreateCampaignPayload = {
@@ -749,6 +777,18 @@ export async function listarCampanhas() {
 
 export async function apagarCampanha(id: number) {
   await api.delete(`/campaigns/${id}`);
+}
+
+export async function editarCampanha(
+  id: number,
+  payload: {
+    name: string;
+    destinationUrl: string;
+    links: { id?: number; affiliateId: number; shortCode: string }[];
+  },
+) {
+  const { data } = await api.put<Campaign>(`/campaigns/${id}`, payload);
+  return normalizeCampaignLinks(data);
 }
 
 export async function apagarLink(id: number) {

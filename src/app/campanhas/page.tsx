@@ -8,12 +8,19 @@ import {
 } from "react";
 import {
   Campaign,
+  Affiliate,
   apagarCampanha,
+  editarCampanha,
   getApiErrorMessage,
+  listarAfiliados,
   listarCampanhas,
 } from "@/lib/api";
-import { FiArrowLeft, FiSearch } from "react-icons/fi";
+import { FiArrowLeft, FiBarChart2, FiEdit2, FiGrid, FiMoreVertical, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import {
+  CampaignDetailDashboard,
+  CampaignSummaryDashboard,
+} from "./CampaignDetailDashboard";
 import styles from "./campanhas.module.css";
 
 const AUTO_REFRESH_MS = 10000;
@@ -26,8 +33,10 @@ export default function Campanhas() {
   const [error, setError] = useState<string | null>(null);
   const [copyHint, setCopyHint] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"campaigns" | "summary">("summary");
   const [deletingCampaignId, setDeletingCampaignId] =
     useState<number | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
 
   const filteredCampaigns = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -54,9 +63,9 @@ export default function Campanhas() {
 
   const selectedCampaign = useMemo(
     () =>
-      campaigns.find((campaign) => campaign.id === expandedCampaignId) ??
+      filteredCampaigns.find((campaign) => campaign.id === expandedCampaignId) ??
       null,
-    [campaigns, expandedCampaignId]
+    [filteredCampaigns, expandedCampaignId]
   );
 
   const loadCampaigns = useCallback(
@@ -156,6 +165,21 @@ export default function Campanhas() {
     }
   }
 
+  async function updateCampaign(
+    name: string,
+    destinationUrl: string,
+    links: { id?: number; affiliateId: number; shortCode: string }[],
+  ) {
+    if (!editingCampaign) return;
+    const updated = await editarCampanha(editingCampaign.id, { name, destinationUrl, links });
+    setCampaigns((current) =>
+      current.map((item) => item.id === updated.id ? updated : item)
+    );
+    setEditingCampaign(null);
+    setCopyHint("Campanha atualizada.");
+    window.setTimeout(() => setCopyHint(null), 2200);
+  }
+
   if (loading) {
     return (
       <div className={styles.page}>
@@ -185,7 +209,53 @@ export default function Campanhas() {
             placeholder="Pesquisar"
           />
         </label>
+
+        {selectedCampaign && <div className={styles.viewTabs} role="tablist" aria-label="Visualização das campanhas">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "campaigns"}
+            className={viewMode === "campaigns" ? styles.activeViewTab : undefined}
+            onClick={() => setViewMode("campaigns")}
+          >
+            <FiGrid aria-hidden="true" />
+            Completa
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "summary"}
+            className={viewMode === "summary" ? styles.activeViewTab : undefined}
+            onClick={() => setViewMode("summary")}
+          >
+            <FiBarChart2 aria-hidden="true" />
+            Resumo
+          </button>
+        </div>}
       </div>
+
+      {selectedCampaign && (
+        <div className={styles.simpleCampaignPicker}>
+          <button
+            type="button"
+            className={styles.summaryBackButton}
+            onClick={() => setExpandedCampaignId(null)}
+          >
+            <FiArrowLeft aria-hidden="true" />
+            Todas as campanhas
+          </button>
+          <select
+            id="active-campaign"
+            aria-label="Campanha selecionada"
+            value={selectedCampaign.id}
+            onChange={(event) => setExpandedCampaignId(Number(event.target.value))}
+          >
+            {filteredCampaigns.map((campaign) => (
+              <option key={campaign.id} value={campaign.id}>{campaign.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {copyHint && (
         <p className={styles.copyHint}>
@@ -193,19 +263,23 @@ export default function Campanhas() {
         </p>
       )}
 
-      {selectedCampaign ? (
-        <CampaignDetail
-          campaign={selectedCampaign}
-          deleting={deletingCampaignId === selectedCampaign.id}
-          onBack={() => setExpandedCampaignId(null)}
-          onCopyLink={copyLink}
-          onDelete={() => deleteCampaign(selectedCampaign)}
-        />
-      ) : campaigns.length === 0 ? (
+      {campaigns.length === 0 ? (
         <div className={styles.emptyCard}>
           <strong>Nenhuma campanha criada.</strong>
           <p>Crie uma campanha para gerar links por grupo de afiliados.</p>
         </div>
+      ) : selectedCampaign ? (
+        viewMode === "summary" ? (
+          <CampaignSimpleView campaign={selectedCampaign} onCopyLink={copyLink} />
+        ) : (
+          <CampaignDetailDashboard
+            campaign={selectedCampaign}
+            deleting={deletingCampaignId === selectedCampaign.id}
+            onBack={() => setExpandedCampaignId(null)}
+            onCopyLink={copyLink}
+            onDelete={() => deleteCampaign(selectedCampaign)}
+          />
+        )
       ) : filteredCampaigns.length === 0 ? (
         <div className={styles.emptyCard}>
           <strong>Nenhuma campanha encontrada.</strong>
@@ -217,38 +291,90 @@ export default function Campanhas() {
             <CampaignCard
               key={campaign.id}
               campaign={campaign}
-              onOpen={() => setExpandedCampaignId(campaign.id)}
+              onOpen={() => {
+                setExpandedCampaignId(campaign.id);
+                setViewMode("summary");
+              }}
+              onEdit={() => setEditingCampaign(campaign)}
+              onDelete={() => deleteCampaign(campaign)}
             />
           ))}
         </div>
       )}
+
+      {editingCampaign && (
+        <CampaignEditModal
+          campaign={editingCampaign}
+          onClose={() => setEditingCampaign(null)}
+          onSave={updateCampaign}
+        />
+      )}
     </div>
+  );
+}
+
+function CampaignSimpleView({
+  campaign,
+  onCopyLink,
+}: {
+  campaign: Campaign;
+  onCopyLink: (link: string) => void;
+}) {
+  return (
+    <section className={styles.simpleView} aria-label="Resumo da campanha">
+      <CampaignSummaryDashboard campaign={campaign} onCopyLink={onCopyLink} />
+    </section>
   );
 }
 
 type CampaignCardProps = {
   campaign: Campaign;
   onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 };
 
 function CampaignCard({
   campaign,
   onOpen,
+  onEdit,
+  onDelete,
 }: CampaignCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const createdAt = formatDate(campaign.createdAt);
   const firstAffiliate = campaign.links.find((link) => link.affiliate)?.affiliate;
 
   return (
-    <button
-      type="button"
-      className={styles.card}
-      onClick={onOpen}
-    >
+    <article className={styles.card}>
       <div className={styles.cardTop}>
-        <strong>{campaign.name}</strong>
+        <iframe
+          className={styles.cardSitePreview}
+          src={campaign.destinationUrl}
+          title={`Prévia do site ${campaign.name}`}
+          loading="lazy"
+          tabIndex={-1}
+          aria-hidden="true"
+          referrerPolicy="no-referrer"
+          sandbox=""
+        />
+        <span className={styles.cardPreviewOverlay} aria-hidden="true" />
+        <button type="button" className={styles.cardOpenArea} onClick={onOpen}>
+          <strong>{campaign.name}</strong>
+        </button>
+        <div className={styles.cardMenuWrap}>
+          <button type="button" className={styles.cardMenuButton} aria-label={`Opções da campanha ${campaign.name}`} aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>
+            <FiMoreVertical aria-hidden="true" />
+          </button>
+          {menuOpen && (
+            <div className={styles.cardMenu} role="menu">
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onEdit(); }}><FiEdit2 /> Editar campanha</button>
+              <button type="button" role="menuitem" className={styles.cardMenuDanger} onClick={() => { setMenuOpen(false); onDelete(); }}><FiTrash2 /> Apagar campanha</button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className={styles.cardBottom}>
+      <button type="button" className={styles.cardBottom} onClick={onOpen}>
         <div className={styles.cardInfo}>
           <span>Criado: {createdAt}</span>
           <span>
@@ -257,12 +383,104 @@ function CampaignCard({
         </div>
 
         <time dateTime={campaign.createdAt}>{createdAt}</time>
-      </div>
-    </button>
+      </button>
+    </article>
   );
 }
 
-function CampaignDetail({
+function CampaignEditModal({ campaign, onClose, onSave }: { campaign: Campaign; onClose: () => void; onSave: (name: string, destinationUrl: string, links: { id?: number; affiliateId: number; shortCode: string }[]) => Promise<void> }) {
+  const [name, setName] = useState(campaign.name);
+  const [destinationUrl, setDestinationUrl] = useState(campaign.destinationUrl);
+  const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
+  const [links, setLinks] = useState<{ id?: number; affiliateId: number; shortCode: string }[]>(() => campaign.links.map((link) => ({
+    id: link.id,
+    affiliateId: link.affiliate?.id ?? 0,
+    shortCode: link.shortCode,
+  })));
+  const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listarAfiliados()
+      .then((items) => setAffiliates(items.filter((affiliate) => affiliate.active)))
+      .catch((error) => setModalError(getApiErrorMessage(error, "Não foi possível carregar os afiliados.")));
+  }, []);
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!name.trim() || !destinationUrl.trim() || links.length === 0) {
+      setModalError("Informe nome, destino e pelo menos um afiliado.");
+      return;
+    }
+    if (links.some((link) => !/^[a-f0-9]{8}$/i.test(link.shortCode.trim()))) {
+      setModalError("Cada código deve possuir exatamente 8 caracteres hexadecimais.");
+      return;
+    }
+    try {
+      setSaving(true);
+      setModalError(null);
+      await onSave(name.trim(), destinationUrl.trim(), links.map((link) => ({
+        ...(link.id ? { id: link.id } : {}),
+        affiliateId: link.affiliateId,
+        shortCode: link.shortCode.trim().toLowerCase(),
+      })));
+    } catch (error) {
+      setModalError(getApiErrorMessage(error, "Não foi possível editar a campanha."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={styles.editBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <form className={styles.editModal} role="dialog" aria-modal="true" aria-labelledby="edit-campaign-title" onSubmit={submit}>
+        <div className={styles.editModalHeader}><h2 id="edit-campaign-title">Editar campanha</h2><button type="button" onClick={onClose} aria-label="Fechar"><FiX /></button></div>
+        <label>Nome da campanha<input value={name} onChange={(event) => setName(event.target.value)} autoFocus /></label>
+        <label>Link de destino<input type="url" value={destinationUrl} onChange={(event) => setDestinationUrl(event.target.value)} /></label>
+        <fieldset className={styles.editAffiliates}>
+          <legend>Afiliados e códigos de divulgação</legend>
+          {links.map((link, index) => (
+            <div key={link.id ?? `new-${index}`} className={styles.editAffiliateRow}>
+              <select
+                aria-label={`Afiliado ${index + 1}`}
+                value={link.affiliateId}
+                onChange={(event) => setLinks((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, affiliateId: Number(event.target.value) } : item))}
+              >
+                <option value={0} disabled>Selecione o afiliado</option>
+                {affiliates.map((affiliate) => (
+                  <option key={affiliate.id} value={affiliate.id} disabled={links.some((item, itemIndex) => itemIndex !== index && item.affiliateId === affiliate.id)}>{affiliate.name}</option>
+                ))}
+              </select>
+              <input aria-label={`Código do afiliado ${index + 1}`} value={link.shortCode} maxLength={8} onChange={(event) => setLinks((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, shortCode: event.target.value.replace(/[^a-f0-9]/gi, "").toLowerCase() } : item))} />
+              <button type="button" className={styles.removeAffiliateButton} onClick={() => setLinks((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label="Remover afiliado"><FiTrash2 /></button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className={styles.addAffiliateButton}
+            disabled={affiliates.every((affiliate) => links.some((link) => link.affiliateId === affiliate.id))}
+            onClick={() => {
+              const affiliate = affiliates.find((item) => !links.some((link) => link.affiliateId === item.id));
+              if (affiliate) setLinks((current) => [...current, { affiliateId: affiliate.id, shortCode: generateShortCode() }]);
+            }}
+          >
+            + Adicionar afiliado
+          </button>
+        </fieldset>
+        {modalError && <p className={styles.editError}>{modalError}</p>}
+        <div className={styles.editActions}><button type="button" onClick={onClose}>Cancelar</button><button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</button></div>
+      </form>
+    </div>
+  );
+}
+
+function generateShortCode() {
+  const bytes = new Uint8Array(4);
+  window.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function LegacyCampaignDetail({
   campaign,
   deleting,
   onBack,

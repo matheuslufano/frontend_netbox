@@ -6,6 +6,7 @@ import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { BsClipboardDataFill } from "react-icons/bs";
 import { FiDatabase, FiGitBranch, FiShare2 } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
@@ -53,9 +54,11 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userPhoto, setUserPhoto] = useState<UserPhoto>(logo1);
+  const [isMounted, setIsMounted] = useState(false);
   const [userName, setUserName] = useState("usuário");
 
   useEffect(() => {
+    const mountTimer = window.setTimeout(() => setIsMounted(true), 0);
     function loadStoredUser() {
       const storedUser = window.localStorage.getItem("afiliados_netbox_user");
 
@@ -88,6 +91,7 @@ export default function Sidebar() {
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
+      window.clearTimeout(mountTimer);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
@@ -110,16 +114,19 @@ export default function Sidebar() {
         <h2 className={styles.titulo}>AFILIADOS NETBOX</h2>
       </div>
 
-      <button
-        type="button"
-        className={styles.collapseButton}
-        onClick={handleToggleSidebar}
-        aria-label={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
-        aria-expanded={!isCollapsed}
-        title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
-      >
-        {isCollapsed ? <IoChevronForward /> : <IoChevronBack />}
-      </button>
+      {isMounted && createPortal(
+        <button
+          type="button"
+          className={`${styles.collapseButton} ${isCollapsed ? styles.collapseButtonCollapsed : ""}`}
+          onClick={handleToggleSidebar}
+          aria-label={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
+        >
+          {isCollapsed ? <IoChevronForward /> : <IoChevronBack />}
+        </button>,
+        document.body
+      )}
 
       <div className={styles.profileBox} title={userName}>
         <div className={styles.avatarFrame}>

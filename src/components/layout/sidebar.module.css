@@ -1,10 +1,15 @@
 /* Sidebar - Barra lateral esquerda */
 
 .sidebar {
-  position: relative;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
   z-index: 1000;
 
   width: 214px;
+  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
 
   padding: 18px 14px;
@@ -13,7 +18,10 @@
   flex-direction: column;
   flex-shrink: 0;
 
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
   color: #ffffff;
 
@@ -31,6 +39,17 @@
   transition:
     width 0.3s ease,
     padding 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.sidebar ~ :global(.main) {
+  margin-left: 214px;
+  transition: margin-left 0.3s ease;
 }
 
 .sidebar::before {
@@ -573,7 +592,7 @@
   transition: transform 0.25s ease;
 }
 
-.sidebar:not(.collapsed) .collapseButton svg {
+.collapseButton:not(.collapseButtonCollapsed) svg {
   transform: translateX(-1px);
 }
 
@@ -596,11 +615,11 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.13);
 }
 
-.sidebar:not(.collapsed) .collapseButton:hover svg {
+.collapseButton:not(.collapseButtonCollapsed):hover svg {
   animation: sidebarArrowLeftFixed 0.8s ease-in-out infinite;
 }
 
-.sidebar.collapsed .collapseButton:hover svg {
+.collapseButtonCollapsed:hover svg {
   animation: sidebarArrowRightFixed 0.8s ease-in-out infinite;
 }
 
@@ -634,6 +653,10 @@
   .sidebar.collapsed {
     width: 78px;
     padding: 16px 10px;
+  }
+
+  .sidebar.collapsed ~ :global(.main) {
+    margin-left: 78px;
   }
 
   .sidebar.collapsed .sidebarHeader {
@@ -727,11 +750,12 @@
     min-width: 32px;
   }
 
-  .sidebar.collapsed .collapseButton {
+  .collapseButtonCollapsed {
     left: 60px;
+    right: auto;
   }
 
-  .sidebar.collapsed .collapseButton svg {
+  .collapseButtonCollapsed svg {
     transform: translateX(1px);
   }
 }
@@ -749,6 +773,11 @@
     overflow: hidden;
 
     z-index: 999;
+  }
+
+
+  .sidebar ~ :global(.main) {
+    margin-left: 72px;
   }
 
   .sidebarHeader {
@@ -866,6 +895,11 @@
     box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.28);
 
     backdrop-filter: blur(18px);
+  }
+
+
+  .sidebar ~ :global(.main) {
+    margin-left: 0;
   }
 
   .sidebar::before {
