@@ -1,6 +1,7 @@
 "use client";
 
 import Head from "next/head";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Affiliate,
@@ -15,6 +16,7 @@ const defaultLandingPageUrl =
   process.env.NEXT_PUBLIC_LANDING_PAGE_URL || "";
 
 export default function CriarProjetos() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [destinationUrl, setDestinationUrl] = useState(defaultLandingPageUrl);
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
@@ -107,6 +109,7 @@ export default function CriarProjetos() {
       setName("");
       setDestinationUrl(defaultLandingPageUrl);
       setSelectedAffiliateIds([]);
+      router.push("/campanhas");
     } catch (err) {
       setError(
         getApiErrorMessage(

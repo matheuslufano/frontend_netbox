@@ -12,6 +12,7 @@ import {
   FiRefreshCw,
   FiSearch,
   FiShare2,
+  FiTag,
   FiUser,
 } from "react-icons/fi";
 import {
@@ -154,9 +155,8 @@ export default function IntegracoesPage() {
     setRealtimeStatus,
   );
 
-  async function handleAttendanceSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const normalizedId = attendanceId.trim();
+  async function searchAttendance(rawAttendanceId: string) {
+    const normalizedId = rawAttendanceId.trim();
 
     if (!normalizedId) {
       setSearchError("Informe o attendance_id recebido no webhook.");
@@ -182,6 +182,19 @@ export default function IntegracoesPage() {
     } finally {
       setSearching(false);
     }
+  }
+
+  function handleAttendanceSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void searchAttendance(attendanceId);
+  }
+
+  function openAttendanceFromWebhook(selectedAttendanceId: string) {
+    const normalizedId = selectedAttendanceId.trim();
+    if (!normalizedId) return;
+
+    setActiveTab("attendance");
+    void searchAttendance(normalizedId);
   }
 
   function openIntegration(nextIntegration: Exclude<Integration, null>) {
@@ -308,6 +321,7 @@ export default function IntegracoesPage() {
           realtimeStatus={realtimeStatus}
           onLimitChange={setWebhookLimit}
           onRefresh={() => void loadWebhookLogs(true)}
+          onOpenAttendance={openAttendanceFromWebhook}
         />
       ) : (
         <AttendancePanel
@@ -369,6 +383,7 @@ function WebhookPanel({
   realtimeStatus,
   onLimitChange,
   onRefresh,
+  onOpenAttendance,
 }: {
   logs: ChatmixWebhookLogResponse[];
   loading: boolean;
@@ -378,6 +393,7 @@ function WebhookPanel({
   realtimeStatus: RealtimeStatus;
   onLimitChange: (limit: number) => void;
   onRefresh: () => void;
+  onOpenAttendance: (attendanceId: string) => void;
 }) {
   return (
     <section className={styles.panel} role="tabpanel">
@@ -437,7 +453,11 @@ function WebhookPanel({
       ) : (
         <div className={styles.webhookList}>
           {logs.map((log) => (
-            <WebhookCard key={log.id} log={log} />
+            <WebhookCard
+              key={log.id}
+              log={log}
+              onOpenAttendance={onOpenAttendance}
+            />
           ))}
         </div>
       )}
@@ -445,7 +465,13 @@ function WebhookPanel({
   );
 }
 
-function WebhookCard({ log }: { log: ChatmixWebhookLogResponse }) {
+function WebhookCard({
+  log,
+  onOpenAttendance,
+}: {
+  log: ChatmixWebhookLogResponse;
+  onOpenAttendance: (attendanceId: string) => void;
+}) {
   const status = stringValue(log.result.status) || "recebido";
   const metadataEntries: Array<[string, unknown]> = [
     [
@@ -466,11 +492,21 @@ function WebhookCard({ log }: { log: ChatmixWebhookLogResponse }) {
       <div className={styles.webhookCardHeader}>
         <div>
           <span className={styles.statusPill}>{status}</span>
-          <h3>
-            {log.attendanceId
-              ? `Atendimento ${log.attendanceId}`
-              : "Webhook sem attendance_id"}
-          </h3>
+          {log.attendanceId ? (
+            <h3>
+              <button
+                type="button"
+                className={styles.attendanceLink}
+                onClick={() => onOpenAttendance(log.attendanceId as string)}
+                aria-label={`Buscar mensagens do atendimento ${log.attendanceId}`}
+              >
+                <span>Atendimento {log.attendanceId}</span>
+                <FiSearch aria-hidden="true" />
+              </button>
+            </h3>
+          ) : (
+            <h3>Webhook sem attendance_id</h3>
+          )}
         </div>
         <time dateTime={log.receivedAt}>
           <FiClock aria-hidden="true" /> {formatDateTime(log.receivedAt)}
@@ -654,8 +690,22 @@ function AttendancePanel({
                       : ""}
                   </small>
                   <div className={styles.affiliateCodeHighlight}>
-                    <span>Código do afiliado</span>
-                    <strong>{affiliateCode || "Não identificado"}</strong>
+                    <div className={styles.affiliateCodeLabel}>
+                      <span className={styles.affiliateCodeIcon}>
+                        <FiTag aria-hidden="true" />
+                      </span>
+                      <div>
+                        <span>Código do afiliado</span>
+                        <small>Identificado na conversa</small>
+                      </div>
+                    </div>
+                    <strong
+                      className={
+                        affiliateCode ? undefined : styles.affiliateCodeMissing
+                      }
+                    >
+                      {affiliateCode || "Não identificado"}
+                    </strong>
                   </div>
                 </section>
               )}

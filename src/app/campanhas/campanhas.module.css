@@ -352,21 +352,122 @@
   margin-bottom: 18px;
 }
 
-.rankingItem {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
+.rankingEntry {
+  overflow: hidden;
   border: 1px solid #eef1f5;
   border-radius: 12px;
   background: #fff;
 }
 
-.rankingItem p {
-  margin: 4px 0 0;
+.rankingItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  width: 100%;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 0;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rankingItem:hover {
+  background: #fff7f4;
+}
+
+.rankingItem:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: -3px;
+}
+
+.rankingAffiliate {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.rankingAffiliate > span {
   color: #6b7280;
   overflow-wrap: anywhere;
+}
+
+.rankingTotals {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.conversionPill,
+.sgpConverted,
+.sgpPending {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.conversionPill {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.conversionList {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px 64px;
+  background: #fff;
+}
+
+.conversionItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.conversionItem > div {
+  display: grid;
+  gap: 3px;
+}
+
+.conversionItem > div > span:not(.conversionLabel) {
+  color: #4b5563;
+}
+
+.conversionLabel {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sgpConverted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sgpPending {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.noConversions {
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #6b7280;
 }
 
 .position {
@@ -397,6 +498,31 @@
   overflow-x: auto;
   border-radius: 12px;
   -webkit-overflow-scrolling: touch;
+}
+
+.linksToggleRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.linksToggleButton {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #ff5f34;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.linksToggleButton:hover {
+  background: #c22a00;
+}
+
+.linksToggleButton:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .table {
@@ -538,8 +664,16 @@
     grid-template-columns: auto 1fr;
   }
 
-  .rankingItem .clickPill {
+  .rankingTotals {
     grid-column: 1 / -1;
     justify-content: flex-start;
+  }
+
+  .conversionList {
+    padding-left: 12px;
+  }
+
+  .conversionItem {
+    grid-template-columns: 1fr;
   }
 }

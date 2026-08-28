@@ -21,12 +21,14 @@ import {
   FiRefreshCw,
   FiSave,
   FiTrash2,
+  FiUsers,
   FiX,
 } from "react-icons/fi";
 
 import {
   apagarConversao,
   apagarLink,
+  type AffiliateContact,
   consultarClienteSgp,
   editarConversao,
   getApiErrorMessage,
@@ -652,6 +654,12 @@ function AffiliateDetailedCard({
   onDeleteLink,
   onOpenLinkConversions,
 }: AffiliateCardProps) {
+  const contacts =
+    block.contacts?.length > 0
+      ? block.contacts
+      : contactsFromConversions(block.conversionEvents ?? []);
+  const totalContacts = contacts.length;
+
   return (
     <article className={styles.affiliateLinkShowcase}>
       <AffiliateShowcaseAvatar block={block} />
@@ -668,8 +676,12 @@ function AffiliateDetailedCard({
             <span>{block.totalClicks}</span>
           </div>
           <div>
-            <strong>Conversões</strong>
+            <strong>Atendimentos</strong>
             <span>{block.totalConversions ?? 0}</span>
+          </div>
+          <div>
+            <strong>Clientes</strong>
+            <span>{totalContacts}</span>
           </div>
         </div>
       </div>
@@ -692,6 +704,52 @@ function AffiliateDetailedCard({
                 onDeleteLink={onDeleteLink}
                 onOpenConversions={onOpenLinkConversions}
               />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.showcaseContactsPanel}>
+        <div className={styles.showcaseTopBar}>
+          <strong>Clientes alcançados</strong>
+          <span className={styles.showcaseContactCount}>
+            <FiUsers aria-hidden="true" /> {totalContacts}
+          </span>
+        </div>
+
+        {contacts.length === 0 ? (
+          <p className={styles.emptyInlineText}>
+            Nenhum cliente identificado nas conversões.
+          </p>
+        ) : (
+          <div className={styles.showcaseContactList}>
+            {contacts.map((contact) => (
+              <article className={styles.showcaseContactCard} key={contact.id}>
+                <span className={styles.showcaseContactAvatar} aria-hidden="true">
+                  {(contact.name || contact.phone || "C").trim().charAt(0).toUpperCase()}
+                </span>
+                <div className={styles.showcaseContactIdentity}>
+                  <strong>{contact.name || "Cliente não identificado"}</strong>
+                  <span>
+                    {contact.phone
+                      ? formatPhone(contact.phone)
+                      : contact.document
+                        ? formatDocument(contact.document)
+                        : "Contato não informado"}
+                  </span>
+                  <small>
+                    {contact.shortCodes.map((code) => `#${code}`).join(" ")}
+                  </small>
+                </div>
+                <div className={styles.showcaseContactMetric}>
+                  <strong>{contact.totalAttendances}</strong>
+                  <span>
+                    {contact.totalAttendances === 1
+                      ? "atendimento"
+                      : "atendimentos"}
+                  </span>
+                </div>
+              </article>
             ))}
           </div>
         )}
@@ -3239,6 +3297,98 @@ function getConversionSearchText(conversion: ConversionWithAffiliate) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function contactsFromConversions(
+  conversions: AffiliateConversion[],
+): AffiliateContact[] {
+  const grouped = new Map<
+    string,
+    { contact: AffiliateContact; attendanceKeys: Set<string> }
+  >();
+
+  conversions.forEach((conversion) => {
+    const document = String(conversion.visitorDocument || "").replace(/\D/g, "");
+    const phone = String(conversion.visitorPhone || "").replace(/\D/g, "");
+    const nameKey = normalizeText(conversion.visitorName);
+    const identity = document
+      ? `document:${document}`
+      : phone
+        ? `phone:${phone}`
+        : nameKey
+          ? `name:${nameKey}`
+          : null;
+
+    if (!identity) return;
+
+    const current = grouped.get(identity) ?? {
+      contact: {
+        id: identity,
+        name: conversion.visitorName,
+        phone: conversion.visitorPhone,
+        document: conversion.visitorDocument,
+        city: conversion.visitorCity,
+        totalAttendances: 0,
+        totalConversions: 0,
+        firstAttendanceAt: conversion.convertedAt,
+        lastAttendanceAt: conversion.convertedAt,
+        attendanceIds: [],
+        shortCodes: [],
+        linkIds: [],
+        conversionIds: [],
+      },
+      attendanceKeys: new Set<string>(),
+    };
+    const contact = current.contact;
+
+    contact.name ||= conversion.visitorName;
+    contact.phone ||= conversion.visitorPhone;
+    contact.document ||= conversion.visitorDocument;
+    contact.city ||= conversion.visitorCity;
+    current.attendanceKeys.add(
+      conversion.attendanceId || `conversion:${conversion.id}`,
+    );
+    if (
+      conversion.attendanceId &&
+      !contact.attendanceIds.includes(conversion.attendanceId)
+    ) {
+      contact.attendanceIds.push(conversion.attendanceId);
+    }
+    if (!contact.shortCodes.includes(conversion.shortCode)) {
+      contact.shortCodes.push(conversion.shortCode);
+    }
+    if (!contact.linkIds.includes(conversion.linkId)) {
+      contact.linkIds.push(conversion.linkId);
+    }
+    if (!contact.conversionIds.includes(conversion.id)) {
+      contact.conversionIds.push(conversion.id);
+    }
+
+    if (
+      new Date(conversion.convertedAt).getTime() <
+      new Date(contact.firstAttendanceAt).getTime()
+    ) {
+      contact.firstAttendanceAt = conversion.convertedAt;
+    }
+    if (
+      new Date(conversion.convertedAt).getTime() >
+      new Date(contact.lastAttendanceAt).getTime()
+    ) {
+      contact.lastAttendanceAt = conversion.convertedAt;
+    }
+
+    contact.totalAttendances = current.attendanceKeys.size;
+    contact.totalConversions = contact.conversionIds.length;
+    grouped.set(identity, current);
+  });
+
+  return [...grouped.values()]
+    .map(({ contact }) => contact)
+    .sort(
+      (first, second) =>
+        new Date(second.lastAttendanceAt).getTime() -
+        new Date(first.lastAttendanceAt).getTime(),
+    );
 }
 
 function formatDateTime(value?: string | null) {

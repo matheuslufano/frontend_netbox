@@ -624,6 +624,78 @@
 
 }
 
+.attendanceLink {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  max-width: 100%;
+
+  padding: 0;
+
+  border: 0;
+
+  border-bottom: 1px solid transparent;
+
+  background: transparent;
+
+  color: #33231e;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: color 160ms ease, border-color 160ms ease;
+
+}
+
+.attendanceLink span {
+
+  overflow-wrap: anywhere;
+
+}
+
+.attendanceLink svg {
+
+  flex: 0 0 auto;
+
+  color: #d94717;
+
+  font-size: 15px;
+
+  transition: transform 160ms ease;
+
+}
+
+.attendanceLink:hover {
+
+  border-color: #ed5a2b;
+
+  color: #c94318;
+
+}
+
+.attendanceLink:hover svg {
+
+  transform: translateX(2px);
+
+}
+
+.attendanceLink:focus-visible {
+
+  outline: 3px solid rgba(255, 95, 52, 0.24);
+
+  outline-offset: 4px;
+
+  border-radius: 4px;
+
+}
+
 .webhookCardHeader time,
 
 .messageMeta time {
@@ -1144,37 +1216,75 @@
 
 .affiliateCodeHighlight {
 
-  display: grid;
+  display: flex;
 
-  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: space-between;
 
   align-items: center;
 
-  gap: 12px;
+  gap: 16px;
 
-  margin-top: 14px;
+  margin-top: 16px;
 
-  padding: 10px 12px;
+  padding: 13px 14px;
 
-  border: 1px solid #f5c9b8;
+  border: 1px solid rgba(237, 90, 43, 0.22);
 
-  border-radius: 10px;
+  border-radius: 14px;
 
-  background: #fff;
+  background: linear-gradient(135deg, #fff 0%, #fff7f3 100%);
+
+  box-shadow: 0 8px 20px rgba(155, 58, 25, 0.08);
 
 }
 
-.affiliateCodeHighlight span {
+.affiliateCodeLabel {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+
+}
+
+.affiliateCodeIcon {
+
+  width: 36px;
+
+  height: 36px;
+
+  display: grid;
+
+  flex: 0 0 36px;
+
+  place-items: center;
+
+  border-radius: 11px;
+
+  background: linear-gradient(145deg, #f36b3d, #d74717);
+
+  color: #fff;
+
+  font-size: 17px;
+
+  box-shadow: 0 7px 14px rgba(210, 71, 25, 0.24);
+
+}
+
+.affiliateCodeLabel > div > span {
 
   display: block;
 
   min-width: 0;
 
-  color: #8b6255;
+  color: #6f4639;
 
-  font-size: 10px;
+  font-size: 11px;
 
-  font-weight: 800;
+  font-weight: 900;
 
   line-height: 1.2;
 
@@ -1182,15 +1292,61 @@
 
 }
 
+.affiliateCodeLabel small {
+
+  display: block;
+
+  margin-top: 3px;
+
+  color: #a17d72;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  line-height: 1.2;
+
+}
+
 .affiliateCodeHighlight strong {
 
-  color: #bd3911;
+  color: #fff;
 
   max-width: 100%;
 
-  font: 900 12px/1.2 Consolas, monospace;
+  padding: 8px 12px;
+
+  border: 1px solid #c94318;
+
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #ed5a2b, #c94318);
+
+  box-shadow: 0 6px 14px rgba(189, 57, 17, 0.2);
+
+  font: 900 13px/1.2 Consolas, monospace;
+
+  letter-spacing: 0.04em;
 
   overflow-wrap: anywhere;
+
+}
+
+.affiliateCodeHighlight strong.affiliateCodeMissing {
+
+  border-color: #ead8d2;
+
+  background: #f5eeeb;
+
+  box-shadow: none;
+
+  color: #8b7670;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  letter-spacing: 0;
 
 }
 
@@ -1471,8 +1627,8 @@
   .conversationHeader { align-items: flex-start; flex-direction: column; }
 
   .affiliateCodeHighlight {
-    grid-template-columns: 1fr;
     align-items: flex-start;
+    flex-direction: column;
   }
 
 }

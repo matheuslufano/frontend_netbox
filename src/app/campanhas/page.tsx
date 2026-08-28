@@ -275,6 +275,10 @@ function CampaignDetail({
   onCopyLink: (link: string) => void;
   onDelete: () => void;
 }) {
+  const [showAffiliateLinks, setShowAffiliateLinks] = useState(false);
+  const [expandedAffiliateLinkIds, setExpandedAffiliateLinkIds] = useState<
+    Set<number>
+  >(new Set());
   const ranking = useMemo(
     () =>
       campaign.links
@@ -384,22 +388,108 @@ function CampaignDetail({
             </p>
           ) : (
             <div className={styles.rankingList}>
-              {ranking.map((link, index) => (
-                <div key={link.id} className={styles.rankingItem}>
-                  <span className={styles.position}>#{index + 1}</span>
-                  <div>
-                    <strong>{link.affiliate?.name}</strong>
-                    <p>{link.affiliate?.email ?? "Sem e-mail"}</p>
+              {ranking.map((link, index) => {
+                const isExpanded = expandedAffiliateLinkIds.has(link.id);
+
+                return (
+                  <div key={link.id} className={styles.rankingEntry}>
+                    <button
+                      type="button"
+                      className={styles.rankingItem}
+                      aria-expanded={isExpanded}
+                      aria-controls={`affiliate-conversions-${link.id}`}
+                      onClick={() =>
+                        setExpandedAffiliateLinkIds((current) => {
+                          const next = new Set(current);
+
+                          if (next.has(link.id)) {
+                            next.delete(link.id);
+                          } else {
+                            next.add(link.id);
+                          }
+
+                          return next;
+                        })
+                      }
+                    >
+                      <span className={styles.position}>#{index + 1}</span>
+                      <span className={styles.rankingAffiliate}>
+                        <strong>{link.affiliate?.name}</strong>
+                        <span>{link.affiliate?.email ?? "Sem e-mail"}</span>
+                      </span>
+                      <span className={styles.rankingTotals}>
+                        <span className={styles.conversionPill}>
+                          {link.conversions} conversões
+                        </span>
+                        <span className={styles.clickPill}>
+                          {link.clicks} cliques
+                        </span>
+                      </span>
+                    </button>
+
+                    {isExpanded && (
+                      <div
+                        id={`affiliate-conversions-${link.id}`}
+                        className={styles.conversionList}
+                      >
+                        {link.conversionEvents.length === 0 ? (
+                          <p className={styles.noConversions}>
+                            Nenhuma conversão registrada para este afiliado.
+                          </p>
+                        ) : (
+                          link.conversionEvents.map((conversion) => (
+                            <div
+                              key={conversion.id}
+                              className={styles.conversionItem}
+                            >
+                              <div>
+                                <span className={styles.conversionLabel}>Cliente</span>
+                                <strong>{conversion.customerName}</strong>
+                                <span>
+                                  {conversion.customerPhone ?? "Número não informado"}
+                                </span>
+                              </div>
+                              <span
+                                className={
+                                  conversion.convertedInSgp
+                                    ? styles.sgpConverted
+                                    : styles.sgpPending
+                                }
+                              >
+                                {conversion.convertedInSgp
+                                  ? "Convertido no SGP"
+                                  : "Não convertido no SGP"}
+                              </span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <span className={styles.clickPill}>
-                    {link.clicks} cliques
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
-          <div className={styles.tableWrapper}>
+          <div className={styles.linksToggleRow}>
+            <button
+              type="button"
+              className={styles.linksToggleButton}
+              aria-expanded={showAffiliateLinks}
+              aria-controls="affiliate-links-table"
+              onClick={() => setShowAffiliateLinks((current) => !current)}
+            >
+              {showAffiliateLinks
+                ? "Ocultar links dos afiliados"
+                : "Mostrar links dos afiliados"}
+            </button>
+          </div>
+
+          {showAffiliateLinks && (
+          <div
+            id="affiliate-links-table"
+            className={styles.tableWrapper}
+          >
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -446,6 +536,7 @@ function CampaignDetail({
               </tbody>
             </table>
           </div>
+          )}
         </div>
     </section>
   );

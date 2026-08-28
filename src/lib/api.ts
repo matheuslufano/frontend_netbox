@@ -84,6 +84,22 @@ export type AffiliateConversionEvent = {
   latestClickAt: string | null;
 };
 
+export type AffiliateContact = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  document: string | null;
+  city: string | null;
+  totalAttendances: number;
+  totalConversions: number;
+  firstAttendanceAt: string;
+  lastAttendanceAt: string;
+  attendanceIds: string[];
+  shortCodes: string[];
+  linkIds: number[];
+  conversionIds: number[];
+};
+
 export type AffiliateStats = {
   affiliate: string;
   affiliatePhotoUrl: string | null;
@@ -91,6 +107,8 @@ export type AffiliateStats = {
   totalLinks: number;
   totalClicks: number;
   totalConversions: number;
+  totalContacts: number;
+  contacts: AffiliateContact[];
   conversionEvents: AffiliateConversionEvent[];
   links: {
     id: number;
@@ -203,6 +221,13 @@ export type Campaign = {
     promoLink: string;
     clicks: number;
     conversions: number;
+    conversionEvents: {
+      id: number;
+      customerName: string;
+      customerPhone: string | null;
+      convertedAt: string;
+      convertedInSgp: boolean;
+    }[];
     whatsappLink: string;
     affiliate: {
       id: number;
@@ -219,6 +244,13 @@ export type Campaign = {
     promoLink: string;
     clicks: number;
     conversions: number;
+    conversionEvents: {
+      id: number;
+      customerName: string;
+      customerPhone: string | null;
+      convertedAt: string;
+      convertedInSgp: boolean;
+    }[];
     whatsappLink: string;
     affiliate: {
       id: number;
