@@ -2127,11 +2127,11 @@ export default function Crm() {
       value: Number.isFinite(value) ? value : 0,
       monthlyValue: Number.isFinite(value) ? value : 0,
       plan: newDeal.plan,
-      owner: newDeal.owner,
-      createdByUserId: null,
-      createdByUserName: "",
-      responsibleUserId: null,
-      responsibleUserName: newDeal.owner,
+      owner: currentCrmUser?.name || newDeal.owner,
+      createdByUserId: currentCrmUser?.id || null,
+      createdByUserName: currentCrmUser?.name || "",
+      responsibleUserId: currentCrmUser?.id || undefined,
+      responsibleUserName: currentCrmUser?.name || newDeal.owner,
       responsibleUserPhotoUrl: null,
       updatedByUserId: null,
       activity: saveAndTask ? "Criar tarefa" : "1o contato - 24 horas",
@@ -2174,11 +2174,14 @@ export default function Crm() {
       );
       setSyncStatus("success");
       setSyncMessage("Negociação criada e salva no backend.");
-    } catch {
+    } catch (error) {
       setDeals((current) => current.filter((deal) => deal.id !== id));
       setSyncStatus("warning");
       setSyncMessage(
-        "Não foi possível salvar a negociação no backend. O cartão não foi criado.",
+        getApiErrorMessage(
+          error,
+          "Não foi possível salvar a negociação no backend. O cartão não foi criado.",
+        ),
       );
     }
   }

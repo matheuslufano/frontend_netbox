@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -16,14 +17,23 @@ import {
   listarCampanhas,
 } from "@/lib/api";
 import { FiArrowLeft, FiBarChart2, FiEdit2, FiGrid, FiMoreVertical, FiSearch, FiTrash2, FiX } from "react-icons/fi";
-import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import {
+  RealtimeEventName,
+  useRealtimeEvents,
+} from "@/lib/useRealtimeEvents";
 import {
   CampaignDetailDashboard,
   CampaignSummaryDashboard,
 } from "./CampaignDetailDashboard";
 import styles from "./campanhas.module.css";
 
-const AUTO_REFRESH_MS = 10000;
+const AUTO_REFRESH_MS = 5000;
+const REALTIME_REFRESH_DELAY_MS = 250;
+const CAMPAIGN_REALTIME_EVENTS: RealtimeEventName[] = [
+  "link-clicked",
+  "link-converted",
+  "chatmix-webhook",
+];
 
 export default function Campanhas() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -37,6 +47,7 @@ export default function Campanhas() {
   const [deletingCampaignId, setDeletingCampaignId] =
     useState<number | null>(null);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
 
   const filteredCampaigns = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -99,12 +110,21 @@ export default function Campanhas() {
   );
 
   const refreshCampaignsFromEvent = useCallback(() => {
-    if (document.visibilityState === "visible") {
-      loadCampaigns({ silent: true });
+    if (document.visibilityState !== "visible") {
+      return;
     }
+
+    if (realtimeRefreshTimerRef.current !== null) {
+      window.clearTimeout(realtimeRefreshTimerRef.current);
+    }
+
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      loadCampaigns({ silent: true });
+    }, REALTIME_REFRESH_DELAY_MS);
   }, [loadCampaigns]);
 
-  useRealtimeEvents(refreshCampaignsFromEvent);
+  useRealtimeEvents(refreshCampaignsFromEvent, CAMPAIGN_REALTIME_EVENTS);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -117,9 +137,23 @@ export default function Campanhas() {
       }
     }, AUTO_REFRESH_MS);
 
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        loadCampaigns({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
     return () => {
       window.clearTimeout(timer);
       window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      if (realtimeRefreshTimerRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
     };
   }, [loadCampaigns]);
 

@@ -20,7 +20,8 @@ import {
   useRealtimeEvents,
 } from "@/lib/useRealtimeEvents";
 
-const AUTO_REFRESH_MS = 15000;
+const AUTO_REFRESH_MS = 5000;
+const REALTIME_REFRESH_DELAY_MS = 250;
 const REPORT_REALTIME_EVENTS: RealtimeEventName[] = [
   "link-clicked",
   "link-converted",
@@ -34,6 +35,7 @@ export type AffiliateDetail = AffiliateStats & {
 export function useRelatorios() {
   const mountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
 
   const [dashboard, setDashboard] =
     useState<DashboardData | null>(null);
@@ -140,9 +142,18 @@ export function useRelatorios() {
   );
 
   const refreshFromEvent = useCallback(() => {
-    if (document.visibilityState === "visible") {
-      load({ silent: true });
+    if (document.visibilityState !== "visible") {
+      return;
     }
+
+    if (realtimeRefreshTimerRef.current !== null) {
+      window.clearTimeout(realtimeRefreshTimerRef.current);
+    }
+
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      load({ silent: true });
+    }, REALTIME_REFRESH_DELAY_MS);
   }, [load]);
 
   useRealtimeEvents(refreshFromEvent, REPORT_REALTIME_EVENTS);
@@ -159,9 +170,23 @@ export function useRelatorios() {
       }
     }, AUTO_REFRESH_MS);
 
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        load({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
     return () => {
       window.clearTimeout(timer);
       window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      if (realtimeRefreshTimerRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
       mountedRef.current = false;
     };
   }, [load]);

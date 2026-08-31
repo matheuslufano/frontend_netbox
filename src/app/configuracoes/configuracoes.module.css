@@ -411,11 +411,32 @@
   background: #ffe0da;
 }
 
-.profileStats div {
+.profileStats button {
+  width: 100%;
   min-height: 140px;
+  border: 0;
   border-radius: 18px;
   padding: 24px;
   background: rgba(255, 255, 255, 0.92);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.profileStats button:hover {
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(91, 24, 0, 0.14);
+  transform: translateY(-2px);
+}
+
+.profileStats button:focus-visible {
+  outline: 3px solid #ff5336;
+  outline-offset: 3px;
+}
+
+.profileStats button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .profileStats span {
@@ -430,6 +451,16 @@
   margin-top: 12px;
   color: #050505;
   font-size: 36px;
+}
+
+.profileStats small {
+  display: block;
+  margin-top: 10px;
+  color: #d63819;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .profileEditCard {
@@ -1376,6 +1407,26 @@
   gap: 12px;
 }
 
+.profileEditHeading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.profileHeaderBackButton {
+  min-width: 48px;
+  min-height: 42px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+  font-size: 17px;
+  letter-spacing: -0.08em;
+}
+
+.profileHeaderBackButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .profileSearchHeader span {
   display: block;
   color: #ff5336;
@@ -1934,14 +1985,3 @@
   width: 22px;
   height: 22px;
 }
-
-.profileEditorTopbar {
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.profileEditorScreen .backButton {
-  margin-bottom: 2px;
-}
-

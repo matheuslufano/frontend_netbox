@@ -183,6 +183,9 @@ export default function Configuracoes() {
     useState<SettingsSection>("inicio");
   const [profileSearchTerm, setProfileSearchTerm] = useState("");
   const [showAllProfileResults, setShowAllProfileResults] = useState(false);
+  const [profileListFilter, setProfileListFilter] = useState<
+    "all" | "users" | "affiliates"
+  >("all");
   const [photoCrop, setPhotoCrop] = useState<PhotoCropState>(null);
   const [pendingPhotoCrops, setPendingPhotoCrops] = useState<PendingPhotoCrops>(
     {},
@@ -199,6 +202,10 @@ export default function Configuracoes() {
     showAllProfileResults || Boolean(normalizedProfileSearch);
 
   const filteredUsers = useMemo(() => {
+    if (profileListFilter === "affiliates") {
+      return [];
+    }
+
     if (showAllProfileResults && !normalizedProfileSearch) {
       return users;
     }
@@ -214,9 +221,13 @@ export default function Configuracoes() {
           String(value).toLowerCase().includes(normalizedProfileSearch),
         ),
     );
-  }, [normalizedProfileSearch, showAllProfileResults, users]);
+  }, [normalizedProfileSearch, profileListFilter, showAllProfileResults, users]);
 
   const filteredAffiliates = useMemo(() => {
+    if (profileListFilter === "users") {
+      return [];
+    }
+
     if (showAllProfileResults && !normalizedProfileSearch) {
       return affiliates;
     }
@@ -232,7 +243,12 @@ export default function Configuracoes() {
           String(value).toLowerCase().includes(normalizedProfileSearch),
         ),
     );
-  }, [affiliates, normalizedProfileSearch, showAllProfileResults]);
+  }, [
+    affiliates,
+    normalizedProfileSearch,
+    profileListFilter,
+    showAllProfileResults,
+  ]);
 
   const totalFilteredProfiles =
     filteredUsers.length + filteredAffiliates.length;
@@ -398,11 +414,16 @@ export default function Configuracoes() {
   function handleProfileSearchChange(value: string) {
     setProfileSearchTerm(value);
     setShowAllProfileResults(false);
+    setProfileListFilter("all");
   }
 
-  async function handleShowAllProfiles() {
+  async function handleShowAllProfiles(
+    filter: "all" | "users" | "affiliates" = "all",
+  ) {
     resetStatus();
     setRefreshingProfiles(true);
+    setProfileSearchTerm("");
+    setProfileListFilter(filter);
 
     try {
       const [usersResult, affiliatesResult] = await Promise.allSettled([
@@ -635,13 +656,6 @@ export default function Configuracoes() {
 
   async function handleSaveUser(id: number) {
     resetStatus();
-
-    if (currentUserRole !== "ADMIN") {
-      setError(
-        "Somente um usuário com nível Administrador pode alterar o nível de acesso.",
-      );
-      return;
-    }
 
     const normalizedEmail = userForm.email.trim().toLowerCase();
     const password = userForm.password.trim();
@@ -1126,37 +1140,30 @@ export default function Configuracoes() {
                     {editingUserId || editingAffiliateId ? (
                       <>
                         <div className={styles.profileSearchHeader}>
-                          <div>
-                            <span>Editar perfil</span>
-                            <h2>
-                              {editingUserId
-                                ? "Editar usuário"
-                                : "Editar afiliado"}
-                            </h2>
+                          <div className={styles.profileEditHeading}>
+                            <button
+                              type="button"
+                              className={`${styles.backButton} ${styles.profileHeaderBackButton}`}
+                              onClick={backToProfileSearch}
+                              disabled={saving}
+                              aria-label="Voltar para pesquisar perfis"
+                              title="Voltar"
+                            >
+                              &lt;&lt;
+                            </button>
+                            <div>
+                              <span>Editar perfil</span>
+                              <h2>
+                                {editingUserId
+                                  ? "Editar usuário"
+                                  : "Editar afiliado"}
+                              </h2>
+                            </div>
                           </div>
-                          <button
-                            type="button"
-                            className={styles.secondaryButton}
-                            onClick={backToProfileSearch}
-                            disabled={saving}
-                          >
-                            <FaAnglesLeft />Voltar para busca
-                          </button>
                         </div>
 
                         {editingUserId && (
                           <section className={styles.profileEditorScreen}>
-                            <div className={styles.profileEditorTopbar}>
-                              <button
-                                type="button"
-                                className={styles.backButton}
-                                onClick={backToProfileSearch}
-                                disabled={saving}
-                              >
-                                <FaAnglesLeft />
-                              </button>
-                            </div>
-
                             <ProfilePhotoPicker
                               label="Foto do usuário"
                               name={userForm.name}
@@ -1264,17 +1271,6 @@ export default function Configuracoes() {
 
                         {editingAffiliateId && (
                           <section className={styles.profileEditorScreen}>
-                            <div className={styles.profileEditorTopbar}>
-                              <button
-                                type="button"
-                                className={styles.backButton}
-                                onClick={backToProfileSearch}
-                                disabled={saving}
-                              >
-                                ⬅️Voltar
-                              </button>
-                            </div>
-
                             <ProfilePhotoPicker
                               label="Foto do afiliado"
                               name={affiliateForm.name}
@@ -1426,14 +1422,28 @@ export default function Configuracoes() {
                         {!shouldShowProfileResults && (
                           <>
                             <div className={styles.profileStats}>
-                              <div>
+                              <button
+                                type="button"
+                                onClick={() => void handleShowAllProfiles("users")}
+                                disabled={refreshingProfiles}
+                                aria-label="Mostrar todos os usuários"
+                              >
                                 <span>Usuários</span>
                                 <strong>{users.length}</strong>
-                              </div>
-                              <div>
-                                <span>Afiliados ativos</span>
-                                <strong>{activeAffiliates}</strong>
-                              </div>
+                                <small>Ver todos</small>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleShowAllProfiles("affiliates")
+                                }
+                                disabled={refreshingProfiles}
+                                aria-label="Mostrar todos os afiliados"
+                              >
+                                <span>Afiliados</span>
+                                <strong>{affiliates.length}</strong>
+                                <small>Ver todos</small>
+                              </button>
                             </div>
 
                             <div className={styles.profileEmpty}>
