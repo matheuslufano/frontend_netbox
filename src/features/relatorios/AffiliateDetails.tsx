@@ -49,6 +49,7 @@ interface AffiliateDetailsProps {
   initialConversionReportView?: ConversionReportView;
   hideAffiliateSelector?: boolean;
   hideAffiliatePanel?: boolean;
+  minimalFlow?: boolean;
 }
 
 type AffiliateLink = AffiliateDetail["links"][number];
@@ -166,6 +167,7 @@ export default function AffiliateDetails({
   initialConversionReportView = "objective",
   hideAffiliateSelector = false,
   hideAffiliatePanel = false,
+  minimalFlow = false,
 }: AffiliateDetailsProps) {
   const [deletingLinkId, setDeletingLinkId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<AffiliateViewMode>("detailed");
@@ -234,7 +236,7 @@ export default function AffiliateDetails({
   }
 
   return (
-    <section className={styles.affiliateDetailsSurface}>
+    <section className={cx(styles.affiliateDetailsSurface, minimalFlow && styles.minimalFlow)}>
       <DetailsHeader
         activeTab={detailTab}
         activeViewMode={viewMode}

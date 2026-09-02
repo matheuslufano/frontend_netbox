@@ -26,8 +26,11 @@ export default function FluxogramaConversoesPage() {
   }
 
   return (
-    <div className={`${styles.page} ${styles.transparentPage}`}>
-      <h1 className={styles.title}>Fluxograma de conversões</h1>
+    <div className={`${styles.page} ${styles.transparentPage} ${styles.minimalFlowPage}`}>
+      <div className={styles.minimalFlowHeading}>
+        <h1 className={`${styles.title} ${styles.minimalFlowTitle}`}>Fluxograma de conversões</h1>
+        <p>Acompanhe cada cliente da visita inicial até a validação no SGP.</p>
+      </div>
 
       <AffiliateDetails
         details={details}
@@ -37,6 +40,7 @@ export default function FluxogramaConversoesPage() {
         initialConversionReportView="flow"
         hideAffiliateSelector
         hideAffiliatePanel
+        minimalFlow
         emptyMessage="Nenhuma conversão encontrada para exibir no fluxograma."
       />
     </div>

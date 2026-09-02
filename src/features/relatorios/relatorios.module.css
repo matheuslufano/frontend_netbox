@@ -5294,3 +5294,203 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
     grid-template-columns: 1fr;
   }
 }
+
+/* Fluxograma dedicado: visual leve e compacto. */
+.minimalFlowPage {
+  padding: 20px;
+  color: #0f172a;
+}
+
+.minimalFlowHeading {
+  max-width: 760px;
+  margin-bottom: 18px;
+}
+
+.minimalFlowHeading > span {
+  color: #f97316;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.minimalFlowTitle {
+  margin: 5px 0 0;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.04em;
+}
+
+.minimalFlowHeading p {
+  margin: 7px 0 0;
+  color: #fff;
+  font-size: 13px;
+}
+
+.minimalFlow {
+  gap: 10px;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.minimalFlow > .sectionHeader {
+  display: none;
+}
+
+.minimalFlow .conversionReportMain {
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.minimalFlow .conversionReportTitleRow {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.minimalFlow .conversionReportTitleRow h3 {
+  font-size: 15px !important;
+  font-weight: 800;
+}
+
+.minimalFlow .conversionViewSwitcher {
+  padding: 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.minimalFlow .conversionViewSwitcher button {
+  min-height: 26px;
+  border-radius: 7px;
+  padding: 0 9px;
+}
+
+.minimalFlow .conversionReportFilters,
+.minimalFlow .conversionReportShellFull .conversionReportFilters {
+  gap: 8px;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.minimalFlow .conversionReportMetrics,
+.minimalFlow .conversionReportShellFull .conversionReportMetrics {
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #e5e7eb;
+}
+
+.minimalFlow .flowMetric {
+  min-height: 52px;
+  border: 0;
+  border-radius: 0;
+  padding: 8px 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.minimalFlow .flowMetricActive {
+  background: #fff7ed;
+}
+
+.minimalFlow .flowMetric strong {
+  font-size: 18px;
+}
+
+.minimalFlow .conversionFlowList,
+.minimalFlow .conversionReportShellFull .conversionFlowList {
+  gap: 10px;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.minimalFlow .conversionFlowCard,
+.minimalFlow .conversionReportShellFull .conversionFlowCard {
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.minimalFlow .conversionFlowHeader {
+  align-items: center;
+}
+
+.minimalFlow .conversionIdentity h3 {
+  font-size: 14px;
+}
+
+.minimalFlow .conversionBoard {
+  margin-top: 10px;
+}
+
+.minimalFlow .conversionStageTrack {
+  gap: 7px;
+}
+
+.minimalFlow .conversionStageCard {
+  min-height: 205px;
+  gap: 6px;
+  border-color: #e5e7eb;
+  border-radius: 11px;
+  padding: 9px;
+  background: #fafafa;
+  box-shadow: none;
+}
+
+.minimalFlow .conversionStageDone {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  box-shadow: none;
+}
+
+.minimalFlow .conversionStageClickable:hover {
+  border-color: #cbd5e1;
+  box-shadow: none;
+  transform: none;
+}
+
+.minimalFlow .stageIconBox {
+  width: 38px;
+  height: 38px;
+  margin-top: 4px;
+  border-radius: 10px;
+}
+
+.minimalFlow .stageContentCard {
+  min-height: 112px;
+  padding: 9px;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .minimalFlowPage {
+    padding: 12px;
+  }
+
+  .minimalFlow .conversionReportMain {
+    padding: 12px;
+  }
+
+  .minimalFlow .conversionReportTitleRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
