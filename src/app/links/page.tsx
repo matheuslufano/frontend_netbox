@@ -7,7 +7,6 @@ import {
   FiDownload,
   FiEdit2,
   FiExternalLink,
-  FiEye,
   FiLink,
   FiRefreshCw,
   FiSave,
@@ -413,7 +412,6 @@ export default function Links() {
               className={styles.viewLinksButton}
               onClick={openLinksModal}
             >
-              <FiEye aria-hidden="true" />
               Ver links criados
             </button>
           </form>

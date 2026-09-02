@@ -293,24 +293,52 @@
 }
 
 .conversionHero {
-  background: linear-gradient(135deg, #fff7ed, #ffffff);
-  border-color: #fed7aa;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(82px, 1fr));
+  gap: 10px;
+  min-width: 430px;
+}
+
+.conversionSummary .conversionHero {
+  border-color: rgba(226, 232, 240, 0.95);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.conversionHero > div {
+  min-height: 76px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.74));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.conversionHero > .conversionHeroConversions {
+  grid-column: 1 / -1;
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.conversionHero > .conversionHeroConversions strong {
+  margin-top: 0;
+  font-size: 22px;
 }
 
 .conversionHero span {
   display: block;
-  color: #9a3412;
-  font-size: 14px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  color: #64748b;
+  font-size: 11px;
 }
 
 .conversionHero strong {
   display: block;
-  margin-top: 8px;
-  color: #ea580c;
-  font-size: 42px;
+  margin-top: 7px;
+  color: #111827;
+  font-size: 25px;
   line-height: 1;
 }
 
@@ -344,41 +372,72 @@
 
 .rankingList {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 4px 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 .rankingItem {
+  position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #eef1f5;
-  border-radius: 12px;
-  background: #fafafa;
+  flex: 0 0 98px;
+  justify-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: center;
+}
+
+.rankingItem + .rankingItem {
+  margin-left: -14px;
+}
+
+.rankingItem:hover {
+  z-index: 2;
 }
 
 .rankingItem strong {
   display: block;
+  overflow: hidden;
+  width: 82px;
+  margin-top: 3px;
+  color: #111827;
+  font-size: 11px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.rankingItem p {
-  margin: 3px 0 0;
-  color: #6b7280;
-  font-size: 13px;
+.rankingAvatar {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  place-items: center;
+  overflow: hidden;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: var(--avatar-bg, #e2e8f0);
+  color: var(--avatar-color, #334155);
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
 }
 
-.rankBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #ffedd5;
+.rankingAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rankPosition {
   color: #c2410c;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .affiliateDetailsSurface {
@@ -827,7 +886,9 @@
   display: grid;
   max-height: min(58vh, 460px);
   gap: 8px;
-  overflow-y: auto;
+/*
+aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas para a base de ruas para a história era bem assim o modereiro seguro informado a tristez e a ideia que mim se parece para o seu ensino falou fazer uma pesquisa para seguir a rodinha existiu no ser tipo de vídeo para se desaparecer ela tá numa receita as áreas que desainda era voltada para a cima que a esquina tem a flor de poste a igreja do caçador fechado de acordo de três marido a sol da vida existe muitos serviços em certo julho paulista mercado era de carinho fácil da conforme se ganha pior que tem tido várias peleiras com inspiração que ele não morreu que dentro se mexeu se mexer caraca não tinha muita marida é a feira coberto era bonito é que a noite está aberto a essa loja que é central tá aberto até hoje que tá aberta acho que sou eu tô para isso também tá aberto né hoje essa daqui também essa loja de bíblia que gosta pra hoje o techor ou no lição e dez data aberta é o sobricar isso não sabia que aquela que eu falei a no pino que é a virada não achei que era antigo mental não é nada só que me ainda será galera chegar no artigo na tarefa vinte e sete a bem mais verde era bem marcado bastante é a vítima onde é subido pela servida de sábado ser empagado se a realização que nós temos de e ele está subindo que uma anexidade só no meio responde é uma resposta o galo que dole de sexto caminho de resposta do que desde o que pode destruir mas a gente não tinha ressáprio a informação seja a receber os grupos que são recebendo cada e quarenta e meta e disse quanto e se recebe responder isso no presídio
+*/
   padding: 2px;
   scrollbar-width: thin;
 }
@@ -2339,7 +2400,7 @@
 
 .affiliateLinkShowcase {
   display: grid;
-  grid-template-columns: 170px 175px minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  grid-template-columns: 220px minmax(380px, 1.25fr) minmax(320px, 1fr);
   gap: 18px;
   align-items: center;
   min-height: 304px;
@@ -2347,7 +2408,7 @@
   padding: 8px 12px;
   border: 0;
   border-radius: 12px;
-  background: #fff;
+  background: #00000029;
   box-shadow: none;
   overflow: hidden;
 }
@@ -2428,52 +2489,89 @@
 
 .showcaseAffiliatePanel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 9px;
   min-width: 0;
   width: 100%;
-  max-width: 175px;
+  max-width: 220px;
   height: 280px;
   align-content: start;
-  border-radius: 10px;
-  padding: 14px 10px 10px;
-  background: #a6a6a6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
   overflow: hidden;
 }
 
+.showcaseAffiliatePanel .showcaseAvatar {
+  min-height: 0;
+  max-width: none;
+  align-content: start;
+  gap: 5px;
+}
+
+.showcaseAffiliatePanel .showcaseAvatarCircle {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 4px;
+  border-width: 3px;
+}
+
+.showcaseAffiliatePanel .showcaseAvatarInitials {
+  font-size: 20px;
+}
+
+.showcaseAffiliatePanel .showcaseAvatar strong {
+  font-size: 14px;
+}
+
+.showcaseAffiliatePanel .showcaseAvatarHint {
+  display: none;
+}
+
 .showcaseDetailTitle {
-  color: #050505;
-  font-size: 18px;
-  text-align: center;
+  padding-top: 7px;
+  border-top: 1px solid #e5e7eb;
+  color: #64748b;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
 }
 
 .showcaseAffiliateFields {
   display: grid;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
 
 .showcaseAffiliateFields div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  min-height: 50px;
-  border-radius: 7px;
-  padding: 7px 12px;
-  background: #d8d8d8;
+  min-height: 26px;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 4px 2px;
+  background: transparent;
+}
+
+.showcaseAffiliateFields div:last-child {
+  border-bottom: 0;
 }
 
 .showcaseAffiliateFields strong {
   overflow: hidden;
-  color: #050505;
-  font-size: 16px;
-  line-height: 1;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .showcaseAffiliateFields span {
-  color: #555;
-  font-size: 12px;
+  color: #111827;
+  font-size: 11px;
   font-weight: 900;
 }
 
@@ -2483,14 +2581,15 @@
   min-width: 0;
   width: 100%;
   height: 280px;
-  border-radius: 10px;
-  padding: 10px 28px 10px 24px;
-  background: #a6a6a6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 18px 14px 14px;
+  background: #f8fafc;
   overflow-y: scroll;
   overflow-x: hidden;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: #5a5a5a #efefef;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 .showcaseContactsPanel {
@@ -2499,9 +2598,10 @@
   min-width: 0;
   width: 100%;
   height: 280px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #a6a6a6;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
   overflow: hidden;
 }
 
@@ -2511,8 +2611,8 @@
   gap: 5px;
   padding: 5px 9px;
   border-radius: 999px;
-  background: #1f2937;
-  color: #fff;
+  background: #e2e8f0;
+  color: #475569;
   font-size: 11px;
   font-weight: 900;
 }
@@ -2536,8 +2636,26 @@
   gap: 9px;
   min-width: 0;
   padding: 9px;
-  border-radius: 9px;
-  background: #f4f4f4;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.showcaseContactCard:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.showcaseContactCard:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.38);
+  outline-offset: 1px;
 }
 
 .showcaseContactAvatar {
@@ -2600,18 +2718,72 @@
   text-transform: uppercase;
 }
 
+.contactModalBackdrop {
+  position: fixed;
+  z-index: 99999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(4px);
+}
+
+.contactConversationModal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.35);
+}
+
+.contactModalClose {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  right: 58px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+.contactModalState,
+.contactModalError {
+  align-self: center;
+  margin: auto;
+  padding: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.contactModalError {
+  color: #b91c1c;
+}
+
 .showcaseLinksPanel::-webkit-scrollbar {
-  width: 12px;
+  width: 7px;
 }
 
 .showcaseLinksPanel::-webkit-scrollbar-track {
   border-radius: 999px;
-  background: #e5e5e5;
+  background: transparent;
 }
 
 .showcaseLinksPanel::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: #5a5a5a;
+  background: #cbd5e1;
 }
 
 .showcaseTopBar {
@@ -2628,12 +2800,13 @@
 .showcaseTopBar > strong {
   width: fit-content;
   max-width: 100%;
-  border-radius: 9px;
-  padding: 5px 12px;
-  background: #e7e7e7;
-  color: #050505;
-  font-size: 18px;
-  line-height: 1.1;
+  padding: 0;
+  background: transparent;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .showcaseActionButtons,
@@ -2681,7 +2854,7 @@
 
 .showcaseLinkList {
   display: grid;
-  gap: 10px;
+  gap: 7px;
   min-width: 0;
   width: 100%;
   overflow: visible;
@@ -2697,13 +2870,13 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  min-height: 64px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-left: 5px solid transparent;
-  border-radius: 10px;
+  min-height: 58px;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
   padding: 8px 10px;
-  background: #dedede;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  background: #fff;
+  box-shadow: none;
   overflow: hidden;
   transition:
     border-color 0.2s ease,
@@ -2714,10 +2887,8 @@
 
 .showcaseLinkCardConverted {
   border-left-color: #16a34a;
-  background: linear-gradient(90deg, rgba(22, 163, 74, 0.18), #e8f7ee 42%, #dedede 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.58),
-    0 8px 18px rgba(22, 163, 74, 0.12);
+  background: #f0fdf4;
+  box-shadow: none;
 }
 
 .showcaseLinkCardConverted::before {
@@ -2726,7 +2897,7 @@
   top: 0;
   bottom: 0;
   left: 0;
-  width: 5px;
+  width: 3px;
   background: #16a34a;
 }
 
@@ -3348,7 +3519,7 @@
 
 @media (max-width: 1500px) {
   .affiliateLinkShowcase {
-    grid-template-columns: 170px minmax(0, 1fr);
+    grid-template-columns: 220px minmax(0, 1fr);
     max-height: none;
     overflow: visible;
   }
@@ -3358,7 +3529,7 @@
   }
 
   .showcaseAffiliateFields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .showcaseLinksPanel,
@@ -3444,7 +3615,7 @@
   }
 
   .affiliateLinkShowcase {
-    grid-template-columns: 72px 1fr;
+    grid-template-columns: 1fr;
     align-items: start;
     max-height: none;
     min-height: 0;
@@ -3477,7 +3648,7 @@
   }
 
   .showcaseAffiliateFields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .showcaseLinksPanel,
@@ -5110,5 +5281,16 @@
 
   .flowMetric {
     min-height: 58px;
+  }
+
+  .conversionHero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .conversionHero {
+    grid-template-columns: 1fr;
   }
 }

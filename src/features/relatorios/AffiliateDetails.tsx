@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import type {
   ComponentType,
   CSSProperties,
@@ -29,6 +30,7 @@ import {
   apagarConversao,
   apagarLink,
   type AffiliateContact,
+  buscarMensagensAtendimentoChatmix,
   consultarClienteSgp,
   editarConversao,
   getApiErrorMessage,
@@ -36,6 +38,7 @@ import {
 import { formatDisplayLink } from "@/lib/links";
 import { AffiliateDetail } from "./useRelatorios";
 import styles from "./relatorios.module.css";
+import integrationStyles from "@/app/integracoes/integracoes.module.css";
 
 interface AffiliateDetailsProps {
   details: AffiliateDetail[];
@@ -245,7 +248,6 @@ export default function AffiliateDetails({
           emptyMessage={emptyMessage}
           affiliateListClassName={affiliateListClassName}
           conversionRanking={conversionRanking}
-          totalConversions={totalConversions}
           deletingLinkId={deletingLinkId}
           refreshing={refreshing}
           onRefresh={refresh}
@@ -369,7 +371,6 @@ function LinksTab({
   emptyMessage,
   affiliateListClassName,
   conversionRanking,
-  totalConversions,
   deletingLinkId,
   refreshing,
   onRefresh,
@@ -382,7 +383,6 @@ function LinksTab({
   emptyMessage: string;
   affiliateListClassName: string;
   conversionRanking: AffiliateDetail[];
-  totalConversions: number;
   deletingLinkId: number | null;
   refreshing: boolean;
   onRefresh: () => void;
@@ -391,10 +391,20 @@ function LinksTab({
   onOpenLinkConversions: (link: AffiliateLink) => void;
   viewMode: AffiliateViewMode;
 }) {
+  const orderedDetails = useMemo(
+    () => [...details].sort((first, second) => {
+      const conversionDifference =
+        (second.totalConversions ?? 0) - (first.totalConversions ?? 0);
+      if (conversionDifference) return conversionDifference;
+      return second.totalLinks - first.totalLinks;
+    }),
+    [details],
+  );
+
   return (
     <>
       <ConversionSummary
-        totalConversions={totalConversions}
+        details={details}
         ranking={conversionRanking}
       />
 
@@ -402,7 +412,7 @@ function LinksTab({
         <p className={styles.emptyText}>{emptyMessage}</p>
       ) : (
         <div className={affiliateListClassName}>
-          {details.map((affiliate) => (
+          {orderedDetails.map((affiliate) => (
             <AffiliateCardByViewMode
               key={affiliate.affiliateId}
               block={affiliate}
@@ -422,24 +432,36 @@ function LinksTab({
 }
 
 function ConversionSummary({
-  totalConversions,
+  details,
   ranking,
 }: {
-  totalConversions: number;
+  details: AffiliateDetail[];
   ranking: AffiliateDetail[];
 }) {
+  const totalLinks = details.reduce((total, affiliate) => total + affiliate.totalLinks, 0);
+  const totalClicks = details.reduce((total, affiliate) => total + affiliate.totalClicks, 0);
+  const totalConversions = details.reduce(
+    (total, affiliate) => total + (affiliate.totalConversions ?? 0),
+    0,
+  );
+  const totalSgp = details.reduce(
+    (total, affiliate) => total + affiliate.conversionEvents.filter((conversion) => hasSgpSale({ ...conversion, affiliate: affiliate.affiliate, affiliateId: affiliate.affiliateId })).length,
+    0,
+  );
+
   return (
     <div className={styles.conversionSummary}>
       <div className={styles.conversionHero}>
-        <span>Conv. WhatsApp</span>
-        <strong>{totalConversions}</strong>
-        <p>Cliques no botao da landing que vieram de links de divulgação.</p>
+        <div><span>Afiliados</span><strong>{details.length}</strong></div>
+        <div><span>Links</span><strong>{totalLinks}</strong></div>
+        <div><span>Cliques</span><strong>{totalClicks}</strong></div>
+        <div><span>SGP</span><strong>{totalSgp}</strong></div>
+        <div className={styles.conversionHeroConversions}><span>Conversões</span><strong>{totalConversions}</strong></div>
       </div>
 
       <div className={styles.conversionRanking}>
         <div className={styles.rankingHeader}>
-          <strong>Top afiliados</strong>
-          <span>{ranking.length} conv.</span>
+          <strong>Ranking</strong>
         </div>
 
         {ranking.length === 0 ? (
@@ -450,22 +472,30 @@ function ConversionSummary({
           <div className={styles.rankingList}>
             {ranking.map((affiliate, index) => (
               <div key={affiliate.affiliateId} className={styles.rankingItem}>
-                <span className={styles.rankBadge}>#{index + 1}</span>
-
-                <div>
-                  <strong>{affiliate.affiliate}</strong>
-                  <p>ID #{affiliate.affiliateId}</p>
-                </div>
-
-                <span className={styles.conversionBadge}>
-                  {affiliate.totalConversions}
-                </span>
+                <RankingAffiliateAvatar affiliate={affiliate} />
+                <strong title={affiliate.affiliate}>{affiliate.affiliate}</strong>
+                <span className={styles.rankPosition}>{index + 1}º lugar</span>
               </div>
             ))}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function RankingAffiliateAvatar({ affiliate }: { affiliate: AffiliateDetail }) {
+  const photoUrl = getAffiliatePhotoUrl(affiliate);
+  const palette = getAffiliateAvatarPalette(affiliate.affiliate, affiliate.affiliateId);
+  const avatarStyle = {
+    "--avatar-bg": palette.background,
+    "--avatar-color": palette.color,
+  } as CSSProperties;
+
+  return (
+    <span className={styles.rankingAvatar} style={avatarStyle}>
+      {photoUrl ? <img src={photoUrl} alt={`Foto de ${affiliate.affiliate}`} /> : <span>{getAffiliateInitials(affiliate.affiliate)}</span>}
+    </span>
   );
 }
 
@@ -659,12 +689,49 @@ function AffiliateDetailedCard({
       ? block.contacts
       : contactsFromConversions(block.conversionEvents ?? []);
   const totalContacts = contacts.length;
+  const [selectedContact, setSelectedContact] = useState<AffiliateContact | null>(null);
+  const [contactMessages, setContactMessages] = useState<ContactChatMessage[]>([]);
+  const [contactModalLoading, setContactModalLoading] = useState(false);
+  const [contactModalError, setContactModalError] = useState("");
+
+  useEffect(() => {
+    if (!selectedContact) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedContact(null);
+    };
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedContact]);
+
+  async function openContact(contact: AffiliateContact) {
+    setSelectedContact(contact);
+    setContactMessages([]);
+    setContactModalError("");
+    const attendanceId = contact.attendanceIds[0];
+    if (!attendanceId) {
+      setContactModalError("Este cliente não possui atendimento do Chatmix vinculado.");
+      return;
+    }
+    setContactModalLoading(true);
+    try {
+      const result = await buscarMensagensAtendimentoChatmix(attendanceId);
+      setContactMessages(result.messages.map(normalizeContactChatMessage));
+    } catch (error) {
+      setContactModalError(getApiErrorMessage(error, "Não foi possível carregar a conversa."));
+    } finally {
+      setContactModalLoading(false);
+    }
+  }
 
   return (
     <article className={styles.affiliateLinkShowcase}>
-      <AffiliateShowcaseAvatar block={block} />
-
       <div className={styles.showcaseAffiliatePanel}>
+        <AffiliateShowcaseAvatar block={block} />
         <strong className={styles.showcaseDetailTitle}>Detalhe</strong>
         <div className={styles.showcaseAffiliateFields}>
           <div>
@@ -724,7 +791,7 @@ function AffiliateDetailedCard({
         ) : (
           <div className={styles.showcaseContactList}>
             {contacts.map((contact) => (
-              <article className={styles.showcaseContactCard} key={contact.id}>
+              <button type="button" className={styles.showcaseContactCard} key={contact.id} onClick={() => void openContact(contact)}>
                 <span className={styles.showcaseContactAvatar} aria-hidden="true">
                   {(contact.name || contact.phone || "C").trim().charAt(0).toUpperCase()}
                 </span>
@@ -749,15 +816,62 @@ function AffiliateDetailedCard({
                       : "atendimentos"}
                   </span>
                 </div>
-              </article>
+              </button>
             ))}
           </div>
         )}
       </div>
+      {selectedContact && typeof document !== "undefined" && createPortal((
+        <div className={styles.contactModalBackdrop} role="presentation" onMouseDown={() => setSelectedContact(null)}>
+          <div className={styles.contactConversationModal} role="dialog" aria-modal="true" aria-label={`Conversa de ${selectedContact.name || "cliente"}`} onMouseDown={(event) => event.stopPropagation()}>
+            <button type="button" className={styles.contactModalClose} onClick={() => setSelectedContact(null)} aria-label="Fechar"><FiX /></button>
+            <section className={integrationStyles.whatsappPanel} aria-label="Conversa no WhatsApp">
+              <div className={integrationStyles.whatsappTopbar}>
+                <div className={integrationStyles.whatsappContact}>
+                  <span className={integrationStyles.whatsappAvatar}>{(selectedContact.name || "C").charAt(0).toUpperCase()}</span>
+                  <div><strong>{selectedContact.name || "Cliente não identificado"}</strong><small>{selectedContact.phone ? formatPhone(selectedContact.phone) : "Conversa do atendimento convertido"}</small></div>
+                </div>
+                <span className={integrationStyles.whatsappCount}>{contactMessages.length}</span>
+              </div>
+              <div className={integrationStyles.whatsappConversation}>
+                {contactModalLoading ? <p className={styles.contactModalState}>Carregando conversa...</p> : contactModalError ? <p className={styles.contactModalError}>{contactModalError}</p> : contactMessages.length === 0 ? <p className={styles.contactModalState}>Nenhuma mensagem encontrada.</p> : contactMessages.map((message) => (
+                  <article key={message.id} className={`${integrationStyles.whatsappBubble} ${message.incoming ? integrationStyles.customerBubble : integrationStyles.attendantBubble}`}>
+                    <div className={integrationStyles.whatsappSenderRow}><strong className={integrationStyles.whatsappSender}>{message.incoming ? selectedContact.name || "Cliente" : "Atendente"}</strong></div>
+                    <p className={integrationStyles.whatsappText}>{message.text}</p>
+                    {message.timestamp && <time className={integrationStyles.whatsappTime}>{formatDateTime(message.timestamp)}</time>}
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      ), document.body)}
     </article>
   );
 }
 
+type ContactChatMessage = { id: string; text: string; timestamp: string | null; incoming: boolean };
+
+function normalizeContactChatMessage(value: unknown, index: number): ContactChatMessage {
+  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const content = record.content && typeof record.content === "object" ? record.content as Record<string, unknown> : {};
+  const data = record.data && typeof record.data === "object" ? record.data as Record<string, unknown> : {};
+  const pick = (source: Record<string, unknown>, keys: string[]) => keys.map((key) => source[key]).find((item) => typeof item === "string" && item.trim()) as string | undefined;
+  const text = pick(content, ["content", "message", "text", "body", "caption"]) || pick(record, ["message", "text", "body", "caption"]) || pick(data, ["message", "text", "body", "caption"]) || "Mensagem sem conteúdo textual";
+  const type = String(record.type || "").toLowerCase();
+  const direction = String(record.direction || "").toLowerCase();
+  const fromMe = record.fromMe ?? record.from_me ?? data.fromMe ?? data.from_me;
+  const incoming = type === "received" || /incoming|inbound|received|recebid/.test(direction) || fromMe === false || fromMe === 0 || fromMe === "0";
+  const timestamp = pick(record, ["createdAt", "created_at", "sentAt", "sent_at", "timestamp", "date", "utcDhMessageSent"]) || null;
+  return { id: String(record.id || record.messageId || `contact-message-${index}`), text, timestamp, incoming };
+/*
+É o mesmo pré só pouquíssimo ah só tomar em veículos é bizarro isso pra ele ter lá em momento sinceridade também ao futebol a sobremaneira para agradecimento do esporte para espaço se de morer Aristê para o primeiro assadinho muito bom de bom saber muito analisa jogar música de voz tá ligado pra cada análise tá aqui na lisa frio está do lado se ganhou a santeira carne ciclo a publicar meu pai carros da alegre foi desaminhando segura se né pode ter impossível adequar comercialmente fúridos de ideia de cara brutal bem horas colorido mais colorido mais colorido porque tinha mais coloquita ali marrãozinho tá legal marrão tá legal marrãozinho tá cresce usar o que inspirado tem mais versão que nasci traduzi vogas melhor}
+
+*/
+}
+/*
+aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas para a base de ruas para a história era bem assim o modereiro seguro
+*/
 function AffiliateShowcaseLink({
   link,
   deleting,
@@ -2914,8 +3028,11 @@ function useConversionRanking(details: AffiliateDetail[]) {
   return useMemo(
     () =>
       [...details]
-        .filter((affiliate) => (affiliate.totalConversions ?? 0) > 0)
-        .sort((a, b) => (b.totalConversions ?? 0) - (a.totalConversions ?? 0)),
+        .sort((a, b) => {
+          const conversionDifference =
+            (b.totalConversions ?? 0) - (a.totalConversions ?? 0);
+          return conversionDifference || a.affiliate.localeCompare(b.affiliate, "pt-BR");
+        }),
     [details],
   );
 }

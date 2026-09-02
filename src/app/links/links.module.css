@@ -40,21 +40,22 @@
 .viewLinksButton {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 18px;
+  justify-self: start;
+  margin-top: -4px;
   border: 0;
-  border-radius: 10px;
-  padding: 11px 16px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 800;
+  padding: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
 .viewLinksButton:hover {
-  background: #1d4ed8;
+  color: #c2410c;
 }
 
 .card {
@@ -168,7 +169,7 @@
 
 .actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .primaryButton,
@@ -601,7 +602,6 @@
   }
 
   .actions,
-  .primaryButton,
   .copyButton {
     width: 100%;
   }

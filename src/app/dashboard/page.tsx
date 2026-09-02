@@ -271,18 +271,17 @@ export default function Dashboard() {
         Dashboard
       </h1>
 
-      <div className={styles.summaryGrid}>
-        <SummaryCard dashboard={data} />
-        <TopAffiliates affiliates={data.topAffiliates} />
-      </div>
-
       <DashboardCharts
         dashboard={data}
         affiliateRows={affiliateRows}
       />
 
       <TocantinsCoverageMap cities={coverageMetrics} />
-
+      
+      <div className={styles.summaryGrid}>
+        <SummaryCard dashboard={data} />
+        <TopAffiliates affiliates={data.topAffiliates} />
+      </div>
       <AffiliatesTable affiliateRows={affiliateRows} />
     </div>
   );

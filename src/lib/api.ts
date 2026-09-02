@@ -295,6 +295,49 @@ export type CreateCampaignPayload = {
   affiliateIds: number[];
 };
 
+export type AffiliateCode = {
+  id: number;
+  code: string;
+  active: boolean;
+  createdAt: string;
+  affiliate: { id: number; name: string; active: boolean } | null;
+  campaign: { id: number; name: string } | null;
+};
+
+export type WhatsAppLinkItem = {
+  id: number;
+  campaignId: number;
+  affiliateId: number;
+  affiliateCodeId: number;
+  affiliateCode: string;
+  whatsappNumber: string;
+  originalMessage: string;
+  finalMessage: string;
+  identificationTemplate: string;
+  appendAffiliateCode: boolean;
+  whatsappUrl: string;
+  channel: "whatsapp";
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  qrCode: string;
+  campaign: { id: number; name: string };
+  affiliate: { id: number; name: string; active: boolean };
+  link: { id: number; shortCode: string; createdAt: string };
+  createdBy: { id: number; name: string };
+};
+
+export type SaveWhatsAppLinkPayload = {
+  campaignId?: number;
+  affiliateId: number;
+  affiliateCodeId?: number;
+  generateNewCode?: boolean;
+  whatsappNumber: string;
+  message: string;
+  appendAffiliateCode: boolean;
+  identificationTemplate: string;
+};
+
 export type LoginPayload = {
   email: string;
   password: string;
@@ -773,6 +816,40 @@ export async function criarCampanha(payload: CreateCampaignPayload) {
 export async function listarCampanhas() {
   const { data } = await api.get<Campaign[]>("/campaigns");
   return Array.isArray(data) ? data.map(normalizeCampaignLinks) : [];
+}
+
+export async function listarCodigosAfiliados(params?: {
+  campaignId?: number;
+  affiliateId?: number;
+  search?: string;
+}) {
+  const { data } = await api.get<AffiliateCode[]>("/affiliate-codes", { params });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function obterConfiguracaoWhatsApp() {
+  const { data } = await api.get<{ whatsappNumber: string | null }>(
+    "/whatsapp-links/config",
+  );
+  return data;
+}
+
+export async function listarLinksWhatsApp() {
+  const { data } = await api.get<WhatsAppLinkItem[]>("/whatsapp-links");
+  return Array.isArray(data) ? data : [];
+}
+
+export async function criarLinkWhatsApp(payload: SaveWhatsAppLinkPayload) {
+  const { data } = await api.post<WhatsAppLinkItem>("/whatsapp-links", payload);
+  return data;
+}
+
+export async function editarLinkWhatsApp(
+  id: number,
+  payload: Partial<SaveWhatsAppLinkPayload> & { active?: boolean },
+) {
+  const { data } = await api.put<WhatsAppLinkItem>(`/whatsapp-links/${id}`, payload);
+  return data;
 }
 
 export async function apagarCampanha(id: number) {
@@ -1259,7 +1336,7 @@ export async function listarCrmDeals(
 
 export async function listarUsuariosAtribuiveis() {
   const { data } = await api.get<User[]>("/crm/assignable-users");
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function criarCrmFunnel(payload: {

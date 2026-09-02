@@ -32,7 +32,7 @@ export default function Login() {
 
       localStorage.setItem("afiliados_netbox_user", JSON.stringify(data.user));
 
-      router.push("/dashboard");
+      router.push("/links-campanhas");
     } catch (err) {
       setError(getApiErrorMessage(err, "Não foi possível fazer login."));
     } finally {

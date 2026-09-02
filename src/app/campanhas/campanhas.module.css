@@ -1,7 +1,8 @@
 .page {
   min-height: 100%;
   padding: 32px 40px;
-  background: linear-gradient(135deg, #ff6749 0%, #e92f0f 100%);
+  background: linear-gradient(135deg, #ff6749 0%, #e9300f 100%);
+  border-radius:32px 32px;
 }
 
 .header {
@@ -448,7 +449,7 @@
   overflow: hidden;
   max-width: 100%;
   color: #fff;
-  font-size: 36px;
+  font-size: 25px;
   font-weight: 500;
   line-height: 1.15;
   text-align: center;

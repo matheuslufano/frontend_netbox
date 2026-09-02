@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { BsClipboardDataFill } from "react-icons/bs";
-import { FiDatabase, FiGitBranch, FiShare2 } from "react-icons/fi";
+import { FiGitBranch, FiShare2 } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
 import { ImUsers } from "react-icons/im";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
@@ -215,13 +215,6 @@ export default function Sidebar() {
             >
               <BsClipboardDataFill className={styles.icon} />
               <span className={styles.itemLabel}>Relat&oacute;rios</span>
-            </Link>
-          </li>
-
-          <li className={styles.button}>
-            <Link href="/sgp" className={styles.menuItem} aria-label="SGP">
-              <FiDatabase className={styles.icon} />
-              <span className={styles.itemLabel}>SGP</span>
             </Link>
           </li>
 

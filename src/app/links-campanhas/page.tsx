@@ -2,9 +2,18 @@ import Link from "next/link";
 import { BsMegaphoneFill } from "react-icons/bs";
 import { FiArrowRight, FiPlusCircle } from "react-icons/fi";
 import { PiLinkFill } from "react-icons/pi";
+import { FaWhatsapp } from "react-icons/fa";
 import styles from "./links-campanhas.module.css";
 
 const actions = [
+  {
+    href: "/links-campanhas/whatsapp",
+    title: "Link do WhatsApp",
+    description:
+      "Crie mensagens com código de afiliado, QR Code e rastreamento por campanha.",
+    icon: FaWhatsapp,
+    label: "Criar link do WhatsApp",
+  },
   {
     href: "/links",
     title: "Links e QR Code",

@@ -135,6 +135,7 @@ type ChatmixRealtimeMessage = {
 };
 
 const STAGE_ICONS_STORAGE_KEY = "crm-stage-icons-v1";
+const CRM_USER_FILTERS_STORAGE_PREFIX = "afiliados-netbox:crm:user-filters:v1";
 const CRM_REALTIME_EVENTS: RealtimeEventName[] = ["chatmix-webhook"];
 const stageIconOptions = [
   { value: "", label: "Sem ícone" },
@@ -1014,6 +1015,7 @@ export default function Crm() {
   const [filterConditions, setFilterConditions] = useState<
     CrmFilterCondition[]
   >([]);
+  const [userFiltersRestored, setUserFiltersRestored] = useState(false);
   const [crmPermissions, setCrmPermissions] = useState<CrmPermissions>({
     canViewAll: false,
     canViewTeam: false,
@@ -1096,6 +1098,71 @@ export default function Crm() {
   });
   const [newDeal, setNewDeal] = useState(newDealDefaults);
   const [stageForm, setStageForm] = useState<StageForm>(defaultStageForm);
+
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      if (!currentCrmUser?.id) {
+        setUserFiltersRestored(true);
+        return;
+      }
+
+      try {
+        const key = `${CRM_USER_FILTERS_STORAGE_PREFIX}:${currentCrmUser.id}`;
+        const raw = window.localStorage.getItem(key);
+        if (raw) {
+          const saved = JSON.parse(raw) as Record<string, unknown>;
+          if (saved.viewMode === "kanban" || saved.viewMode === "list") setViewMode(saved.viewMode);
+          if (typeof saved.selectedFunnelId === "string") setSelectedFunnelId(saved.selectedFunnelId);
+          if (typeof saved.responsibleUserId === "number" || saved.responsibleUserId === null) setResponsibleUserId(saved.responsibleUserId as number | null);
+          if (typeof saved.scopeFilter === "string") setScopeFilter(saved.scopeFilter as ScopeFilter);
+          if (typeof saved.statusFilter === "string") setStatusFilter(saved.statusFilter as DealStatus | "all");
+          if (typeof saved.sortMode === "string") setSortMode(saved.sortMode as SortMode);
+          if (typeof saved.periodFilter === "string") setPeriodFilter(saved.periodFilter as PeriodFilter);
+          if (Array.isArray(saved.filterConditions)) setFilterConditions(saved.filterConditions as CrmFilterCondition[]);
+          if (saved.advancedFilters && typeof saved.advancedFilters === "object") {
+            setAdvancedFilters((current) => ({ ...current, ...saved.advancedFilters as Partial<typeof current> }));
+          }
+        }
+      } catch {
+        // Mantém os filtros padrão se os dados locais estiverem corrompidos.
+      } finally {
+        if (active) setUserFiltersRestored(true);
+      }
+    });
+
+    return () => { active = false; };
+  }, [currentCrmUser?.id]);
+
+  useEffect(() => {
+    if (!userFiltersRestored || !currentCrmUser?.id) return;
+
+    const key = `${CRM_USER_FILTERS_STORAGE_PREFIX}:${currentCrmUser.id}`;
+    window.localStorage.setItem(key, JSON.stringify({
+      viewMode,
+      selectedFunnelId,
+      responsibleUserId,
+      scopeFilter,
+      statusFilter,
+      sortMode,
+      periodFilter,
+      filterConditions,
+      advancedFilters,
+    }));
+  }, [
+    advancedFilters,
+    currentCrmUser?.id,
+    filterConditions,
+    periodFilter,
+    responsibleUserId,
+    scopeFilter,
+    selectedFunnelId,
+    sortMode,
+    statusFilter,
+    userFiltersRestored,
+    viewMode,
+  ]);
 
   useEffect(() => {
     let storedIcons: Record<string, StageIcon> = {};
@@ -1244,14 +1311,15 @@ export default function Crm() {
           name: crmData.currentUser.name,
         });
       }
-      if (!selectedFunnelId && crmData.funnels[0]) {
-        setSelectedFunnelId(crmData.funnels[0].id);
-        setSelectedFunnel(crmData.funnels[0].name);
-      } else {
-        const activeFunnel = crmData.funnels.find(
-          (funnel) => funnel.id === selectedFunnelId,
-        );
-        if (activeFunnel) setSelectedFunnel(activeFunnel.name);
+      if (crmData.funnels[0]) {
+        setSelectedFunnelId((current) => {
+          const nextId = current || crmData.funnels[0].id;
+          const activeFunnel =
+            crmData.funnels.find((funnel) => funnel.id === nextId) ||
+            crmData.funnels[0];
+          setSelectedFunnel(activeFunnel.name);
+          return activeFunnel.id;
+        });
       }
 
       if (crmData.statuses.length > 0) {

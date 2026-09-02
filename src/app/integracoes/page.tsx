@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   FiActivity,
   FiArrowLeft,
@@ -61,6 +62,7 @@ type DisplayMessage = {
 const chatmixRealtimeEvents: ["chatmix-webhook"] = ["chatmix-webhook"];
 
 export default function IntegracoesPage() {
+  const router = useRouter();
   const [integration, setIntegration] = useState<Integration>(null);
   const [activeTab, setActiveTab] = useState<ChatmixTab>("webhooks");
   const [webhookLogs, setWebhookLogs] = useState<ChatmixWebhookLogResponse[]>(
@@ -235,8 +237,9 @@ export default function IntegracoesPage() {
             icon={<FiDatabase aria-hidden="true" />}
             name="SGP"
             description="Conecte os dados comerciais e a ativação dos contratos."
-            status="Em preparação"
-            onOpen={() => openIntegration("sgp")}
+            status="Disponível"
+            available
+            onOpen={() => router.push("/sgp")}
           />
         </section>
       </main>
