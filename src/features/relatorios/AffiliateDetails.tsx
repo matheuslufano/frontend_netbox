@@ -25,6 +25,7 @@ import {
   FiUsers,
   FiX,
 } from "react-icons/fi";
+import { BsMegaphoneFill } from "react-icons/bs";
 
 import {
   apagarConversao,
@@ -888,6 +889,12 @@ function AffiliateShowcaseLink({
   onOpenConversions: (link: AffiliateLink) => void;
 }) {
   const hasConversions = (link.conversions ?? 0) > 0;
+  const typeMeta = link.linkType === "whatsapp"
+    ? { label: "Link do WhatsApp", Icon: FiMessageCircle, className: styles.showcaseLinkTypeWhatsapp }
+    : link.linkType === "campaign"
+      ? { label: "Link de campanha", Icon: BsMegaphoneFill, className: styles.showcaseLinkTypeCampaign }
+      : { label: "Link individual", Icon: FiLink, className: styles.showcaseLinkTypeIndividual };
+  const TypeIcon = typeMeta.Icon;
 
   return (
     <section
@@ -896,19 +903,13 @@ function AffiliateShowcaseLink({
         hasConversions && styles.showcaseLinkCardConverted,
       )}
     >
-      <div className={styles.showcaseLinkInfo}>
-        <strong>Nome: {link.name || "Link sem nome"}</strong>
-        <span title={link.originalUrl}>
-          Destino: {formatDisplayLink(link.originalUrl)}
-        </span>
-        <a
-          href={link.promoLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={link.promoLink}
-        >
-          Afiliado: {formatDisplayLink(link.promoLink)}
-        </a>
+      <div className={styles.showcaseLinkMain}>
+        <span className={cx(styles.showcaseLinkTypeIcon, typeMeta.className)} title={typeMeta.label} aria-label={typeMeta.label}><TypeIcon aria-hidden="true" /></span>
+        <div className={styles.showcaseLinkInfo}>
+          <strong>Nome: {link.name || "Link sem nome"}</strong>
+          <span title={link.originalUrl}>Destino: {formatDisplayLink(link.originalUrl)}</span>
+          <a href={link.promoLink} target="_blank" rel="noopener noreferrer" title={link.promoLink}>Afiliado: {formatDisplayLink(link.promoLink)}</a>
+        </div>
       </div>
 
       <div

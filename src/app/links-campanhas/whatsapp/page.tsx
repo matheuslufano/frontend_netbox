@@ -33,6 +33,7 @@ export default function WhatsAppLinkPage() {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [codes, setCodes] = useState<AffiliateCode[]>([]);
   const [items, setItems] = useState<WhatsAppLinkItem[]>([]);
+  const [linkName, setLinkName] = useState("");
   const [affiliateId, setAffiliateId] = useState("");
   const [codeMode, setCodeMode] = useState<"existing" | "new">("existing");
   const [affiliateCodeId, setAffiliateCodeId] = useState("");
@@ -78,6 +79,8 @@ export default function WhatsAppLinkPage() {
   }, [affiliateId]);
 
   function validate() {
+    if (!linkName.trim()) return "Informe um nome para o link.";
+    if (linkName.trim().length > 120) return "O nome do link deve ter no máximo 120 caracteres.";
     if (!affiliateId) return "Selecione um afiliado.";
     if (codeMode === "existing" && !affiliateCodeId) return "Selecione um código de afiliado.";
     if (!/^55[1-9]{2}9?\d{8}$/.test(normalizeBrazilianPhone(phone))) return "Informe um WhatsApp brasileiro válido, com DDD.";
@@ -92,6 +95,7 @@ export default function WhatsAppLinkPage() {
     setSaving(true); setError(""); setNotice("");
     try {
       const payload = {
+        name: linkName.trim(),
         affiliateId: Number(affiliateId),
         ...(codeMode === "existing" ? { affiliateCodeId: Number(affiliateCodeId) } : { generateNewCode: true }),
         whatsappNumber: normalizeBrazilianPhone(phone), message,
@@ -115,6 +119,7 @@ export default function WhatsAppLinkPage() {
   }
 
   function loadFromItem(item: WhatsAppLinkItem, edit: boolean) {
+    setLinkName(edit ? item.name : `${item.name} - cópia`);
     setAffiliateId(String(item.affiliateId)); setCodeMode("existing"); setAffiliateCodeId(String(item.affiliateCodeId));
     setPhone(maskBrazilianPhone(item.whatsappNumber)); setMessage(item.originalMessage);
     setAppendCode(item.appendAffiliateCode); setTemplate(item.identificationTemplate);
@@ -145,6 +150,7 @@ export default function WhatsAppLinkPage() {
     <div className={styles.builderGrid}>
       <section className={styles.formCard}>
         <div className={styles.sectionTitle}><FiLink /><div><h2>Configuração do link</h2><p>Defina a atribuição antes de montar a mensagem.</p></div></div>
+        <label className={styles.field}><span>Nome do link</span><input value={linkName} onChange={(e) => setLinkName(e.target.value)} maxLength={120} placeholder="Ex.: Campanha Setembro — João" autoComplete="off" /></label>
         <label className={styles.field}><span>Afiliado</span><select value={affiliateId} onChange={(e) => { setAffiliateId(e.target.value); setAffiliateCodeId(""); setCodes([]); }}><option value="">Selecione</option>{activeAffiliates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         <fieldset className={styles.codeBox}><legend>Identificação do afiliado</legend><div className={styles.segmented}>
           <label><input type="radio" checked={codeMode === "existing"} onChange={() => setCodeMode("existing")} /> Usar código existente</label>

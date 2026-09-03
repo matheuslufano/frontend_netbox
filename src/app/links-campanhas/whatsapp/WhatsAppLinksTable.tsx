@@ -15,8 +15,9 @@ export default function WhatsAppLinksTable({ items, onCopy, onEdit, onDuplicate,
     <section className={styles.listCard}>
       <div className={styles.listHeader}><div><span className={styles.kicker}>Histórico</span><h2>Links criados</h2></div><span>{items.length} registro{items.length === 1 ? "" : "s"}</span></div>
       {items.length === 0 ? <p className={styles.empty}>Nenhum link WhatsApp salvo ainda.</p> : (
-        <div className={styles.tableWrap}><table><thead><tr><th>Afiliado / código</th><th>Mensagem</th><th>WhatsApp</th><th>Criado em</th><th>Status</th><th>Ações</th></tr></thead>
+        <div className={styles.tableWrap}><table><thead><tr><th>Nome</th><th>Afiliado / código</th><th>Mensagem</th><th>WhatsApp</th><th>Criado em</th><th>Status</th><th>Ações</th></tr></thead>
         <tbody>{items.map((item) => <tr key={item.id}>
+          <td><strong>{item.name}</strong></td>
           <td><strong>{item.affiliate.name}</strong><small>{item.affiliateCode}</small></td>
           <td className={styles.messageCell}>{item.finalMessage}</td><td>{item.whatsappNumber}</td>
           <td>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}</td>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BsMegaphoneFill } from "react-icons/bs";
-import { FiArrowRight, FiPlusCircle } from "react-icons/fi";
+import { FiArrowRight, FiBarChart2, FiPlusCircle } from "react-icons/fi";
 import { PiLinkFill } from "react-icons/pi";
 import { FaWhatsapp } from "react-icons/fa";
 import styles from "./links-campanhas.module.css";
@@ -53,6 +53,13 @@ export default function LinksCampanhasPage() {
               monitore os resultados dos afiliados em um só lugar.
             </p>
           </div>
+          <Link
+            href="/links-campanhas/relatorios"
+            className={styles.reportsButton}
+          >
+            <FiBarChart2 aria-hidden="true" />
+            Relatórios
+          </Link>
         </header>
 
 

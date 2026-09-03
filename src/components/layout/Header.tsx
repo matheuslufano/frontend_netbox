@@ -9,6 +9,7 @@ import {
   systemVersionUpdatedAt,
 } from "@/lib/version";
 import styles from "./header.module.css";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type ConnectionState = "checking" | "online" | "offline";
 
@@ -91,6 +92,7 @@ export default function Header() {
       </div>
 
       <div className={styles.headerTools} title={healthTitle}>
+        <ThemeToggle className={styles.themeToggle} />
         <div className={styles.versionPill}>
           <span>Versao</span>
           <strong>v{systemVersion}</strong>

@@ -111,6 +111,32 @@
   line-height: 1.6;
 }
 
+.reportsButton {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid rgba(255, 95, 52, 0.32);
+  border-radius: 13px;
+  background: linear-gradient(135deg, #ff5f34, #f97316);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 12px 24px rgba(249, 115, 22, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reportsButton:hover,
+.reportsButton:focus-visible {
+  outline: 0;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(249, 115, 22, 0.3);
+}
+
 /* =========================================
    RESUMO
 ========================================= */
@@ -399,6 +425,14 @@
 
   .header p {
     font-size: 14px;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .reportsButton {
+    width: 100%;
   }
 
   .actionCard {

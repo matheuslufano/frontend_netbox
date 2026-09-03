@@ -2908,6 +2908,12 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   gap: 2px;
 }
 
+.showcaseLinkMain { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.showcaseLinkTypeIcon { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 8px; font-size: 14px; }
+.showcaseLinkTypeWhatsapp { background: #dcfce7; color: #15803d; }
+.showcaseLinkTypeCampaign { background: #e0e7ff; color: #4338ca; }
+.showcaseLinkTypeIndividual { background: #fff1eb; color: #ea580c; }
+
 .showcaseLinkInfo strong,
 .showcaseLinkInfo span,
 .showcaseLinkInfo a {

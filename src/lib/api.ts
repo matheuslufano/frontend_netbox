@@ -120,6 +120,8 @@ export type AffiliateStats = {
     promoLink: string;
     whatsappLink: string;
     latestClickAt: string | null;
+    linkType: "individual" | "whatsapp" | "campaign";
+    campaignName: string | null;
     conversionEvents: AffiliateConversionEvent[];
   }[];
 };
@@ -195,6 +197,7 @@ export type LinkItem = {
     name: string;
     email: string | null;
     city: string | null;
+    photoUrl: string | null;
   } | null;
 };
 
@@ -254,6 +257,7 @@ export type CampaignConversionEvent = {
 export type CampaignLink = {
   id: number;
   name: string | null;
+  displayName: string | null;
   originalUrl: string;
   shortCode: string;
   promoLink: string;
@@ -262,11 +266,13 @@ export type CampaignLink = {
   conversions: number;
   conversionEvents: CampaignConversionEvent[];
   whatsappLink: string;
+  linkType: "individual" | "whatsapp" | "campaign";
   affiliate: {
     id: number;
     name: string;
     email: string | null;
     city: string | null;
+    photoUrl: string | null;
   } | null;
 };
 
@@ -306,6 +312,7 @@ export type AffiliateCode = {
 
 export type WhatsAppLinkItem = {
   id: number;
+  name: string;
   campaignId: number;
   affiliateId: number;
   affiliateCodeId: number;
@@ -328,6 +335,7 @@ export type WhatsAppLinkItem = {
 };
 
 export type SaveWhatsAppLinkPayload = {
+  name: string;
   campaignId?: number;
   affiliateId: number;
   affiliateCodeId?: number;

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import { consultarSaudeSistema } from "@/lib/api";
 import styles from "./header.module.css";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type ConnectionState = "checking" | "online" | "offline";
 
@@ -89,10 +90,9 @@ export default function CompactHeader() {
         </div>
       </div>
 
-      <div
-        className={styles.compactHealth}
-        title={`Backend: ${getConnectionLabel(backendState)}`}
-      >
+      <div className={styles.compactTools}>
+        <ThemeToggle className={styles.themeToggle} />
+        <div className={styles.compactHealth} title={`Backend: ${getConnectionLabel(backendState)}`}>
         <span
           className={`${styles.compactLed} ${
             backendState === "online"
@@ -104,6 +104,7 @@ export default function CompactHeader() {
           aria-hidden="true"
         />
         <span>Backend</span>
+        </div>
       </div>
     </header>
   );
