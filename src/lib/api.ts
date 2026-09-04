@@ -860,6 +860,10 @@ export async function editarLinkWhatsApp(
   return data;
 }
 
+export async function apagarLinkWhatsApp(id: number) {
+  await api.delete(`/whatsapp-links/${id}`);
+}
+
 export async function apagarCampanha(id: number) {
   await api.delete(`/campaigns/${id}`);
 }

@@ -292,6 +292,13 @@
 .kpiCard_green { --kpi-color: #16a34a; }
 .kpiCard_dark { --kpi-color: #111827; }
 
+:global(html[data-theme="dark"]) .kpiCard_blue { --kpi-color: #7088a6; }
+:global(html[data-theme="dark"]) .kpiCard_orange { --kpi-color: #c18462; }
+:global(html[data-theme="dark"]) .kpiCard_violet { --kpi-color: #8d7aa6; }
+:global(html[data-theme="dark"]) .kpiCard_cyan { --kpi-color: #648d96; }
+:global(html[data-theme="dark"]) .kpiCard_green { --kpi-color: #6f9479; }
+:global(html[data-theme="dark"]) .kpiCard_dark { --kpi-color: #858883; }
+
 .chartsGrid,
 .chartsGridEnhanced {
   display: grid;
@@ -633,6 +640,96 @@
 .inactiveBadge {
   background: #fee2e2;
   color: #991b1b;
+}
+
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .dashboardPanel,
+:global(html[data-theme="dark"]) .kpiCard,
+:global(html[data-theme="dark"]) .chartCard,
+:global(html[data-theme="dark"]) .chartCardLarge,
+:global(html[data-theme="dark"]) .chartCardCompact {
+  border-color: #565952;
+  background: #393a36;
+  color: var(--nb-text-primary);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+:global(html[data-theme="dark"]) .summaryBadge,
+:global(html[data-theme="dark"]) .totalAffiliates {
+  background: #454b52;
+  color: #bdc8d5;
+}
+
+:global(html[data-theme="dark"]) .summaryItem,
+:global(html[data-theme="dark"]) .affiliateRankingCard,
+:global(html[data-theme="dark"]) .funnelStep,
+:global(html[data-theme="dark"]) .healthItem,
+:global(html[data-theme="dark"]) .healthItemBox,
+:global(html[data-theme="dark"]) .quickInsights div {
+  border-color: #51544e;
+  background: #41423e;
+}
+
+:global(html[data-theme="dark"]) .summaryItem:hover,
+:global(html[data-theme="dark"]) .affiliateRankingCard:hover {
+  border-color: #686b64;
+  background: #474843;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+:global(html[data-theme="dark"]) .cardTitle,
+:global(html[data-theme="dark"]) .summaryValue,
+:global(html[data-theme="dark"]) .affiliateTitle,
+:global(html[data-theme="dark"]) .kpiCard strong,
+:global(html[data-theme="dark"]) .funnelStepHeader strong,
+:global(html[data-theme="dark"]) .barInfo strong,
+:global(html[data-theme="dark"]) .quickInsights strong {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .summaryLabel,
+:global(html[data-theme="dark"]) .affiliateSubtitle,
+:global(html[data-theme="dark"]) .kpiCard span,
+:global(html[data-theme="dark"]) .kpiCard small,
+:global(html[data-theme="dark"]) .chartSubtitle,
+:global(html[data-theme="dark"]) .funnelStep small,
+:global(html[data-theme="dark"]) .quickInsights span,
+:global(html[data-theme="dark"]) .quickInsights small {
+  color: var(--nb-text-secondary);
+}
+
+:global(html[data-theme="dark"]) .funnelTrack,
+:global(html[data-theme="dark"]) .barTrack {
+  background: #50524c;
+}
+
+:global(html[data-theme="dark"]) .efficiencyBox,
+:global(html[data-theme="dark"]) .efficiencyBoxEnhanced {
+  border-color: #5b584f;
+  background: linear-gradient(135deg, #484238, #41413d);
+}
+
+:global(html[data-theme="dark"]) .tableWrapper {
+  border-color: #565952;
+  background: #393a36;
+}
+
+:global(html[data-theme="dark"]) .tableHead {
+  background: #30312e;
+}
+
+:global(html[data-theme="dark"]) .tableRow:hover {
+  background: #464842;
+}
+
+:global(html[data-theme="dark"]) .activeBadge {
+  background: rgba(111, 148, 121, 0.2);
+  color: #afd0b8;
+}
+
+:global(html[data-theme="dark"]) .inactiveBadge {
+  background: rgba(174, 103, 103, 0.2);
+  color: #d7abab;
 }
 
 @media (max-width: 1120px) {

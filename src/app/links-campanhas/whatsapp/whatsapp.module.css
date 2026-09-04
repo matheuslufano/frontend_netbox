@@ -540,6 +540,251 @@
   color: #ea580c;
 }
 
+.rowActions .deleteIconButton {
+  color: #b91c1c;
+}
+
+.rowActions .deleteIconButton:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.actionPopover {
+  position: fixed;
+  z-index: 1500;
+  width: min(380px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.22);
+}
+
+.actionPopover::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(90deg, #ff5f34, #f97316);
+}
+
+.actionPopoverHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.actionPopoverHeader > div {
+  min-width: 0;
+}
+
+.actionPopoverHeader span,
+.actionPopoverHeader strong {
+  display: block;
+}
+
+.actionPopoverHeader span {
+  color: #ea580c;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.actionPopoverHeader strong {
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actionPopoverHeader > button {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.actionPopover form,
+.actionPopover form > label {
+  display: grid;
+  gap: 7px;
+}
+
+.actionPopover form {
+  gap: 12px;
+}
+
+.actionPopover form > label > span {
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.actionPopover input,
+.actionPopover select,
+.actionPopover textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 13px;
+}
+
+.actionPopover textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.affiliateChangeHint {
+  color: #9a3412;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.actionPopover .popoverCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.popoverCheckbox input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  padding: 0;
+  accent-color: #ff5f34;
+}
+
+.deleteConfirmation,
+.popoverError {
+  margin: 0;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.deleteConfirmation {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.popoverError {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.actionPopoverFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 3px;
+}
+
+.actionPopoverFooter button {
+  min-height: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 13px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.actionPopoverFooter .confirmSaveButton {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ff5f34, #f97316);
+  color: #ffffff;
+}
+
+.actionPopoverFooter .confirmDeleteButton {
+  border-color: transparent;
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.actionPopoverFooter button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+:global(html[data-theme="dark"]) .actionPopover {
+  border-color: var(--nb-border);
+  background: var(--nb-surface-elevated);
+  color: var(--nb-text-primary);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.34);
+}
+
+:global(html[data-theme="dark"]) .actionPopoverHeader > button,
+:global(html[data-theme="dark"]) .actionPopoverFooter button {
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
+}
+
+:global(html[data-theme="dark"]) .actionPopover input,
+:global(html[data-theme="dark"]) .actionPopover select,
+:global(html[data-theme="dark"]) .actionPopover textarea {
+  border-color: var(--nb-input-border);
+  background: var(--nb-input);
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .affiliateChangeHint {
+  color: #e2b397;
+}
+
+:global(html[data-theme="dark"]) .actionPopover .popoverCheckbox {
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+}
+
+:global(html[data-theme="dark"]) .deleteConfirmation {
+  background: rgba(193, 132, 98, 0.16);
+  color: #e2b397;
+}
+
+:global(html[data-theme="dark"]) .popoverError {
+  background: rgba(168, 102, 102, 0.18);
+  color: #e0adad;
+}
+
+:global(html[data-theme="dark"]) .actionPopoverFooter .confirmSaveButton {
+  border-color: transparent;
+  background: linear-gradient(135deg, #c56f51, #bd7952);
+  color: #ffffff;
+}
+
+:global(html[data-theme="dark"]) .actionPopoverFooter .confirmDeleteButton {
+  border-color: transparent;
+  background: #9f5e5e;
+  color: #ffffff;
+}
+
 .empty,
 .loading {
   padding: 28px;

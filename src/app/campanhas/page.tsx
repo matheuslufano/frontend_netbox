@@ -227,7 +227,7 @@ export default function Campanhas() {
     return (
       <div className={styles.page}>
         <h1>Campanhas</h1>
-        <p className={styles.error}>{error}</p>
+        <p className={styles.error} role="alert">{error}</p>
       </div>
     );
   }
@@ -501,7 +501,7 @@ function CampaignEditModal({ campaign, onClose, onSave }: { campaign: Campaign; 
             + Adicionar afiliado
           </button>
         </fieldset>
-        {modalError && <p className={styles.editError}>{modalError}</p>}
+        {modalError && <p className={styles.editError} role="alert">{modalError}</p>}
         <div className={styles.editActions}><button type="button" onClick={onClose}>Cancelar</button><button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</button></div>
       </form>
     </div>

@@ -1,16 +1,26 @@
 :root {
+  color-scheme: light;
   --nb-background: #f5f5f5;
+  --nb-background-secondary: #f1f5f9;
   --nb-surface: #ffffff;
   --nb-surface-secondary: #f8fafc;
   --nb-surface-elevated: #ffffff;
+  --nb-surface-hover: #fff7ed;
   --nb-text-primary: #111827;
   --nb-text-secondary: #64748b;
   --nb-text-muted: #94a3b8;
+  --nb-text-inverse: #ffffff;
   --nb-border: #e2e8f0;
+  --nb-border-secondary: #eef2f7;
   --nb-input: #ffffff;
+  --nb-input-border: #cbd5e1;
+  --nb-input-placeholder: #64748b;
+  --nb-input-disabled: #f1f5f9;
   --nb-hover: #f1f5f9;
+  --nb-selected: #fff1eb;
   --nb-overlay: rgba(15, 23, 42, 0.56);
   --nb-shadow: rgba(15, 23, 42, 0.1);
+  --nb-focus-ring: rgba(255, 95, 52, 0.22);
   --nb-orange: #ff5f34;
   --nb-orange-strong: #ea580c;
   --nb-success: #16a34a;
@@ -21,18 +31,33 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --nb-background: #181a1b;
-  --nb-surface: #1e2021;
-  --nb-surface-secondary: #242627;
-  --nb-surface-elevated: #292b2d;
-  --nb-text-primary: #e8e6e3;
-  --nb-text-secondary: #b4b1ad;
-  --nb-text-muted: #918f8c;
-  --nb-border: #3a3d3f;
-  --nb-input: #252729;
-  --nb-hover: #303335;
-  --nb-overlay: rgba(0, 0, 0, 0.72);
-  --nb-shadow: rgba(0, 0, 0, 0.34);
+  --nb-background: #262724;
+  --nb-background-secondary: #2d2e2b;
+  --nb-surface: #353632;
+  --nb-surface-secondary: #3d3e39;
+  --nb-surface-elevated: #464741;
+  --nb-surface-hover: #4c4943;
+  --nb-text-primary: #f3f1ed;
+  --nb-text-secondary: #d2cfca;
+  --nb-text-muted: #b3b0aa;
+  --nb-text-inverse: #242522;
+  --nb-border: #575a54;
+  --nb-border-secondary: #494c47;
+  --nb-input: #292a27;
+  --nb-input-border: #5d605a;
+  --nb-input-placeholder: #b0ada7;
+  --nb-input-disabled: #30312e;
+  --nb-hover: #444640;
+  --nb-selected: #51372d;
+  --nb-overlay: rgba(0, 0, 0, 0.68);
+  --nb-shadow: rgba(0, 0, 0, 0.3);
+  --nb-focus-ring: rgba(255, 112, 67, 0.24);
+  --nb-orange: #ff7043;
+  --nb-orange-strong: #f97316;
+  --nb-success: #35c46a;
+  --nb-error: #ff6b6b;
+  --nb-warning: #fbbf24;
+  --nb-info: #60a5fa;
 }
 
 body {
@@ -44,106 +69,278 @@ body {
 
 body,
 .main,
-.content {
-  transition: background-color 0.2s ease, color 0.2s ease;
+.content,
+input,
+textarea,
+select,
+button,
+[role="dialog"],
+[role="menu"] {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 :root[data-theme="dark"] .app-container {
-  background: linear-gradient(120deg, #512015 0%, #190d09 100%);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 132, 88, 0.2), transparent 34%),
+    linear-gradient(120deg, #8f3e27 0%, #bd4d28 100%);
 }
 
-:root[data-theme="dark"] :where([class*="compactHeader"],[class*="header_module"],[class*="header__"]) {
+:root[data-theme="dark"]
+  :where(
+    [class*="compactHeader"],
+    [class*="header_module"],
+    [class*="header__"]
+  ) {
   border-color: var(--nb-border) !important;
 }
 
 :root[data-theme="dark"] [class*="compactHeader"] {
-  background: linear-gradient(135deg, rgba(35,37,39,.97), rgba(24,26,27,.98)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(116, 55, 34, 0.94),
+    rgba(91, 43, 28, 0.96)
+  ) !important;
   color: var(--nb-text-primary) !important;
-  box-shadow: 0 14px 32px rgba(0,0,0,.3) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3) !important;
 }
 
 :root[data-theme="dark"] [class*="sidebar"] {
-  border-color: rgba(255,255,255,.1);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-:root[data-theme="dark"] :where(
-  main,
-  [class*="page"],
-  [class*="Page"]
-) {
+:root[data-theme="dark"] :where(main, [class*="page"], [class*="Page"]) {
   color: var(--nb-text-primary);
 }
 
-:root[data-theme="dark"] :where(
-  [class*="panel"], [class*="Panel"],
-  [class*="surface"], [class*="Surface"],
-  [class*="card"], [class*="Card"],
-  [class*="section"], [class*="Section"],
-  [class*="modal"], [class*="Modal"],
-  [class*="dropdown"], [class*="Dropdown"],
-  [class*="popover"], [class*="Popover"]
-):not([class*="Icon"]):not([class*="icon"]):not([class*="badge"]):not([class*="Badge"]):not([class*="status"]):not([class*="Status"]):not([class*="success"]):not([class*="error"]):not([class*="warning"]) {
+:root[data-theme="dark"]
+  :where(
+    [class*="panel"],
+    [class*="Panel"],
+    [class*="surface"],
+    [class*="Surface"],
+    [class*="card"],
+    [class*="Card"],
+    [class*="section"],
+    [class*="Section"],
+    [class*="modal"],
+    [class*="Modal"],
+    [class*="dropdown"],
+    [class*="Dropdown"],
+    [class*="popover"],
+    [class*="Popover"]
+  ):not([class*="Icon"]):not([class*="icon"]):not([class*="badge"]):not(
+    [class*="Badge"]
+  ):not([class*="status"]):not([class*="Status"]):not([class*="success"]):not(
+    [class*="error"]
+  ):not([class*="warning"]) {
   border-color: var(--nb-border) !important;
   color: var(--nb-text-primary);
 }
 
-:root[data-theme="dark"] :where(
-  [class*="panel"], [class*="Panel"],
-  [class*="surface"], [class*="Surface"],
-  [class*="card"], [class*="Card"],
-  [class*="formCard"], [class*="listCard"], [class*="dataSection"],
-  [class*="reportCard"], [class*="kpiCard"], [class*="summaryCard"],
-  [class*="tableWrap"], [class*="affiliateRanking"], [class*="affiliatePicker"],
-  [class*="modal"], [class*="Modal"], [class*="dropdown"], [class*="Dropdown"]
-):not([class*="Icon"]):not([class*="icon"]):not([class*="badge"]):not([class*="Badge"]):not([class*="status"]):not([class*="Status"]):not([class*="success"]):not([class*="error"]):not([class*="warning"]):not([class*="primaryButton"]):not([class*="deleteButton"]) {
-  background: var(--nb-surface) !important;
-  box-shadow: 0 12px 30px var(--nb-shadow);
+:root[data-theme="dark"]
+  :where(
+    [class*="panel"],
+    [class*="Panel"],
+    [class*="surface"],
+    [class*="Surface"],
+    [class*="card"],
+    [class*="Card"],
+    [class*="formCard"],
+    [class*="listCard"],
+    [class*="dataSection"],
+    [class*="reportCard"],
+    [class*="kpiCard"],
+    [class*="summaryCard"],
+    [class*="tableWrap"],
+    [class*="affiliateRanking"],
+    [class*="affiliatePicker"],
+    [class*="modal"],
+    [class*="Modal"],
+    [class*="dropdown"],
+    [class*="Dropdown"]
+  ):not([class*="Icon"]):not([class*="icon"]):not([class*="badge"]):not(
+    [class*="Badge"]
+  ):not([class*="status"]):not([class*="Status"]):not([class*="success"]):not(
+    [class*="error"]
+  ):not([class*="warning"]):not([class*="primaryButton"]):not(
+    [class*="deleteButton"]
+  ) {
+
 }
 
-:root[data-theme="dark"] :where([class*="title"],[class*="Title"],[class*="heading"],[class*="Heading"],[class*="name"],[class*="Name"]) {
+:root[data-theme="dark"]
+  :where(
+    [class*="title"],
+    [class*="Title"],
+    [class*="heading"],
+    [class*="Heading"],
+    [class*="name"],
+    [class*="Name"]
+  ) {
   color: var(--nb-text-primary);
 }
 
-:root[data-theme="dark"] :where([class*="subtitle"],[class*="Subtitle"],[class*="description"],[class*="Description"],[class*="caption"],[class*="Caption"]) {
+:root[data-theme="dark"]
+  :where(
+    [class*="subtitle"],
+    [class*="Subtitle"],
+    [class*="description"],
+    [class*="Description"],
+    [class*="caption"],
+    [class*="Caption"]
+  ) {
   color: var(--nb-text-secondary);
 }
 
-:root[data-theme="dark"] :where(h1,h2,h3,h4,h5,h6,strong,label,legend) {
+:root[data-theme="dark"] :where(h1, h2, h3, h4, h5, h6, strong, label, legend) {
   color: var(--nb-text-primary);
 }
 
-:root[data-theme="dark"] :where(p,small,[class*="subtitle"],[class*="description"],[class*="hint"],[class*="meta"]) {
+:root[data-theme="dark"]
+  :where(
+    p,
+    small,
+    [class*="subtitle"],
+    [class*="description"],
+    [class*="hint"],
+    [class*="meta"]
+  ) {
   color: var(--nb-text-secondary);
 }
 
-:root[data-theme="dark"] :where(input,select,textarea) {
-  border-color: var(--nb-border) !important;
+:root[data-theme="dark"] :where(input, select, textarea) {
+  border-color: var(--nb-input-border) !important;
   background: var(--nb-input) !important;
   color: var(--nb-text-primary) !important;
+  caret-color: var(--nb-text-primary);
+  box-shadow: none;
 }
 
-:root[data-theme="dark"] :where(input,textarea)::placeholder { color: var(--nb-text-muted); }
-:root[data-theme="dark"] :where(input,select,textarea):focus { outline-color: rgba(255,95,52,.55); border-color: var(--nb-orange) !important; }
+:root[data-theme="dark"] :where(input, textarea)::placeholder {
+  color: var(--nb-input-placeholder) !important;
+  opacity: 1;
+}
 
-:root[data-theme="dark"] table { color: var(--nb-text-primary); }
-:root[data-theme="dark"] :where(thead,thead tr,th) { border-color: var(--nb-border) !important; background-color: var(--nb-surface-secondary) !important; color: var(--nb-text-secondary) !important; }
-:root[data-theme="dark"] :where(td,tr) { border-color: var(--nb-border) !important; }
-:root[data-theme="dark"] tbody tr:hover { background-color: var(--nb-hover); }
+:root[data-theme="dark"] :where(input, select, textarea):focus,
+:root[data-theme="dark"] :where(input, select, textarea):focus-visible {
+  outline: 2px solid transparent;
+  border-color: var(--nb-orange) !important;
+  box-shadow: 0 0 0 3px var(--nb-focus-ring) !important;
+}
 
-:root[data-theme="dark"] :where([class*="empty"],[class*="Empty"],[class*="filter"],[class*="Filter"],[class*="search"],[class*="Search"],[class*="detail"],[class*="Detail"]):not(input):not(select):not(textarea):not([class*="Icon"]):not([class*="icon"]) {
+:root[data-theme="dark"] :where(input, select, textarea):disabled,
+:root[data-theme="dark"] :where(input, select, textarea)[readonly] {
+  border-color: var(--nb-border-secondary) !important;
+  background: var(--nb-input-disabled) !important;
+  color: var(--nb-text-muted) !important;
+  opacity: 1;
+}
+
+:root[data-theme="dark"] :where(option, optgroup) {
+  background: var(--nb-surface-elevated);
+  color: var(--nb-text-primary);
+}
+
+:root[data-theme="dark"] :where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--nb-orange);
+}
+
+:root[data-theme="dark"]
+  :where(input[type="date"], input[type="datetime-local"], input[type="time"]),
+:root[data-theme="dark"]
+  :where(
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"]
+  )::-webkit-calendar-picker-indicator {
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] input:-webkit-autofill,
+:root[data-theme="dark"] input:-webkit-autofill:hover,
+:root[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--nb-text-primary) !important;
+  caret-color: var(--nb-text-primary);
+  box-shadow: 0 0 0 1000px var(--nb-input) inset !important;
+  transition: background-color 9999s ease-out 0s;
+}
+
+:root[data-theme="dark"] table {
+  color: var(--nb-text-primary);
+}
+:root[data-theme="dark"] :where(thead, thead tr, th) {
+  border-color: var(--nb-border) !important;
+  background-color: var(--nb-surface-secondary) !important;
+  color: var(--nb-text-secondary) !important;
+}
+:root[data-theme="dark"] :where(td, tr) {
+  border-color: var(--nb-border) !important;
+}
+:root[data-theme="dark"] tbody tr:hover {
+  background-color: var(--nb-hover);
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="empty"],
+    [class*="Empty"],
+    [class*="filter"],
+    [class*="Filter"],
+    [class*="search"],
+    [class*="Search"],
+    [class*="detail"],
+    [class*="Detail"]
+  ):not(input):not(select):not(textarea):not([class*="Icon"]):not(
+    [class*="icon"]
+  ) {
   border-color: var(--nb-border) !important;
 }
 
-:root[data-theme="dark"] :where([class*="chartCard"],[class*="chartPlaceholder"],[class*="barTrack"],[class*="funnelStage"] > div) {
+:root[data-theme="dark"]
+  :where(
+    [class*="chartCard"],
+    [class*="chartPlaceholder"],
+    [class*="barTrack"],
+    [class*="funnelStage"] > div
+  ) {
   border-color: var(--nb-border) !important;
   background: var(--nb-surface-secondary) !important;
   color: var(--nb-text-primary);
 }
 
-:root[data-theme="dark"] :where([role="dialog"],[class*="tooltip"],[class*="Tooltip"]) {
+:root[data-theme="dark"]
+  :where(
+    dialog,
+    [role="dialog"],
+    [role="menu"],
+    [role="listbox"],
+    [class*="tooltip"],
+    [class*="Tooltip"],
+    [class*="popover"],
+    [class*="Popover"],
+    [class*="dropdown"],
+    [class*="Dropdown"]
+  ) {
   border-color: var(--nb-border) !important;
   background: var(--nb-surface-elevated) !important;
   color: var(--nb-text-primary) !important;
+  box-shadow: 0 18px 42px var(--nb-shadow);
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="modalOverlay"],
+    [class*="ModalOverlay"],
+    [class*="modalBackdrop"],
+    [class*="ModalBackdrop"],
+    [class*="drawerBackdrop"],
+    [class*="DrawerBackdrop"],
+    [class*="backdrop"],
+    [class*="Backdrop"]
+  ) {
+  background-color: var(--nb-overlay) !important;
 }
 
 :root[data-theme="dark"] img,
@@ -152,8 +349,238 @@ body,
   filter: none !important;
 }
 
+/*
+ * Compatibilidade direcionada para a paleta clara legada dos CSS Modules.
+ * Os seletores usam papéis visuais conhecidos e continuam válidos para nós
+ * criados depois da hidratação, inclusive conteúdo montado em portals no body.
+ */
+:root[data-theme="dark"]
+  :where(
+    [class*="page_"],
+    [class*="page__"],
+    [class*="workspace"],
+    [class*="dashboardShell"],
+    [class*="reportShell"],
+    [class*="contentArea"],
+    [class*="mainContent"]
+  ) {
+  color: var(--nb-text-primary);
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="glassShell"],
+    [class*="coveragePanel"],
+    [class*="tocantinsMapCard"],
+    [class*="conversionSummary"],
+    [class*="affiliateDetailsSurface"],
+    [class*="affiliateCard"],
+    [class*="efficiencyBoxEnhanced"],
+    [class*="preCadastroCard"],
+    [class*="contractItem"],
+    [class*="customerRow"],
+    [class*="infoItem"],
+    [class*="listCard"],
+    [class*="reportSelectField"],
+    [class*="chartPlaceholder"],
+    [class*="coverageRanking"]
+  ) {
+  border-color: var(--nb-border) !important;
+  color: var(--nb-text-primary) !important;
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="glassShell"],
+    [class*="conversionSummary"] [class*="conversionHero"],
+    [class*="affiliateCard"]
+  ) {
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 112, 67, 0.13), transparent 32%),
+    linear-gradient(
+      145deg,
+      var(--nb-surface) 0%,
+      var(--nb-surface-secondary) 100%
+    ) !important;
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="coveragePanel"],
+    [class*="tocantinsMapCard"],
+    [class*="coverageRanking"]
+  ) {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 112, 67, 0.13), transparent 34%),
+    radial-gradient(
+      circle at 98% 8%,
+      rgba(96, 165, 250, 0.09),
+      transparent 27%
+    ),
+    linear-gradient(
+      180deg,
+      var(--nb-surface) 0%,
+      var(--nb-surface-secondary) 100%
+    ) !important;
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="affiliateDetailsSurface"],
+    [class*="efficiencyBoxEnhanced"],
+    [class*="preCadastroCard"]
+  ) {
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 112, 67, 0.11), transparent 34%),
+    linear-gradient(
+      135deg,
+      var(--nb-surface-secondary) 0%,
+      var(--nb-surface) 100%
+    ) !important;
+}
+
+:root[data-theme="dark"] :where([class*="reportSelectField"] select) {
+  background:
+    linear-gradient(45deg, transparent 50%, var(--nb-orange) 50%) right 18px
+      center / 8px 8px no-repeat,
+    linear-gradient(
+      135deg,
+      var(--nb-input),
+      var(--nb-surface-secondary)
+    ) !important;
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="conversionDataModalBody"],
+    [class*="chartPlaceholder"],
+    [class*="listCard"],
+    [class*="infoItem"],
+    [class*="contractItem"],
+    [class*="customerRow"]
+  ) {
+  background: linear-gradient(
+    180deg,
+    var(--nb-surface) 0%,
+    var(--nb-surface-secondary) 100%
+  ) !important;
+}
+
+:root[data-theme="dark"] :where([class*="conversionDataModalHero"]) {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(96, 165, 250, 0.2),
+      transparent 34%
+    ),
+    linear-gradient(135deg, #171d29 0%, #202938 54%, #2458ad 100%) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] :where([class*="objectiveInfographicSold"]) {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 101, 52, 0.72),
+    rgba(20, 83, 45, 0.82)
+  ) !important;
+}
+
+:root[data-theme="dark"] :where([class*="objectiveInfographicProgress"]) {
+  background: linear-gradient(
+    135deg,
+    rgba(133, 77, 14, 0.72),
+    rgba(113, 63, 18, 0.82)
+  ) !important;
+}
+
+:root[data-theme="dark"] :where([class*="objectiveInfographicLost"]) {
+  background: linear-gradient(
+    135deg,
+    rgba(127, 29, 29, 0.72),
+    rgba(153, 27, 27, 0.82)
+  ) !important;
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="dealCardWon"],
+    [class*="outcomeWon"] [class*="resultAnimationCard"]
+  ) {
+  background: linear-gradient(
+    135deg,
+    rgba(20, 83, 45, 0.78),
+    var(--nb-surface)
+  ) !important;
+}
+
+:root[data-theme="dark"]
+  :where(
+    [class*="dealCardLost"],
+    [class*="dealCardCanceled"],
+    [class*="outcomeLost"] [class*="resultAnimationCard"]
+  ) {
+  background: linear-gradient(
+    135deg,
+    rgba(127, 29, 29, 0.7),
+    var(--nb-surface)
+  ) !important;
+}
+
+:root[data-theme="dark"] :where(a, button, [role="button"]):focus-visible {
+  outline: 3px solid var(--nb-focus-ring);
+  outline-offset: 2px;
+}
+
+:root[data-theme="dark"] :where(hr) {
+  border-color: var(--nb-border);
+}
+
+:root[data-theme="dark"] :where(svg:not([data-brand-icon])) {
+  forced-color-adjust: auto;
+}
+
+/* Valores calculados pela camada dinâmica para resíduos da paleta clara. */
+:root[data-theme="dark"] [data-nb-dark-background] {
+  background-color: var(--nb-dynamic-background) !important;
+}
+
+:root[data-theme="dark"] [data-nb-dark-gradient] {
+  background-image: var(--nb-dynamic-gradient) !important;
+}
+
+:root[data-theme="dark"] [data-nb-dark-text] {
+  color: var(--nb-dynamic-text) !important;
+}
+
+:root[data-theme="dark"] [data-nb-dark-border] {
+  border-top-color: var(--nb-dynamic-border-top, var(--nb-border)) !important;
+  border-right-color: var(
+    --nb-dynamic-border-right,
+    var(--nb-border)
+  ) !important;
+  border-bottom-color: var(
+    --nb-dynamic-border-bottom,
+    var(--nb-border)
+  ) !important;
+  border-left-color: var(--nb-dynamic-border-left, var(--nb-border)) !important;
+}
+
+:root[data-theme="dark"] [data-nb-dark-shadow] {
+  box-shadow: var(--nb-dynamic-shadow) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  body, .main, .content { transition: none; }
+  body,
+  .main,
+  .content,
+  input,
+  textarea,
+  select,
+  button,
+  [role="dialog"],
+  [role="menu"] {
+    transition: none;
+  }
 }
 
 * {
@@ -171,9 +598,12 @@ body {
   display: flex;
   min-height: 100vh;
   background: #ff7f5c;
-  background: linear-gradient(120deg, rgba(255, 127, 92, 1) 0%, rgba(194, 42, 0, 1) 100%);
+  background: linear-gradient(
+    120deg,
+    rgba(255, 127, 92, 1) 0%,
+    rgba(194, 42, 0, 1) 100%
+  );
 }
-
 
 /* Main */
 .main {
@@ -184,8 +614,7 @@ body {
 
 /* Content */
 .content {
-
-  margin: 30px ;
+  margin: 30px;
   border-radius: 15px;
   min-width: 0;
 }

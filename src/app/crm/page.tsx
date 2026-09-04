@@ -69,6 +69,8 @@ import {
   useRealtimeEvents,
   type RealtimeEventName,
 } from "@/lib/useRealtimeEvents";
+import { getDarkThemeColor } from "@/lib/themeColors";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import styles from "./crm.module.css";
 import CrmFilterHeader from "./CrmFilterHeader";
 
@@ -993,6 +995,7 @@ function getDealBorderColor(deal: Deal) {
 }
 
 export default function Crm() {
+  const { theme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [stages, setStages] = useState<KanbanColumn[]>(defaultStages);
   const [stageIcons, setStageIcons] = useState<Record<string, StageIcon>>({});
@@ -3304,7 +3307,14 @@ export default function Crm() {
         style={
           {
             "--deal-border": getDealBorderColor(deal),
-            ...(deal.cardColor ? { backgroundColor: deal.cardColor } : {}),
+            ...(deal.cardColor
+              ? {
+                  backgroundColor:
+                    theme === "dark"
+                      ? getDarkThemeColor(deal.cardColor, "surface")
+                      : deal.cardColor,
+                }
+              : {}),
           } as CSSProperties
         }
         draggable
@@ -5145,7 +5155,12 @@ export default function Crm() {
                       {
                         "--deal-border": getDealBorderColor(deal),
                         ...(deal.cardColor
-                          ? { backgroundColor: deal.cardColor }
+                          ? {
+                              backgroundColor:
+                                theme === "dark"
+                                  ? getDarkThemeColor(deal.cardColor, "surface")
+                                  : deal.cardColor,
+                            }
                           : {}),
                       } as CSSProperties
                     }

@@ -729,7 +729,7 @@ function SgpCustomersPanel({
   if (error) {
     return (
       <section className={styles.listCard}>
-        <p className={styles.error}>{error}</p>
+        <p className={styles.error} role="alert">{error}</p>
         <button
           type="button"
           className={styles.secondaryButton}

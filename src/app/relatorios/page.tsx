@@ -49,7 +49,7 @@ export default function Relatorios() {
     return (
       <div className={styles.page}>
         <h1>Relatórios</h1>
-        <p className={styles.error}>
+        <p className={styles.error} role="alert">
           {error}
         </p>
       </div>

@@ -297,8 +297,8 @@ export default function Afiliado() {
             </button>
           </div>
 
-          {error && <p style={{ color: "#b00020" }}>{error}</p>}
-          {message && <p style={{ color: "#137333" }}>{message}</p>}
+          {error && <p role="alert" style={{ color: "#b00020" }}>{error}</p>}
+          {message && <p role="status" style={{ color: "#137333" }}>{message}</p>}
         </form>
 
         <div className={styles.conteiner} style={{ marginTop: 24 }}>

@@ -36,6 +36,7 @@ import {
   editarConversao,
   getApiErrorMessage,
 } from "@/lib/api";
+import { notifySystem } from "@/components/SystemNotificationProvider";
 import { formatDisplayLink } from "@/lib/links";
 import { AffiliateDetail } from "./useRelatorios";
 import styles from "./relatorios.module.css";
@@ -209,6 +210,10 @@ export default function AffiliateDetails({
 
     try {
       await apagarLink(id);
+      notifySystem({
+        type: "success",
+        message: `Link "${label}" apagado com sucesso.`,
+      });
       refresh();
     } catch (error) {
       alert(getApiErrorMessage(error, "Não foi possível apagar o link."));
@@ -1481,6 +1486,10 @@ function ConversionFlowPanel({
       await editarConversao(id, normalizeConversionForm(editForm));
       cancelEditingConversion();
       setSelectedConversionForData(null);
+      notifySystem({
+        type: "success",
+        message: `Conversão #${id} atualizada com sucesso.`,
+      });
       onRefresh();
     } catch (error) {
       alert(
@@ -1502,6 +1511,10 @@ function ConversionFlowPanel({
 
     try {
       await apagarConversao(conversion.id);
+      notifySystem({
+        type: "success",
+        message: `Conversão #${conversion.id} apagada com sucesso.`,
+      });
       onRefresh();
     } catch (error) {
       alert(getApiErrorMessage(error, "Não foi possível apagar a conversão."));

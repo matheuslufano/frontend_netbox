@@ -210,13 +210,13 @@ export default function CriarProjetos() {
           </div>
 
           {error && (
-            <p className={styles.error}>
+            <p className={styles.error} role="alert">
               {error}
             </p>
           )}
 
           {message && (
-            <p className={styles.success}>
+            <p className={styles.success} role="status">
               {message}
             </p>
           )}

@@ -111,7 +111,7 @@ export default function Login() {
             <IoArrowForward aria-hidden="true" />
           </button>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && <p className={styles.error} role="alert">{error}</p>}
         </form>
       </section>
     </main>

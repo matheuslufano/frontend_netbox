@@ -941,8 +941,8 @@ export default function Configuracoes() {
           </aside>
 
           <main className={styles.settingsContent}>
-            {message && <p className={styles.success}>{message}</p>}
-            {error && <p className={styles.error}>{error}</p>}
+            {message && <p className={styles.success} role="status">{message}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
             {activeSettingsSection === "inicio" && (
               <section className={styles.aboutPanel}>

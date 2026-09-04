@@ -456,3 +456,51 @@
     font-size: 13px;
   }
 }
+
+:global(html[data-theme="dark"]) .page {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .panel {
+  border-color: var(--nb-border);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 112, 67, 0.15), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.09), transparent 30%),
+    linear-gradient(135deg, var(--nb-surface) 0%, var(--nb-surface-secondary) 100%);
+  box-shadow: 0 24px 54px var(--nb-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:global(html[data-theme="dark"]) .header h1,
+:global(html[data-theme="dark"]) .actionContent strong {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .header p,
+:global(html[data-theme="dark"]) .actionContent span {
+  color: var(--nb-text-secondary);
+}
+
+:global(html[data-theme="dark"]) .summaryCard,
+:global(html[data-theme="dark"]) .actionCard {
+  border-color: var(--nb-border);
+  background: linear-gradient(180deg, var(--nb-surface-elevated) 0%, var(--nb-surface) 100%);
+  box-shadow: 0 14px 30px var(--nb-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:global(html[data-theme="dark"]) .actionCard:hover,
+:global(html[data-theme="dark"]) .actionCard:focus-visible {
+  border-color: rgba(255, 112, 67, 0.65);
+  background: linear-gradient(180deg, var(--nb-surface-hover) 0%, var(--nb-surface-elevated) 100%);
+  box-shadow: 0 22px 42px var(--nb-shadow), 0 0 0 4px var(--nb-focus-ring);
+}
+
+:global(html[data-theme="dark"]) .actionArrow,
+:global(html[data-theme="dark"]) .actionFooter small,
+:global(html[data-theme="dark"]) .kicker {
+  background: var(--nb-selected);
+  color: var(--nb-orange);
+}
+
+:global(html[data-theme="dark"]) .actionFooter {
+  border-color: var(--nb-border-secondary);
+}

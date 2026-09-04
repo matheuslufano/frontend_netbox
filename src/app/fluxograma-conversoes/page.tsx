@@ -20,7 +20,7 @@ export default function FluxogramaConversoesPage() {
     return (
       <div className={styles.page}>
         <h1>Fluxograma de conversões</h1>
-        <p className={styles.error}>{error}</p>
+        <p className={styles.error} role="alert">{error}</p>
       </div>
     );
   }

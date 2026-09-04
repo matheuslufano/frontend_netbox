@@ -1,0 +1,161 @@
+.notificationRegion {
+  position: fixed;
+  z-index: 10050;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  width: min(390px, calc(100vw - 36px));
+  gap: 12px;
+  pointer-events: none;
+}
+
+.notification {
+  --notification-accent: var(--nb-info);
+  --notification-accent-soft: color-mix(
+    in srgb,
+    var(--notification-accent) 13%,
+    transparent
+  );
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 34px;
+  align-items: start;
+  min-height: 82px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--notification-accent) 35%, var(--nb-border));
+  border-radius: 15px;
+  background:
+    radial-gradient(
+      circle at 0 0,
+      var(--notification-accent-soft),
+      transparent 46%
+    ),
+    var(--nb-surface-elevated);
+  color: var(--nb-text-primary);
+  box-shadow:
+    0 18px 44px color-mix(in srgb, var(--nb-shadow) 88%, transparent),
+    0 3px 10px color-mix(in srgb, var(--nb-shadow) 70%, transparent);
+  pointer-events: auto;
+  animation: notificationEnter 220ms ease-out both;
+}
+
+.success {
+  --notification-accent: var(--nb-success);
+}
+
+.error {
+  --notification-accent: var(--nb-error);
+}
+
+.warning {
+  --notification-accent: var(--nb-warning);
+}
+
+.info {
+  --notification-accent: var(--nb-info);
+}
+
+.icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  margin: 15px 0 0 14px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--notification-accent-soft);
+  color: var(--notification-accent);
+  font-size: 20px;
+}
+
+.content {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding: 15px 10px 18px 13px;
+}
+
+.content strong {
+  color: var(--nb-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.content > span {
+  overflow-wrap: anywhere;
+  color: var(--nb-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.closeButton {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  margin: 9px 8px 0 0;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--nb-text-muted);
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  border-color: var(--nb-border);
+  background: var(--nb-hover);
+  color: var(--nb-text-primary);
+}
+
+.closeButton:focus-visible {
+  outline: 3px solid var(--nb-focus-ring);
+  outline-offset: 1px;
+}
+
+.progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  transform-origin: left;
+  border-radius: 0 3px 3px 0;
+  background: var(--notification-accent);
+  animation: notificationProgress var(--notification-duration) linear forwards;
+}
+
+@keyframes notificationEnter {
+  from {
+    transform: translate3d(22px, -5px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes notificationProgress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .notificationRegion {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification,
+  .progress {
+    animation: none;
+  }
+}

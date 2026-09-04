@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import { consultarSaudeSistema } from "@/lib/api";
 import styles from "./header.module.css";
@@ -20,8 +21,24 @@ const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/relatorios": "Relatórios",
   "/sgp": "SGP",
+  "/links-campanhas": "Links e Campanhas",
+  "/links-campanhas/whatsapp": "WhatsApp",
+  "/links-campanhas/relatorios": "Relat\u00f3rios",
+  "/links-campanhas/relatorios/whatsapp": "WhatsApp",
+  "/links-campanhas/relatorios/link": "Link Individual",
+  "/links-campanhas/relatorios/campanha": "Campanha",
+  "/configuracoes": "Configura\u00e7\u00f5es",
+  "/crm": "CRM",
+  "/fluxograma-conversoes": "Fluxograma",
   "/integracoes": "Integrações",
 };
+
+function formatRouteSegment(segment: string) {
+  if (/^\d+$/.test(segment)) return "Detalhes";
+  return decodeURIComponent(segment)
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 export default function CompactHeader() {
   const pathname = usePathname();
@@ -56,18 +73,12 @@ export default function CompactHeader() {
     };
   }, []);
 
-  const title = useMemo(() => {
-    const exactLabel = routeLabels[pathname || ""];
-
-    if (exactLabel) {
-      return exactLabel;
-    }
-
-    const section = `/${String(pathname || "")
-      .split("/")
-      .filter(Boolean)[0] || ""}`;
-
-    return routeLabels[section] || "Painel";
+  const breadcrumbs = useMemo(() => {
+    const segments = String(pathname || "").split("/").filter(Boolean);
+    return segments.map((segment, index) => {
+      const href = `/${segments.slice(0, index + 1).join("/")}`;
+      return { href, label: routeLabels[href] || formatRouteSegment(segment) };
+    });
   }, [pathname]);
 
   return (
@@ -83,11 +94,26 @@ export default function CompactHeader() {
           <FiArrowLeft aria-hidden="true" />
         </button>
 
-        <div className={styles.compactBrand}>
-          <span>Painel Netbox</span>
-          <FiChevronRight aria-hidden="true" />
-          <strong>{title}</strong>
-        </div>
+        <nav className={styles.compactBrand} aria-label="NavegaÃ§Ã£o estrutural">
+          <Link href="/dashboard" className={styles.breadcrumbLink}>
+            Painel Netbox
+          </Link>
+          {breadcrumbs.map((breadcrumb, index) => {
+            const current = index === breadcrumbs.length - 1;
+            return (
+              <span className={styles.breadcrumbItem} key={breadcrumb.href}>
+                <FiChevronRight aria-hidden="true" />
+                {current ? (
+                  <strong aria-current="page">{breadcrumb.label}</strong>
+                ) : (
+                  <Link href={breadcrumb.href} className={styles.breadcrumbLink}>
+                    {breadcrumb.label}
+                  </Link>
+                )}
+              </span>
+            );
+          })}
+        </nav>
       </div>
 
       <div className={styles.compactTools}>
