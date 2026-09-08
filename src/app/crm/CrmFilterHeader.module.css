@@ -274,3 +274,62 @@
 
 /* Global notifications share the final toolbar cell with filters. */
 .panelWrap { display:flex; align-items:center; gap:8px; }
+
+.themeToggle {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #d3dee4;
+  border-radius: 9px;
+  background: #f4f7f8;
+  color: #36566b;
+  cursor: pointer;
+}
+
+.themeToggle:hover,
+.themeToggle:focus-visible {
+  border-color: #a8b6bc;
+  background: #e9eef0;
+  outline: 0;
+}
+
+:global(html[data-theme="dark"]) .themeToggle {
+  border-color: #555852;
+  background: #474039;
+  color: #e2b18d;
+}
+
+:global(html[data-theme="dark"]) .themeToggle:hover,
+:global(html[data-theme="dark"]) .themeToggle:focus-visible {
+  border-color: #776354;
+  background: #574940;
+}
+
+:global(html[data-theme="dark"]) .bar,
+:global(html[data-theme="dark"]) .panel,
+:global(html[data-theme="dark"]) .panel footer {
+  border-color: #555852;
+  background: #30312e;
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .control,
+:global(html[data-theme="dark"]) .filterButton,
+:global(html[data-theme="dark"]) .conditions article select,
+:global(html[data-theme="dark"]) .conditions article input {
+  border-color: #555852;
+  background: #292a27;
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .panel footer button {
+  background: #474039;
+  color: #e2b18d;
+}
+
+:global(html[data-theme="dark"]) .panel footer .apply {
+  background: #8f6048;
+  color: #fff8f2;
+}

@@ -873,3 +873,83 @@
     min-height: 200px;
   }
 }
+
+/* Dark mode: graphite surfaces keep the WhatsApp accent semantic without
+   allowing the page to turn into a saturated blue dashboard. */
+:global(html[data-theme="dark"]) .page {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .header,
+:global(html[data-theme="dark"]) .formCard,
+:global(html[data-theme="dark"]) .previewCard,
+:global(html[data-theme="dark"]) .resultCard,
+:global(html[data-theme="dark"]) .listCard {
+  border-color: var(--nb-border);
+  background: linear-gradient(145deg, #3a3b37 0%, #30312e 100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+:global(html[data-theme="dark"]) .header h1,
+:global(html[data-theme="dark"]) .sectionTitle h2,
+:global(html[data-theme="dark"]) .resultCard h2,
+:global(html[data-theme="dark"]) .listHeader h2 {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .header p,
+:global(html[data-theme="dark"]) .back,
+:global(html[data-theme="dark"]) .sectionTitle p,
+:global(html[data-theme="dark"]) .field small,
+:global(html[data-theme="dark"]) .info,
+:global(html[data-theme="dark"]) .empty,
+:global(html[data-theme="dark"]) .loading {
+  color: var(--nb-text-secondary);
+}
+
+:global(html[data-theme="dark"]) .field > span,
+:global(html[data-theme="dark"]) .codeBox legend {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .field input,
+:global(html[data-theme="dark"]) .field select,
+:global(html[data-theme="dark"]) .editor textarea,
+:global(html[data-theme="dark"]) .resultCard input {
+  border-color: var(--nb-input-border);
+  background: #292a27;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .codeBox,
+:global(html[data-theme="dark"]) .toolbar,
+:global(html[data-theme="dark"]) .segmented label {
+  border-color: var(--nb-border);
+  background: #2d2e2b;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .heroIcon {
+  background: linear-gradient(135deg, #1d5a4d, #2b806b);
+  box-shadow: 0 12px 24px rgba(22, 86, 72, 0.28);
+}
+
+:global(html[data-theme="dark"]) .chatArea {
+  background: #2e302d;
+}
+
+:global(html[data-theme="dark"]) .customerBubble,
+:global(html[data-theme="dark"]) .messageBubble {
+  background: #28483d;
+  color: #e6eee9;
+}
+
+:global(html[data-theme="dark"]) .attendantBubble {
+  background: #3b403c;
+  color: #f0f1ed;
+}
+
+:global(html[data-theme="dark"]) .monospace {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--nb-text-primary);
+}

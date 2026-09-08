@@ -2819,3 +2819,92 @@
     animation: none !important;
   }
 }
+
+/* Dark mode uses graphite surfaces throughout the CRM. Stage/status colors
+   remain semantic, while the surrounding UI no longer reads as blue. */
+:global(html[data-theme="dark"]) .page {
+  color: var(--nb-text-primary);
+  background: var(--nb-background);
+}
+
+:global(html[data-theme="dark"]) .toolbar,
+:global(html[data-theme="dark"]) .filters,
+:global(html[data-theme="dark"]) .summaryBar,
+:global(html[data-theme="dark"]) .board,
+:global(html[data-theme="dark"]) .column,
+:global(html[data-theme="dark"]) .detailPanel,
+:global(html[data-theme="dark"]) .sidePanel,
+:global(html[data-theme="dark"]) .modal,
+:global(html[data-theme="dark"]) .stageModal,
+:global(html[data-theme="dark"]) .taskModal,
+:global(html[data-theme="dark"]) .cardEditModal,
+:global(html[data-theme="dark"]) .archiveModal,
+:global(html[data-theme="dark"]) .optionModal,
+:global(html[data-theme="dark"]) .syncModal {
+  border-color: #555852;
+  background: linear-gradient(145deg, #393a36, #30312e);
+  color: var(--nb-text-primary);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+:global(html[data-theme="dark"]) .dealCard,
+:global(html[data-theme="dark"]) .cardMeta,
+:global(html[data-theme="dark"]) .cardValueRow,
+:global(html[data-theme="dark"]) .activity,
+:global(html[data-theme="dark"]) .columnHeader {
+  border-color: #555852;
+  background: #30312e;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) input,
+:global(html[data-theme="dark"]) textarea,
+:global(html[data-theme="dark"]) select {
+  border-color: #555852;
+  background: #292a27;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .createButton,
+:global(html[data-theme="dark"]) .filterButton,
+:global(html[data-theme="dark"]) .iconButton,
+:global(html[data-theme="dark"]) .columnTools button {
+  border-color: #65594f;
+  background: #474039;
+  color: #e2b18d;
+}
+
+:global(html[data-theme="dark"]) .createButton:hover,
+:global(html[data-theme="dark"]) .filterButton:hover,
+:global(html[data-theme="dark"]) .iconButton:hover,
+:global(html[data-theme="dark"]) .columnTools button:hover {
+  background: #574940;
+  color: #f0c2a0;
+}
+
+:global(html[data-theme="dark"]) .dealName,
+:global(html[data-theme="dark"]) .columnTitle,
+:global(html[data-theme="dark"]) .toolbar h1,
+:global(html[data-theme="dark"]) .detailPanel h2,
+:global(html[data-theme="dark"]) .modal h2,
+:global(html[data-theme="dark"]) .stageModal h2,
+:global(html[data-theme="dark"]) .taskModal h2 {
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .cardMeta span,
+:global(html[data-theme="dark"]) .cardValueRow span,
+:global(html[data-theme="dark"]) .activity span,
+:global(html[data-theme="dark"]) .activity time,
+:global(html[data-theme="dark"]) .helperText {
+  color: #c5c1b9;
+}
+
+:global(html[data-theme="dark"]) .statusMiniMenu,
+:global(html[data-theme="dark"]) .generalMenu,
+:global(html[data-theme="dark"]) .periodMenu,
+:global(html[data-theme="dark"]) .cardMenu {
+  border-color: #555852;
+  background: #30312e;
+  color: var(--nb-text-primary);
+}

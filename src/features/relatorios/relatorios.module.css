@@ -175,6 +175,84 @@
   }
 }
 
+/* The report screen uses many legacy light surfaces. Keep its dark palette
+   neutral and warm so links and metrics remain readable without neon blues. */
+:global(html[data-theme="dark"]) .page,
+:global(html[data-theme="dark"]) .transparentPage {
+  color: var(--nb-text-primary);
+  background: transparent;
+}
+
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .affiliateDetailsSurface,
+:global(html[data-theme="dark"]) .affiliateCard,
+:global(html[data-theme="dark"]) .conversionFlowPanel,
+:global(html[data-theme="dark"]) .conversionFlowCard,
+:global(html[data-theme="dark"]) .conversionReportMain,
+:global(html[data-theme="dark"]) .reportProfileCard,
+:global(html[data-theme="dark"]) .conversionObjectiveCard {
+  border-color: var(--nb-border);
+  background: linear-gradient(145deg, #393a36, #30312e);
+  color: var(--nb-text-primary);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+}
+
+:global(html[data-theme="dark"]) .searchField,
+:global(html[data-theme="dark"]) .searchField input,
+:global(html[data-theme="dark"]) .reportSelectField select,
+:global(html[data-theme="dark"]) .conversionEditGrid input,
+:global(html[data-theme="dark"]) .conversionEditGrid textarea {
+  border-color: var(--nb-input-border);
+  background: #292a27;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .summaryItem,
+:global(html[data-theme="dark"]) .statBox,
+:global(html[data-theme="dark"]) .conversionStageCard,
+:global(html[data-theme="dark"]) .stageContentCard,
+:global(html[data-theme="dark"]) .affiliateFilterDropdown,
+:global(html[data-theme="dark"]) .contactConversationModal {
+  border-color: var(--nb-border);
+  background: #30312e;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .title,
+:global(html[data-theme="dark"]) .cardTitle,
+:global(html[data-theme="dark"]) .affiliateName,
+:global(html[data-theme="dark"]) .conversionReportTitleRow h3,
+:global(html[data-theme="dark"]) .summaryValue {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .summaryLabel,
+:global(html[data-theme="dark"]) .emptyText,
+:global(html[data-theme="dark"]) .emptyInlineText,
+:global(html[data-theme="dark"]) .affiliateId,
+:global(html[data-theme="dark"]) .linkLabel {
+  color: var(--nb-text-secondary);
+}
+
+:global(html[data-theme="dark"]) .clearSearchButton {
+  background: #4a4038;
+  color: #e0a67e;
+}
+
+:global(html[data-theme="dark"]) .clearSearchButton:hover {
+  background: #58483d;
+}
+
+:global(html[data-theme="dark"]) .link,
+:global(html[data-theme="dark"]) .linkPreviewText a {
+  color: #d2a887;
+}
+
+:global(html[data-theme="dark"]) .conversionStageDone {
+  border-color: #66806d;
+  background: #354238;
+}
+
 /* Acentos dessaturados exclusivos do modo escuro. */
 :global(html[data-theme="dark"]) .summaryBadge,
 :global(html[data-theme="dark"]) .totalAffiliates,
@@ -251,7 +329,11 @@
 
 :global(html[data-theme="dark"]) .conversionDataModalHero {
   background:
-    radial-gradient(circle at top right, rgba(112, 136, 166, 0.2), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(112, 136, 166, 0.2),
+      transparent 34%
+    ),
     linear-gradient(135deg, #30343a 0%, #3b424a 54%, #52657a 100%) !important;
 }
 /* =========================
@@ -389,7 +471,11 @@
   border: 1px solid rgba(255, 255, 255, 0.68);
   border-radius: 14px;
   padding: 12px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.74));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(255, 255, 255, 0.74)
+  );
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
@@ -527,8 +613,11 @@
   padding: 22px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.78));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(248, 250, 252, 0.78)
+  );
   box-shadow:
     0 18px 45px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.86);
@@ -567,8 +656,11 @@
   padding: 14px;
   border: 1px solid rgba(255, 116, 79, 0.22);
   border-radius: 14px;
-  background:
-    linear-gradient(135deg, rgba(255, 247, 243, 0.96), rgba(255, 255, 255, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 247, 243, 0.96),
+    rgba(255, 255, 255, 0.9)
+  );
   box-shadow: 0 12px 24px rgba(255, 116, 79, 0.08);
 }
 
@@ -599,7 +691,8 @@
   border-color: rgba(255, 116, 79, 0.34);
   padding: 0 38px 0 16px;
   background:
-    linear-gradient(45deg, transparent 50%, #ff744f 50%) right 18px center / 8px 8px no-repeat,
+    linear-gradient(45deg, transparent 50%, #ff744f 50%) right 18px center / 8px
+      8px no-repeat,
     linear-gradient(135deg, #ffffff, #fff7f3);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
   appearance: none;
@@ -966,7 +1059,7 @@
   display: grid;
   max-height: min(58vh, 460px);
   gap: 8px;
-/*
+  /*
 aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas para a base de ruas para a história era bem assim o modereiro seguro informado a tristez e a ideia que mim se parece para o seu ensino falou fazer uma pesquisa para seguir a rodinha existiu no ser tipo de vídeo para se desaparecer ela tá numa receita as áreas que desainda era voltada para a cima que a esquina tem a flor de poste a igreja do caçador fechado de acordo de três marido a sol da vida existe muitos serviços em certo julho paulista mercado era de carinho fácil da conforme se ganha pior que tem tido várias peleiras com inspiração que ele não morreu que dentro se mexeu se mexer caraca não tinha muita marida é a feira coberto era bonito é que a noite está aberto a essa loja que é central tá aberto até hoje que tá aberta acho que sou eu tô para isso também tá aberto né hoje essa daqui também essa loja de bíblia que gosta pra hoje o techor ou no lição e dez data aberta é o sobricar isso não sabia que aquela que eu falei a no pino que é a virada não achei que era antigo mental não é nada só que me ainda será galera chegar no artigo na tarefa vinte e sete a bem mais verde era bem marcado bastante é a vítima onde é subido pela servida de sábado ser empagado se a realização que nós temos de e ele está subindo que uma anexidade só no meio responde é uma resposta o galo que dole de sexto caminho de resposta do que desde o que pode destruir mas a gente não tinha ressáprio a informação seja a receber os grupos que são recebendo cada e quarenta e meta e disse quanto e se recebe responder isso no presídio
 */
   padding: 2px;
@@ -1074,8 +1167,11 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   padding: 10px 14px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.8));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(248, 250, 252, 0.8)
+  );
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.82),
     0 10px 22px rgba(15, 23, 42, 0.08);
@@ -1095,20 +1191,29 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 
 .objectiveInfographicSold {
   border-color: rgba(22, 101, 52, 0.28);
-  background:
-    linear-gradient(135deg, rgba(220, 252, 231, 0.98), rgba(187, 236, 179, 0.88));
+  background: linear-gradient(
+    135deg,
+    rgba(220, 252, 231, 0.98),
+    rgba(187, 236, 179, 0.88)
+  );
 }
 
 .objectiveInfographicProgress {
   border-color: rgba(161, 98, 7, 0.24);
-  background:
-    linear-gradient(135deg, rgba(254, 249, 195, 0.98), rgba(237, 240, 131, 0.86));
+  background: linear-gradient(
+    135deg,
+    rgba(254, 249, 195, 0.98),
+    rgba(237, 240, 131, 0.86)
+  );
 }
 
 .objectiveInfographicLost {
   border-color: rgba(185, 28, 28, 0.28);
-  background:
-    linear-gradient(135deg, rgba(254, 226, 226, 0.96), rgba(255, 96, 70, 0.84));
+  background: linear-gradient(
+    135deg,
+    rgba(254, 226, 226, 0.96),
+    rgba(255, 96, 70, 0.84)
+  );
 }
 
 .objectiveStageIcon,
@@ -1480,7 +1585,6 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
     box-shadow 0.2s ease,
     transform 0.2s ease;
 }
-
 
 .conversionStagePending {
   border-color: #dbe3ef;
@@ -2724,7 +2828,9 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .showcaseContactCard:hover {
@@ -2777,7 +2883,9 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 
 .showcaseContactIdentity small {
   color: #d24719;
-  font: 800 9px/1.2 ui-monospace, monospace;
+  font:
+    800 9px/1.2 ui-monospace,
+    monospace;
 }
 
 .showcaseContactMetric {
@@ -2988,11 +3096,33 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   gap: 2px;
 }
 
-.showcaseLinkMain { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.showcaseLinkTypeIcon { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 8px; font-size: 14px; }
-.showcaseLinkTypeWhatsapp { background: #dcfce7; color: #15803d; }
-.showcaseLinkTypeCampaign { background: #e0e7ff; color: #4338ca; }
-.showcaseLinkTypeIndividual { background: #fff1eb; color: #ea580c; }
+.showcaseLinkMain {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.showcaseLinkTypeIcon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.showcaseLinkTypeWhatsapp {
+  background: #dcfce7;
+  color: #15803d;
+}
+.showcaseLinkTypeCampaign {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+.showcaseLinkTypeIndividual {
+  background: #fff1eb;
+  color: #ea580c;
+}
 
 .showcaseLinkInfo strong,
 .showcaseLinkInfo span,
@@ -4008,7 +4138,11 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   align-items: start;
   padding: 22px 24px;
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.18), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(37, 99, 235, 0.18),
+      transparent 34%
+    ),
     linear-gradient(135deg, #0f172a 0%, #1e293b 54%, #2563eb 100%);
   color: #fff;
 }
@@ -4125,9 +4259,6 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   }
 }
 
-
-
-
 /* =========================================================
    AJUSTE FINAL - RELATÓRIOS / CONVERSÕES PROFISSIONAL
    Implementado para deixar a tela mais limpa e o filtro
@@ -4137,7 +4268,6 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 .page {
   padding: 28px;
   color: #fef9f7;
-  
 }
 
 .title {
@@ -4158,8 +4288,6 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 .affiliateCard {
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 20px;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   box-shadow:
     0 16px 36px rgba(15, 23, 42, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
@@ -4260,9 +4388,6 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   margin-top: 28px;
   padding: 22px;
   border-radius: 24px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255, 95, 52, 0.09), transparent 32%),
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
 .sectionHeader {
@@ -4706,7 +4831,11 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 
 .conversionDataModalHero {
   background:
-    radial-gradient(circle at top right, rgba(255, 95, 52, 0.26), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 95, 52, 0.26),
+      transparent 34%
+    ),
     linear-gradient(135deg, #111827 0%, #1f2937 54%, #ff5f34 100%);
 }
 
@@ -5074,7 +5203,6 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
     min-height: 420px;
   }
 }
-
 
 /* =========================================================
    CABECALHO COMPACTO - FLUXOGRAMA / CONVERSOES
@@ -5579,4 +5707,158 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+/* Final dark palette overrides. These are intentionally at the end of the
+   module so legacy light declarations above cannot reintroduce saturated blue
+   surfaces after the theme has been applied. */
+:global(html[data-theme="dark"]) .page,
+:global(html[data-theme="dark"]) .affiliateDetailsSurface,
+:global(html[data-theme="dark"]) .conversionReportShell,
+:global(html[data-theme="dark"]) .conversionFlowPanel {
+  color: var(--nb-text-primary);
+  background: transparent;
+}
+
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .affiliateCard,
+:global(html[data-theme="dark"]) .conversionReportMain,
+:global(html[data-theme="dark"]) .conversionFlowCard,
+:global(html[data-theme="dark"]) .conversionObjectiveCard,
+:global(html[data-theme="dark"]) .reportProfileCard,
+:global(html[data-theme="dark"]) .conversionAffiliatePanel,
+:global(html[data-theme="dark"]) .conversionReportFilters,
+:global(html[data-theme="dark"]) .conversionDataModalCard {
+  border-color: #555852;
+  background: linear-gradient(145deg, #393a36, #30312e);
+  color: var(--nb-text-primary);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+}
+
+:global(html[data-theme="dark"]) .summaryItem,
+:global(html[data-theme="dark"]) .statBox,
+:global(html[data-theme="dark"]) .conversionStageCard,
+:global(html[data-theme="dark"]) .stageContentCard,
+:global(html[data-theme="dark"]) .affiliateFilterDropdown,
+:global(html[data-theme="dark"]) .conversionViewSwitcher,
+:global(html[data-theme="dark"]) .conversionReportMetrics {
+  border-color: #555852;
+  background: #2f302d;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .searchField,
+:global(html[data-theme="dark"]) .searchField input,
+:global(html[data-theme="dark"]) .reportSelectField select,
+:global(html[data-theme="dark"]) .conversionEditGrid input,
+:global(html[data-theme="dark"]) .conversionEditGrid textarea,
+:global(html[data-theme="dark"]) .clientDataList,
+:global(html[data-theme="dark"]) .tableWrapper {
+  border-color: #555852;
+  background: #292a27;
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .summaryBadge,
+:global(html[data-theme="dark"]) .totalAffiliates,
+:global(html[data-theme="dark"]) .searchCount,
+:global(html[data-theme="dark"]) .positionBadge,
+:global(html[data-theme="dark"]) .refreshButton,
+:global(html[data-theme="dark"]) .copyButton,
+:global(html[data-theme="dark"]) .conversionFilterNotice button,
+:global(html[data-theme="dark"]) .affiliateFilterTrigger,
+:global(html[data-theme="dark"]) .affiliateFilterButton {
+  border-color: #62584e;
+  background: #474039;
+  color: #e1b18c;
+  box-shadow: none;
+}
+
+:global(html[data-theme="dark"]) .refreshButton:hover:not(:disabled),
+:global(html[data-theme="dark"]) .copyButton:hover,
+:global(html[data-theme="dark"]) .conversionFilterNotice button:hover,
+:global(html[data-theme="dark"]) .affiliateFilterButton:hover {
+  background: #574940;
+  color: #f0c3a1;
+}
+
+:global(html[data-theme="dark"]) .title,
+:global(html[data-theme="dark"]) .cardTitle,
+:global(html[data-theme="dark"]) .affiliateName,
+:global(html[data-theme="dark"]) .summaryValue,
+:global(html[data-theme="dark"]) .conversionReportTitleRow h3,
+:global(html[data-theme="dark"]) .linkNameHighlight {
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .summaryLabel,
+:global(html[data-theme="dark"]) .emptyText,
+:global(html[data-theme="dark"]) .emptyInlineText,
+:global(html[data-theme="dark"]) .affiliateId,
+:global(html[data-theme="dark"]) .linkLabel,
+:global(html[data-theme="dark"]) .conversionReportFilters label {
+  color: #c5c1b9;
+}
+
+:global(html[data-theme="dark"]) .link,
+:global(html[data-theme="dark"]) .linkPreviewText a {
+  color: #d3aa86;
+}
+
+:global(html[data-theme="dark"]) .clearSearchButton {
+  border: 1px solid #62584e;
+  background: #474039;
+  color: #e1b18c;
+}
+
+:global(html[data-theme="dark"]) .conversionStageDone {
+  border-color: #66806d;
+  background: #354238;
+}
+
+:global(html[data-theme="dark"]) .conversionDataModalHero {
+  background: linear-gradient(135deg, #343735, #45443d) !important;
+}
+
+/* Neutralize the remaining blue panels used by the affiliate summary. */
+:global(html[data-theme="dark"]) .conversionHero,
+:global(html[data-theme="dark"]) .conversionRanking,
+:global(html[data-theme="dark"]) .affiliateDetailsSurface,
+:global(html[data-theme="dark"]) .affiliateCard,
+:global(html[data-theme="dark"]) .flowMetric {
+  border-color: #555852;
+  background: linear-gradient(145deg, #3b3c38, #30312e) !important;
+  color: #f1efea;
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:global(html[data-theme="dark"]) .conversionHero span,
+:global(html[data-theme="dark"]) .conversionHero p,
+:global(html[data-theme="dark"]) .rankingHeader span,
+:global(html[data-theme="dark"]) .rankingItem span,
+:global(html[data-theme="dark"]) .flowMetric span {
+  color: #c5c1b9;
+}
+
+:global(html[data-theme="dark"]) .conversionHero strong,
+:global(html[data-theme="dark"]) .rankingHeader strong,
+:global(html[data-theme="dark"]) .rankingItem strong,
+:global(html[data-theme="dark"]) .flowMetric strong {
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .conversionObjectiveList {
+  background: #272825;
+  border-color: #4d504a;
+}
+
+:global(html[data-theme="dark"]) .showcaseAffiliatePanel,
+:global(html[data-theme="dark"]) .showcaseLinksPanel,
+:global(html[data-theme="dark"]) .showcaseContactsPanel,
+:global(html[data-theme="dark"]) .tableWrapper {
+  border-color: #555852;
+  background: #30312e;
+  color: #f1efea;
 }

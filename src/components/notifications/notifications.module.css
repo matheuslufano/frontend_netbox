@@ -1,4 +1,5 @@
 .bell {
+  position: relative;
   width: 38px;
   height: 38px;
   flex: 0 0 38px;

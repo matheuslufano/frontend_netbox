@@ -29,6 +29,7 @@ import {
   type User,
 } from "@/lib/api";
 import NotificationHeaderButton from "@/components/notifications/NotificationHeaderButton";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import styles from "./CrmFilterHeader.module.css";
 
 type Option = { id: string; name: string };
@@ -383,6 +384,7 @@ export default function CrmFilterHeader(props: Props) {
       </label>
 
       <div className={styles.panelWrap} ref={panelRef}>
+        <ThemeToggle className={styles.themeToggle} />
         <NotificationHeaderButton />
         <button
           type="button"
