@@ -88,7 +88,7 @@ export const notificationRepository = {
   load(owner: string): AppNotification[] {
     const data: unknown = JSON.parse(localStorage.getItem(key(owner)) || "[]");
     if (!Array.isArray(data)) throw new Error("Invalid history");
-    return data
+    const normalized = data
       .filter(
         (n): n is AppNotification =>
           n &&
@@ -109,8 +109,24 @@ export const notificationRepository = {
       )
       .map(safe)
       .filter((n, i, all) => all.findIndex((x) => x.id === n.id) === i)
-      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-      .slice(0, 200);
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+
+    // Older CRM builds treated every reload as a new automation event. Remove
+    // that legacy batch message while preserving real card events and every
+    // other notification type.
+    const cleaned = normalized.filter((notification) => {
+      const isLegacyReloadNotification =
+        notification.context === "crm-card-created" &&
+        /novos atendimentos ou conversões foram adicionados ao CRM/i.test(
+          notification.message || "",
+        );
+      return !isLegacyReloadNotification;
+    }).slice(0, 200);
+
+    if (cleaned.length !== data.length) {
+      localStorage.setItem(key(owner), JSON.stringify(cleaned.map(safe)));
+    }
+    return cleaned;
   },
   save(owner: string, items: AppNotification[]) {
     localStorage.setItem(

@@ -1053,6 +1053,7 @@ export default function Crm() {
   );
   const dealsRef = useRef<Deal[]>(deals);
   const initialCrmLoadedRef = useRef(false);
+  const knownCrmDealIdsRef = useRef<Set<string>>(new Set());
   const crmRequestRef = useRef<AbortController | null>(null);
   const knownAttendanceIdsRef = useRef<Set<string>>(new Set());
   const [draggingDealId, setDraggingDealId] = useState<string | null>(null);
@@ -1373,7 +1374,7 @@ export default function Crm() {
           crmData.deals.map(createDealFromBackend),
         );
         const newlyDiscoveredDeals = mappedDeals.filter(
-          (deal) => !knownDealIds.has(deal.id),
+          (deal) => !knownCrmDealIdsRef.current.has(deal.id),
         );
         const incomingWebhookDeals = placeIncomingWebhookDeals
           ? mappedDeals.filter(
@@ -1411,6 +1412,7 @@ export default function Crm() {
         }
         setDeals(nextDeals);
         dealsRef.current = nextDeals;
+        mappedDeals.forEach((deal) => knownCrmDealIdsRef.current.add(deal.id));
         initialCrmLoadedRef.current = true;
 
         const notificationDeals = wasCrmLoaded
@@ -1439,7 +1441,7 @@ export default function Crm() {
             message:
               notificationDeals.length === 1
                 ? `${notificationDeals[0].customerName || "Um novo contato"} foi adicionado ao CRM.`
-                : `${notificationDeals.length} novos atendimentos ou conversões foram adicionados ao CRM.`,
+                : `${notificationDeals.length} cartões novos foram criados no CRM.`,
             persist: true,
           });
         }
@@ -1482,9 +1484,7 @@ export default function Crm() {
 
   useEffect(() => {
     const sync = window.setTimeout(() => {
-      void loadCrm().finally(() => {
-        initialCrmLoadedRef.current = true;
-      });
+      void loadCrm();
     }, 0);
 
     return () => window.clearTimeout(sync);
