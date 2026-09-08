@@ -3724,6 +3724,7 @@ export default function Crm() {
         </div>
       )}
 
+      <div className={styles.crmTopbar}>
       <header className={styles.toolbar}>
         <div className={styles.viewSwitcher} aria-label="Modo de visualização">
           <button
@@ -3883,19 +3884,7 @@ export default function Crm() {
         }}
       />
 
-      <button
-        type="button"
-        className={`${styles.syncAlert} ${styles[syncStatus]}`}
-        onClick={() => setSyncDetailsOpen(true)}
-      >
-        {syncStatus === "warning" ? (
-          <FiAlertTriangle aria-hidden="true" />
-        ) : (
-          <FiCheckCircle aria-hidden="true" />
-        )}
-        <span>{loadingCrm ? "Atualizando CRM..." : syncMessage}</span>
-        <FiChevronDown aria-hidden="true" />
-      </button>
+      </div>
 
       <div className={styles.summaryBar}>
         <span>

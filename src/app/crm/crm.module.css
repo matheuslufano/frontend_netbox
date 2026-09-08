@@ -30,6 +30,47 @@
   backdrop-filter: blur(18px);
 }
 
+/* Keep the view/actions toolbar, filters and sync feedback in one compact
+   row so the board receives the available vertical space. */
+.crmTopbar {
+  position: relative;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(18px);
+}
+
+.crmTopbar > header {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.crmTopbar > div:not(.toolbar) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.crmTopbar .toolbar,
+.crmTopbar :global(.bar) {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.crmTopbar .syncAlert {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
 .viewSwitcher {
   display: inline-flex;
   overflow: hidden;
@@ -2907,4 +2948,33 @@
   border-color: #555852;
   background: #30312e;
   color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .crmTopbar {
+  border-bottom-color: #4d504a;
+  background: rgba(42, 43, 40, 0.9);
+}
+
+@media (max-width: 1180px) {
+  .crmTopbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .crmTopbar {
+    grid-template-columns: 1fr;
+    padding: 8px 10px;
+  }
+
+  .crmTopbar .toolbar,
+  .crmTopbar :global(.bar) {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+  }
+
+  .crmTopbar > header {
+    justify-self: stretch;
+  }
 }
