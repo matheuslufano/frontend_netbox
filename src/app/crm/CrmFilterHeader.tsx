@@ -177,9 +177,7 @@ export default function CrmFilterHeader(props: Props) {
     () => [
       { id: "all", name: "Todos os cartões" },
       { id: "mine", name: "Minhas negociações" },
-      ...(props.permissions.canViewUnassigned
-        ? [{ id: "unassigned", name: "Negociações sem responsável" }]
-        : []),
+      { id: "unassigned", name: "Negociações sem responsável" },
       ...(props.permissions.canViewTeam
         ? [{ id: "team", name: "Negociações da minha equipe" }]
         : []),

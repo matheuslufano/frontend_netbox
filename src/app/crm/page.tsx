@@ -32,6 +32,7 @@ import {
   FiSend,
   FiSliders,
   FiStar,
+  FiTrash2,
   FiUser,
   FiX,
 } from "react-icons/fi";
@@ -242,7 +243,7 @@ const defaultStages: KanbanColumn[] = [
   },
   {
     id: "informacoes",
-    title: "InformaÃ§Ãµes cadastrais",
+    title: "Informações cadastrais",
     color: "#7c3aed",
     slaHours: 24,
   },
@@ -282,9 +283,9 @@ const periodOptions: Array<{ id: PeriodFilter; name: string }> = [
   { id: "yesterday", name: "Ontem" },
   { id: "last-7", name: "Ultimos 7 dias" },
   { id: "last-30", name: "Ultimos 30 dias" },
-  { id: "this-month", name: "Este mÃªs" },
-  { id: "last-month", name: "MÃªs passado" },
-  { id: "custom", name: "PerÃ­odo personalizado" },
+  { id: "this-month", name: "Este mês" },
+  { id: "last-month", name: "Mês passado" },
+  { id: "custom", name: "Período personalizado" },
 ];
 
 const priorityLabels: Record<Priority, string> = {
@@ -298,7 +299,7 @@ const detailTabs: Array<{ id: DetailTab; name: string }> = [
   { id: "lead", name: "Dados do lead" },
   { id: "service", name: "Atendimento" },
   { id: "tasks", name: "Tarefas" },
-  { id: "history", name: "HistÃ³rico" },
+  { id: "history", name: "Histórico" },
   { id: "sale", name: "Venda" },
   { id: "integrations", name: "Integracoes" },
 ];
@@ -794,7 +795,7 @@ function persistLocalDealEdit(dealId: string, patch: Partial<Deal>) {
       }),
     );
   } catch {
-    // A ediÃ§ão continua aplicada na tela quando o armazenamento estÃ¡ indisponÃ­vel.
+    // A edição continua aplicada na tela quando o armazenamento está indisponível.
   }
 }
 
@@ -802,7 +803,7 @@ function mergeLocalDealEdits(sourceDeals: Deal[]) {
   const edits = readLocalDealEdits();
 
   return sourceDeals.map((deal) => {
-    // CartÃµes persistidos sempre usam o backend como fonte de verdade.
+    // Cartões persistidos sempre usam o backend como fonte de verdade.
     if (/^\d+$/.test(deal.id)) {
       return deal;
     }
@@ -1075,6 +1076,9 @@ export default function Crm() {
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("lead");
   const [activeCardMenuId, setActiveCardMenuId] = useState<string | null>(null);
+  const [selectedDealIds, setSelectedDealIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [activeStatusMenuId, setActiveStatusMenuId] = useState<string | null>(
     null,
   );
@@ -1130,7 +1134,7 @@ export default function Crm() {
           }
         }
       } catch {
-        // MantÃ©m os filtros padrão se os dados locais estiverem corrompidos.
+        // Mantém os filtros padrão se os dados locais estiverem corrompidos.
       } finally {
         if (active) setUserFiltersRestored(true);
       }
@@ -1177,7 +1181,7 @@ export default function Crm() {
         storedIcons = JSON.parse(stored) as Record<string, StageIcon>;
       }
     } catch {
-      // MantÃ©m os Ã­cones vazios quando o armazenamento estiver indisponÃ­vel.
+      // Mantém os ícones vazios quando o armazenamento estiver indisponível.
     }
 
     queueMicrotask(() => {
@@ -1217,7 +1221,7 @@ export default function Crm() {
         JSON.stringify(cardOptionCatalog),
       );
     } catch {
-      // As opÃ§Ãµes continuam disponÃ­veis durante a sessão atual.
+      // As opções continuam disponíveis durante a sessão atual.
     }
   }, [cardOptionCatalog, cardOptionCatalogLoaded]);
 
@@ -1364,8 +1368,12 @@ export default function Crm() {
         const knownDealIds = new Set(
           dealsRef.current.map((deal) => deal.id),
         );
+        const wasCrmLoaded = initialCrmLoadedRef.current;
         const mappedDeals = mergeLocalDealEdits(
           crmData.deals.map(createDealFromBackend),
+        );
+        const newlyDiscoveredDeals = mappedDeals.filter(
+          (deal) => !knownDealIds.has(deal.id),
         );
         const incomingWebhookDeals = placeIncomingWebhookDeals
           ? mappedDeals.filter(
@@ -1379,12 +1387,17 @@ export default function Crm() {
           incomingWebhookDeals.map((deal) => deal.id),
         );
         const nextDeals = mappedDeals.map((deal) =>
-          incomingWebhookIds.has(deal.id)
+          incomingWebhookIds.has(deal.id) ||
+          !deal.responsibleUserId
             ? {
                 ...deal,
                 stageId: newContactStageId,
-                status: "new" as DealStatus,
-                activity: "Novo atendimento recebido via webhook",
+                ...(incomingWebhookIds.has(deal.id)
+                  ? {
+                      status: "new" as DealStatus,
+                      activity: "Novo atendimento recebido via webhook",
+                    }
+                  : {}),
               }
             : deal,
         );
@@ -1400,6 +1413,9 @@ export default function Crm() {
         dealsRef.current = nextDeals;
         initialCrmLoadedRef.current = true;
 
+        const notificationDeals = wasCrmLoaded
+          ? newlyDiscoveredDeals
+          : [];
         if (incomingWebhookDeals.length > 0) {
           await Promise.allSettled(
             incomingWebhookDeals
@@ -1412,26 +1428,28 @@ export default function Crm() {
                 }, { notify: false }),
               ),
           );
+        }
+        if (notificationDeals.length > 0) {
           notify.crm({
             context: "crm-card-created",
             title:
-              incomingWebhookDeals.length === 1
+              notificationDeals.length === 1
                 ? "cartão criado automaticamente"
-                : "CartÃµes criados automaticamente",
+                : "Cartões criados automaticamente",
             message:
-              incomingWebhookDeals.length === 1
-                ? "Um novo atendimento foi adicionado Ã  etapa Novo contato."
-                : `${incomingWebhookDeals.length} novos atendimentos foram adicionados Ã  etapa Novo contato.`,
+              notificationDeals.length === 1
+                ? `${notificationDeals[0].customerName || "Um novo contato"} foi adicionado ao CRM.`
+                : `${notificationDeals.length} novos atendimentos ou conversões foram adicionados ao CRM.`,
             persist: true,
           });
         }
 
         setSyncStatus("success");
         setSyncMessage(
-          incomingWebhookDeals.length > 0
-            ? `${incomingWebhookDeals.length} novo(s) atendimento(s) recebido(s) em Novo contato.`
+          notificationDeals.length > 0
+            ? `${notificationDeals.length} novo(s) cartão(ões) recebido(s) no CRM.`
             : crmData.sync
-            ? `${crmData.sync.total} cliente(s) convertido(s) sincronizados do relatÃ³rio.`
+            ? `${crmData.sync.total} cliente(s) convertido(s) sincronizados do relatório.`
             : "CRM carregado do banco de dados.",
         );
         setLoadingCrm(false);
@@ -1446,7 +1464,7 @@ export default function Crm() {
       }
       setSyncStatus("warning");
       setSyncMessage(
-        getApiErrorMessage(error, "Não foi possÃ­vel carregar o CRM do banco."),
+        getApiErrorMessage(error, "Não foi possível carregar o CRM do banco."),
       );
     } finally {
       if (crmRequestRef.current === requestController) {
@@ -1486,7 +1504,7 @@ export default function Crm() {
         attendanceId =
           rawAttendanceId == null ? "" : String(rawAttendanceId).trim();
       } catch {
-        // Sem identificador, ainda atualiza os novos cartÃµes do webhook.
+        // Sem identificador, ainda atualiza os novos cartões do webhook.
       }
 
       const isNewAttendance = Boolean(
@@ -1663,7 +1681,7 @@ export default function Crm() {
         return false;
       }
 
-      if (scopeFilter === "unassigned" && deal.owner) {
+      if (scopeFilter === "unassigned" && (deal.responsibleUserId || deal.owner.trim())) {
         return false;
       }
 
@@ -1937,7 +1955,7 @@ export default function Crm() {
 
     if (!title) {
       setSyncStatus("warning");
-      setSyncMessage("Informe o tÃ­tulo da tarefa.");
+      setSyncMessage("Informe o título da tarefa.");
       return;
     }
 
@@ -1984,8 +2002,8 @@ export default function Crm() {
       nextDeal,
       isEditing ? "Tarefa atualizada e salva." : "Tarefa criada e salva.",
       isEditing
-        ? "Tarefa atualizada na tela, mas não foi possÃ­vel salvar no backend."
-        : "Tarefa criada na tela, mas não foi possÃ­vel salvar no backend.",
+        ? "Tarefa atualizada na tela, mas não foi possível salvar no backend."
+        : "Tarefa criada na tela, mas não foi possível salvar no backend.",
     );
   }
 
@@ -2016,7 +2034,7 @@ export default function Crm() {
     await persistTaskChanges(
       nextDeal,
       "Tarefa apagada e salva.",
-      "Tarefa apagada na tela, mas não foi possÃ­vel salvar no backend.",
+      "Tarefa apagada na tela, mas não foi possível salvar no backend.",
     );
   }
 
@@ -2043,7 +2061,7 @@ export default function Crm() {
     } else if (targetStage.isLostStage) {
       setSyncStatus("warning");
       setSyncMessage(
-        "Venda marcada como perdida. Informe o motivo no histÃ³rico.",
+        "Venda marcada como perdida. Informe o motivo no histórico.",
       );
       if (movedDeal?.status !== "lost") {
         showDealOutcome("lost", movedDeal?.customerName || "negociação");
@@ -2062,7 +2080,7 @@ export default function Crm() {
       } catch {
         setSyncStatus("warning");
         setSyncMessage(
-          "Card movido localmente, mas não foi possÃ­vel salvar no banco do CRM.",
+          "Card movido localmente, mas não foi possível salvar no banco do CRM.",
         );
       }
       return;
@@ -2183,7 +2201,7 @@ export default function Crm() {
     setSyncStatus(failed ? "warning" : "success");
     setSyncMessage(
       failed
-        ? "Colunas reordenadas na tela, mas alguma posiÃ§ão não foi salva."
+        ? "Colunas reordenadas na tela, mas alguma posição não foi salva."
         : "Ordem das colunas atualizada com sucesso.",
     );
   }
@@ -2197,7 +2215,7 @@ export default function Crm() {
       : stages[0]?.id || "sem-contato";
     const createdDeal: Deal = {
       id,
-      customerName: newDeal.customerName || "NOVA NEGOCIAÃ‡ÃƒO",
+      customerName: newDeal.customerName || "NOVA NEGOCIAÇÃO",
       phone: newDeal.phone,
       email: newDeal.email,
       city: newDeal.city,
@@ -2264,7 +2282,7 @@ export default function Crm() {
       setSyncMessage(
         getApiErrorMessage(
           error,
-          "Não foi possÃ­vel salvar a negociação no backend. O cartão não foi criado.",
+          "Não foi possível salvar a negociação no backend. O cartão não foi criado.",
         ),
       );
     }
@@ -2304,13 +2322,23 @@ export default function Crm() {
       setDeals(previous);
       setSyncStatus("warning");
       setSyncMessage(
-        getApiErrorMessage(error, "Não foi possÃ­vel transferir a negociação."),
+        getApiErrorMessage(error, "Não foi possível transferir a negociação."),
       );
     }
   }
 
   async function handleCardAction(action: string, deal: Deal) {
     setActiveCardMenuId(null);
+
+    if (action === "select") {
+      setSelectedDealIds((current) => {
+        const next = new Set(current);
+        if (next.has(deal.id)) next.delete(deal.id);
+        else next.add(deal.id);
+        return next;
+      });
+      return;
+    }
 
     if (action === "details") {
       setSelectedDealId(deal.id);
@@ -2353,7 +2381,7 @@ export default function Crm() {
     if (action === "copy") {
       navigator.clipboard?.writeText(deal.phone);
       setSyncStatus("success");
-      setSyncMessage("Telefone copiado para a Ã¡rea de transferencia.");
+      setSyncMessage("Telefone copiado para a área de transferencia.");
       return;
     }
 
@@ -2372,7 +2400,7 @@ export default function Crm() {
       updateDeal(deal.id, patch);
       setSyncStatus("warning");
       setSyncMessage(
-        "negociação arquivada. Ela pode ser restaurada em OpÃ§Ãµes.",
+        "negociação arquivada. Ela pode ser restaurada em Opções.",
       );
 
       if (/^\d+$/.test(deal.id)) {
@@ -2383,7 +2411,7 @@ export default function Crm() {
         } catch {
           setSyncStatus("warning");
           setSyncMessage(
-            "negociação arquivada na tela, mas não foi possÃ­vel salvar no backend.",
+            "negociação arquivada na tela, mas não foi possível salvar no backend.",
           );
         }
       }
@@ -2392,6 +2420,45 @@ export default function Crm() {
     }
 
     setSelectedDealId(deal.id);
+  }
+
+  async function archiveSelectedDeals() {
+    const ids = [...selectedDealIds];
+    if (!ids.length) return;
+    const selected = deals.filter((deal) => ids.includes(deal.id));
+    const patches = new Map(selected.map((deal) => [
+      deal.id,
+      {
+        status: "canceled" as DealStatus,
+        cardColor: deal.cardColor || getQuickStatusCardColor(deal.status),
+        activity: "negociação arquivada",
+      },
+    ]));
+    setDeals((current) => current.map((deal) => ({ ...deal, ...(patches.get(deal.id) || {}) })));
+    setSelectedDealIds(new Set());
+    const results = await Promise.allSettled(selected.filter((deal) => /^\d+$/.test(deal.id)).map((deal) => atualizarCrmDeal(deal.id, patches.get(deal.id)!, { notify: false })));
+    const failed = results.filter((result) => result.status === "rejected").length;
+    if (failed) {
+      notify.warning({ title: "Alguns cartões não foram arquivados", message: "Atualize o CRM para conferir os itens que não puderam ser salvos.", persist: true });
+    } else {
+      notify.success({ title: "Cartões arquivados", message: `${selected.length} cartão(ões) foram enviados para as negociações arquivadas.`, persist: true });
+    }
+  }
+
+  async function deleteSelectedDeals() {
+    const ids = [...selectedDealIds];
+    if (!ids.length || !window.confirm(`Apagar permanentemente ${ids.length} cartão(ões)?`)) return;
+    const results = await Promise.allSettled(ids.filter((id) => /^\d+$/.test(id)).map((id) => apagarCrmDeal(id)));
+    const failedIds = new Set(
+      results.flatMap((result, index) => result.status === "rejected" ? [ids.filter((id) => /^\d+$/.test(id))[index]] : []),
+    );
+    setDeals((current) => current.filter((deal) => !ids.includes(deal.id) || failedIds.has(deal.id)));
+    setSelectedDealIds(new Set());
+    if (failedIds.size) {
+      notify.error({ title: "Não foi possível apagar todos os cartões", message: "Os cartões que falharam foram mantidos no funil.", persist: true });
+    } else {
+      notify.success({ title: "Cartões apagados", message: `${ids.length} cartão(ões) foram apagados permanentemente.`, persist: true });
+    }
   }
 
   function clearAdvancedFilters() {
@@ -2448,14 +2515,14 @@ export default function Crm() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `negociaÃ§Ãµes-crm-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `negociações-crm-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     setSyncStatus("success");
     setSyncMessage(`${filteredDeals.length} negociação(oes) exportada(s).`);
     notify.info({
-      title: "RelatÃ³rio exportado",
-      message: `${filteredDeals.length} negociação(Ãµes) foram incluÃ­das no arquivo CSV.`,
+      title: "Relatório exportado",
+      message: `${filteredDeals.length} negociação(ões) foram incluídas no arquivo CSV.`,
     });
   }
 
@@ -2491,9 +2558,9 @@ export default function Crm() {
         city,
         stageId: fallbackStageId,
         status: "no_contact" as DealStatus,
-        source: "ImportaÃ§ão manual",
+        source: "Importação manual",
         affiliate: "Sem afiliado",
-        campaign: "ImportaÃ§ão",
+        campaign: "Importação",
         value: 0,
         monthlyValue: 0,
         owner: "Equipe Netbox",
@@ -2510,7 +2577,7 @@ export default function Crm() {
         nextFollowUpAt: now,
         priority: "medium" as Priority,
         attempts: 0,
-        notes: "Lead importado pelo menu de opÃ§Ãµes.",
+        notes: "Lead importado pelo menu de opções.",
         trackingCode: `NBX-IMP-${String(Date.now()).slice(-4)}-${index + 1}`,
         chatmixId: "",
         sgpId: "",
@@ -2570,8 +2637,8 @@ export default function Crm() {
       icon: savedDeals.length === importedDeals.length ? "crm" : "warning",
       title:
         savedDeals.length === importedDeals.length
-          ? "ImportaÃ§ão concluÃ­da"
-          : "ImportaÃ§ão parcialmente concluÃ­da",
+          ? "Importação concluída"
+          : "Importação parcialmente concluída",
       message: `${savedDeals.length} de ${importedDeals.length} lead(s) foram salvos no CRM.`,
       duration: savedDeals.length === importedDeals.length ? 5_000 : 6_000,
     });
@@ -2602,12 +2669,12 @@ export default function Crm() {
       });
     } catch (error) {
       setSyncStatus("warning");
-      setSyncMessage("Não foi possÃ­vel sincronizar com Chatmix.");
+      setSyncMessage("Não foi possível sincronizar com Chatmix.");
       notify.update(toastId, {
         type: "error",
         context: "integration-error",
-        title: "Falha na integraÃ§ão com Chatmix",
-        message: getApiErrorMessage(error, "Não foi possÃ­vel consultar o Chatmix."),
+        title: "Falha na integração com Chatmix",
+        message: getApiErrorMessage(error, "Não foi possível consultar o Chatmix."),
         duration: 7_000,
         persist: true,
       });
@@ -2637,12 +2704,12 @@ export default function Crm() {
       });
     } catch (error) {
       setSyncStatus("warning");
-      setSyncMessage("Não foi possÃ­vel sincronizar com SGP.");
+      setSyncMessage("Não foi possível sincronizar com SGP.");
       notify.update(toastId, {
         type: "error",
         context: "integration-error",
-        title: "Falha na integraÃ§ão com SGP",
-        message: getApiErrorMessage(error, "Não foi possÃ­vel consultar o SGP."),
+        title: "Falha na integração com SGP",
+        message: getApiErrorMessage(error, "Não foi possível consultar o SGP."),
         duration: 7_000,
         persist: true,
       });
@@ -2652,7 +2719,7 @@ export default function Crm() {
   function handleGeneralMenuAction(label: string) {
     setGeneralMenuOpen(false);
 
-    if (label === "Exportar negociaÃ§Ãµes") {
+    if (label === "Exportar negociações") {
       exportDealsCsv();
       return;
     }
@@ -2662,7 +2729,7 @@ export default function Crm() {
       return;
     }
 
-    if (label === "NegociaÃ§Ãµes arquivadas") {
+    if (label === "Negociações arquivadas") {
       setArchivedOpen(true);
       return;
     }
@@ -2677,7 +2744,7 @@ export default function Crm() {
       return;
     }
 
-    if (label === "Ver histÃ³rico de sincronizaÃ§ão") {
+    if (label === "Ver histórico de sincronização") {
       setSyncDetailsOpen(true);
       return;
     }
@@ -2697,7 +2764,7 @@ export default function Crm() {
       return;
     }
 
-    if (label === "Configurar permissÃµes") {
+    if (label === "Configurar permissões") {
       setOptionsModal("permissions");
     }
   }
@@ -2728,7 +2795,7 @@ export default function Crm() {
     } catch {
       setSyncStatus("warning");
       setSyncMessage(
-        "negociação restaurada na tela, mas não foi possÃ­vel salvar no backend.",
+        "negociação restaurada na tela, mas não foi possível salvar no backend.",
       );
     }
   }
@@ -2739,7 +2806,7 @@ export default function Crm() {
         await apagarCrmDeal(dealId);
       } catch {
         setSyncStatus("warning");
-        setSyncMessage("Não foi possÃ­vel apagar a negociação no backend.");
+        setSyncMessage("Não foi possível apagar a negociação no backend.");
         return;
       }
     }
@@ -2872,7 +2939,7 @@ export default function Crm() {
       setStageForm(defaultStageForm);
     } catch {
       setSyncStatus("warning");
-      setSyncMessage("Não foi possÃ­vel salvar a configuraÃ§ão da coluna.");
+      setSyncMessage("Não foi possível salvar a configuração da coluna.");
     }
   }
 
@@ -2956,7 +3023,7 @@ export default function Crm() {
       emails: "Novo e-mail:",
       cities: "Nova cidade:",
       neighborhoods: "Novo bairro:",
-      addresses: "Novo endereÃ§o:",
+      addresses: "Novo endereço:",
       sources: "Nova origem:",
       conversionCodes: "Novo código de rastreio:",
       affiliates: "Nome do novo afiliado:",
@@ -3000,7 +3067,7 @@ export default function Crm() {
       } catch (error) {
         setSyncStatus("warning");
         setSyncMessage(
-          getApiErrorMessage(error, "Não foi possÃ­vel cadastrar o afiliado."),
+          getApiErrorMessage(error, "Não foi possível cadastrar o afiliado."),
         );
         return;
       }
@@ -3033,7 +3100,7 @@ export default function Crm() {
       } catch (error) {
         setSyncStatus("warning");
         setSyncMessage(
-          getApiErrorMessage(error, "Não foi possÃ­vel cadastrar a campanha."),
+          getApiErrorMessage(error, "Não foi possível cadastrar a campanha."),
         );
         return;
       }
@@ -3183,7 +3250,7 @@ export default function Crm() {
       (user) => user.id === cardEditForm.responsibleUserId,
     );
     const patch: Partial<Deal> = {
-      customerName: cardEditForm.customerName.trim() || "NEGOCIAÃ‡ÃƒO SEM NOME",
+      customerName: cardEditForm.customerName.trim() || "NEGOCIAÇÃO SEM NOME",
       phone: cardEditForm.phone.trim(),
       email: cardEditForm.email.trim(),
       city: cardEditForm.city.trim(),
@@ -3264,7 +3331,7 @@ export default function Crm() {
         setSyncStatus(conversionSyncFailed ? "warning" : "success");
         setSyncMessage(
           conversionSyncFailed
-            ? "cartão salvo, mas não foi possÃ­vel sincronizar a conversão."
+            ? "cartão salvo, mas não foi possível sincronizar a conversão."
             : "cartão e dados da conversão atualizados com sucesso.",
         );
       } catch (error) {
@@ -3272,7 +3339,7 @@ export default function Crm() {
         setSyncMessage(
           getApiErrorMessage(
             error,
-            "Não foi possÃ­vel salvar ou vincular o responsavel no banco.",
+            "Não foi possível salvar ou vincular o responsavel no banco.",
           ),
         );
         return;
@@ -3281,7 +3348,7 @@ export default function Crm() {
       setSyncStatus(conversionSyncFailed ? "warning" : "success");
       setSyncMessage(
         conversionSyncFailed
-          ? "cartão atualizado, mas não foi possÃ­vel sincronizar a conversão."
+          ? "cartão atualizado, mas não foi possível sincronizar a conversão."
           : "cartão e dados da conversão atualizados.",
       );
     }
@@ -3339,7 +3406,7 @@ export default function Crm() {
       setSyncMessage(
         getApiErrorMessage(
           error,
-          `Não foi possÃ­vel salvar o status ${option.name}.`,
+          `Não foi possível salvar o status ${option.name}.`,
         ),
       );
     }
@@ -3381,7 +3448,7 @@ export default function Crm() {
     return (
       <article
         key={deal.id}
-        className={`${styles.dealCard} ${visualClass} ${alertClass}`}
+        className={`${styles.dealCard} ${visualClass} ${alertClass} ${selectedDealIds.has(deal.id) ? styles.dealCardSelected : ""}`}
         style={
           {
             "--deal-border": getDealBorderColor(deal),
@@ -3397,9 +3464,28 @@ export default function Crm() {
         }
         draggable
         onClick={(event) => handleDealCardClick(event, deal)}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setActiveStatusMenuId(null);
+          setObservationDealId(null);
+          setActiveCardMenuId(deal.id);
+        }}
         onDragStart={() => setDraggingDealId(deal.id)}
         onDragEnd={() => setDraggingDealId(null)}
       >
+        {selectedDealIds.size > 0 && (
+          <button
+            type="button"
+            className={`${styles.cardSelectionButton} ${selectedDealIds.has(deal.id) ? styles.cardSelectionButtonSelected : ""}`}
+            aria-label={selectedDealIds.has(deal.id) ? "Remover cartão da seleção" : "Selecionar cartão"}
+            aria-pressed={selectedDealIds.has(deal.id)}
+            title={selectedDealIds.has(deal.id) ? "Cartão selecionado" : "Selecionar cartão"}
+            onClick={() => handleCardAction("select", deal)}
+          >
+            <FiCheckCircle aria-hidden="true" />
+          </button>
+        )}
         <header className={styles.dealCardHeader}>
           <div className={styles.dealCustomer}>
             <FiUser aria-hidden="true" />
@@ -3542,8 +3628,8 @@ export default function Crm() {
           <button
             type="button"
             className={styles.dealObservationButton}
-            aria-label={`Ver observaÃ§ão de ${deal.customerName}`}
-            title="Ver observaÃ§ão"
+            aria-label={`Ver observação de ${deal.customerName}`}
+            title="Ver observação"
             onClick={(event) => {
               event.stopPropagation();
               setObservationDealId(deal.id);
@@ -3589,19 +3675,19 @@ export default function Crm() {
                 <div>
                   <span>negociação</span>
                   <strong id={`observation-title-${deal.id}`}>
-                    ObservaÃ§ão de {deal.customerName}
+                    Observação de {deal.customerName}
                   </strong>
                 </div>
                 <button
                   type="button"
-                  aria-label="Fechar observaÃ§ão"
+                  aria-label="Fechar observação"
                   onClick={() => setObservationDealId(null)}
                 >
                   <FiX aria-hidden="true" />
                 </button>
               </header>
               <p>
-                {notes || "Nenhuma observaÃ§ão cadastrada para esta negociação."}
+                {notes || "Nenhuma observação cadastrada para esta negociação."}
               </p>
             </section>
           </div>
@@ -3611,7 +3697,7 @@ export default function Crm() {
           <button
             type="button"
             className={styles.cardMenuButton}
-            title="AÃ§Ãµes da negociação"
+            title="Funções da negociação"
             onClick={() =>
               setActiveCardMenuId((current) =>
                 current === deal.id ? null : deal.id,
@@ -3623,6 +3709,13 @@ export default function Crm() {
 
           {activeCardMenuId === deal.id && (
             <div className={styles.cardMenu}>
+              <button
+                type="button"
+                aria-label={selectedDealIds.has(deal.id) ? "Remover cartão da seleção" : "Selecionar cartão"}
+                onClick={() => handleCardAction("select", deal)}
+              >
+                {selectedDealIds.has(deal.id) ? "Remover da seleção" : "Selecionar cartão"}
+              </button>
               <button
                 type="button"
                 onClick={() => handleCardAction("details", deal)}
@@ -3710,8 +3803,8 @@ export default function Crm() {
             </strong>
             <p>
               {dealOutcome.type === "won"
-                ? "Ã“timo trabalho, essa negociação foi finalizada com sucesso."
-                : "Tudo bem. O histÃ³rico foi salvo para anÃ¡lise e melhoria do funil."}
+                ? "Ótimo trabalho, essa negociação foi finalizada com sucesso."
+                : "Tudo bem. O histórico foi salvo para análise e melhoria do funil."}
             </p>
             <span>{dealOutcome.dealName}</span>
           </div>
@@ -3720,7 +3813,7 @@ export default function Crm() {
 
       <div className={styles.crmTopbar}>
       <header className={styles.toolbar}>
-        <div className={styles.viewSwitcher} aria-label="Modo de visualizaÃ§ão">
+        <div className={styles.viewSwitcher} aria-label="Modo de visualização">
           <button
             type="button"
             className={
@@ -3728,7 +3821,7 @@ export default function Crm() {
                 ? styles.viewButtonActive
                 : styles.viewButton
             }
-            title="VisualizaÃ§ão Kanban"
+            title="Visualização Kanban"
             onClick={() => setViewMode("kanban")}
           >
             <FiBarChart2 aria-hidden="true" />
@@ -3738,7 +3831,7 @@ export default function Crm() {
             className={
               viewMode === "list" ? styles.viewButtonActive : styles.viewButton
             }
-            title="VisualizaÃ§ão em Lista"
+            title="Visualização em Lista"
             onClick={() => setViewMode("list")}
           >
             <FiList aria-hidden="true" />
@@ -3750,7 +3843,7 @@ export default function Crm() {
             <button
               type="button"
               className={styles.iconButton}
-              title="OpÃ§Ãµes"
+              title="Opções"
               onClick={() => setGeneralMenuOpen((current) => !current)}
             >
               <FiMoreVertical aria-hidden="true" />
@@ -3758,16 +3851,16 @@ export default function Crm() {
             {generalMenuOpen && (
               <div className={styles.generalMenu}>
                 {[
-                  ["Exportar negociaÃ§Ãµes", FiDownload],
+                  ["Exportar negociações", FiDownload],
                   ["Importar leads", FiClipboard],
-                  ["NegociaÃ§Ãµes arquivadas", FiClock],
+                  ["Negociações arquivadas", FiClock],
                   ["Configurar funil", FiSliders],
                   ["Configurar etapas", FiList],
-                  ["Ver histÃ³rico de sincronizaÃ§ão", FiClock],
+                  ["Ver histórico de sincronização", FiClock],
                   ["Atualizar CRM", FiRefreshCw],
                   ["Sincronizar com Chatmix", FiRefreshCw],
                   ["Sincronizar com SGP", FiRefreshCw],
-                  ["Configurar permissÃµes", FiUser],
+                  ["Configurar permissões", FiUser],
                 ].map(([label, Icon]) => (
                   <button
                     key={label as string}
@@ -3880,12 +3973,27 @@ export default function Crm() {
 
       </div>
 
+      {selectedDealIds.size > 0 && (
+        <section className={styles.bulkActions} aria-label="Ações para cartões selecionados">
+          <strong>{selectedDealIds.size} cartão(ões) selecionado(s)</strong>
+          <button type="button" onClick={() => void archiveSelectedDeals()}>
+            <FiClock aria-hidden="true" /> Arquivar
+          </button>
+          <button type="button" className={styles.bulkDeleteButton} onClick={() => void deleteSelectedDeals()}>
+            <FiTrash2 aria-hidden="true" /> Apagar
+          </button>
+          <button type="button" className={styles.bulkClearButton} onClick={() => setSelectedDealIds(new Set())}>
+            Limpar seleção
+          </button>
+        </section>
+      )}
+
       <div className={styles.summaryBar}>
         <span>
           {totals.deals}{" "}
           {activeFilterCount > 0 || statusFilter !== "all"
-            ? "NegociaÃ§Ãµes encontradas"
-            : "NegociaÃ§Ãµes"}
+            ? "Negociações encontradas"
+            : "Negociações"}
         </span>
         <strong>{formatCurrency(totals.amount)}</strong>
         <em>
@@ -3988,7 +4096,7 @@ export default function Crm() {
                     {stageDeals.length > 0 ? (
                       stageDeals.map(renderDealCard)
                     ) : (
-                      <div className={styles.emptyColumn}>Sem negociaÃ§Ãµes</div>
+                      <div className={styles.emptyColumn}>Sem negociações</div>
                     )}
                   </div>
                 </section>
@@ -4009,7 +4117,7 @@ export default function Crm() {
           </section>
         </>
       ) : (
-        <section className={styles.listView} aria-label="Lista de negociaÃ§Ãµes">
+        <section className={styles.listView} aria-label="Lista de negociações">
           <table>
             <thead>
               <tr>
@@ -4021,7 +4129,7 @@ export default function Crm() {
                 <th>Afiliado</th>
                 <th>Valor</th>
                 <th>responsavel</th>
-                <th>Data de criaÃ§ão</th>
+                <th>Data de criação</th>
               </tr>
             </thead>
             <tbody>
@@ -4078,8 +4186,8 @@ export default function Crm() {
               ["city", "Cidade"],
               ["owner", "responsavel"],
               ["source", "Origem do lead"],
-              ["minValue", "Valor mÃ­nimo"],
-              ["maxValue", "Valor mÃ¡ximo"],
+              ["minValue", "Valor mínimo"],
+              ["maxValue", "Valor máximo"],
             ].map(([key, label]) => (
               <label key={key}>
                 <span>{label}</span>
@@ -4183,7 +4291,7 @@ export default function Crm() {
                 ["email", "E-mail"],
                 ["city", "Cidade"],
                 ["neighborhood", "Bairro"],
-                ["address", "EndereÃ§o"],
+                ["address", "Endereço"],
                 ["source", "Origem do lead"],
                 ["affiliate", "Afiliado"],
                 ["campaign", "Campanha"],
@@ -4244,7 +4352,7 @@ export default function Crm() {
               </label>
 
               <label className={styles.fullField}>
-                <span>ObservaÃ§ão</span>
+                <span>Observação</span>
                 <textarea
                   value={newDeal.notes}
                   onChange={(event) =>
@@ -4355,7 +4463,7 @@ export default function Crm() {
               </label>
 
               <label>
-                <span>PosiÃ§ão no funil</span>
+                <span>Posição no funil</span>
                 <input
                   type="number"
                   min="1"
@@ -4370,7 +4478,7 @@ export default function Crm() {
               </label>
 
               <label className={styles.fullField}>
-                <span>Ãcone da coluna</span>
+                <span>Ícone da coluna</span>
                 <div className={styles.stageIconEditor}>
                   <span
                     className={styles.stageIconPreview}
@@ -4419,7 +4527,7 @@ export default function Crm() {
 
                         if (file.size > 300_000) {
                           setSyncStatus("warning");
-                          setSyncMessage("O Ã­cone deve ter no mÃ¡ximo 300 KB.");
+                          setSyncMessage("O ícone deve ter no máximo 300 KB.");
                           event.target.value = "";
                           return;
                         }
@@ -4548,7 +4656,7 @@ export default function Crm() {
 
             <div className={styles.formGrid}>
               <label className={styles.fullField}>
-                <span>TÃ­tulo da tarefa</span>
+                <span>Título da tarefa</span>
                 <input
                   value={taskForm.title}
                   placeholder="Ex: Ligar para confirmar instalacao"
@@ -4778,11 +4886,11 @@ export default function Crm() {
               </label>
 
               <label className={styles.fullField}>
-                <span>EndereÃ§o</span>
+                <span>Endereço</span>
                 <div className={styles.catalogField}>
                   <input
                     list="crm-address-options"
-                    placeholder="Digite o endereÃ§o"
+                    placeholder="Digite o endereço"
                     value={cardEditForm.address}
                     onChange={(event) =>
                       setCardEditForm((current) =>
@@ -4801,8 +4909,8 @@ export default function Crm() {
                     type="button"
                     className={styles.catalogAddButton}
                     onClick={() => void addCardTextOption("addresses")}
-                    aria-label="Adicionar endereÃ§o"
-                    title="Adicionar endereÃ§o"
+                    aria-label="Adicionar endereço"
+                    title="Adicionar endereço"
                   >
                     <FiPlus aria-hidden="true" />
                   </button>
@@ -5140,7 +5248,7 @@ export default function Crm() {
               </label>
 
               <label className={styles.fullField}>
-                <span>ObservaÃ§ão</span>
+                <span>Observação</span>
                 <textarea
                   value={cardEditForm.notes}
                   onChange={(event) =>
@@ -5193,7 +5301,7 @@ export default function Crm() {
           <section className={styles.archiveModal}>
             <header>
               <div>
-                <h2>NegociaÃ§Ãµes arquivadas</h2>
+                <h2>Negociações arquivadas</h2>
                 <span>{archivedDeals.length} item(ns) arquivado(s)</span>
               </div>
               <button type="button" onClick={() => setArchivedOpen(false)}>
@@ -5254,7 +5362,7 @@ export default function Crm() {
 
                     <div className={styles.cardValueRow}>
                       <span>{deal.source}</span>
-                      <strong>{formatCurrency(deal.monthlyValue)}/mÃªs</strong>
+                      <strong>{formatCurrency(deal.monthlyValue)}/mês</strong>
                     </div>
 
                     <div className={styles.activity}>
@@ -5373,7 +5481,7 @@ export default function Crm() {
                 <dd>{selectedDeal.city}</dd>
                 <dt>Bairro</dt>
                 <dd>{selectedDeal.neighborhood}</dd>
-                <dt>EndereÃ§o</dt>
+                <dt>Endereço</dt>
                 <dd>{selectedDeal.address}</dd>
                 <dt>Origem</dt>
                 <dd>{selectedDeal.source}</dd>
@@ -5398,11 +5506,11 @@ export default function Crm() {
                 <dd>{getStage(stages, selectedDeal.stageId)?.title}</dd>
                 <dt>responsavel</dt>
                 <dd>{selectedDeal.owner}</dd>
-                <dt>NÃºmero de tentativas</dt>
+                <dt>Número de tentativas</dt>
                 <dd>{selectedDeal.attempts}</dd>
-                <dt>Ãšltimo contato</dt>
+                <dt>Último contato</dt>
                 <dd>{formatDateTime(selectedDeal.lastInteractionAt)}</dd>
-                <dt>PrÃ³ximo contato</dt>
+                <dt>Próximo contato</dt>
                 <dd>{formatDateTime(selectedDeal.nextFollowUpAt)}</dd>
                 <dt>Observacoes</dt>
                 <dd>{selectedDeal.notes}</dd>
@@ -5508,9 +5616,9 @@ export default function Crm() {
                 <dd>{selectedDeal.chatmixId || "-"}</dd>
                 <dt>ID no SGP</dt>
                 <dd>{selectedDeal.sgpId || "-"}</dd>
-                <dt>Ãšltima sincronizaÃ§ão</dt>
+                <dt>Última sincronização</dt>
                 <dd>{formatDateTime(selectedDeal.updatedAt)}</dd>
-                <dt>Status da sincronizaÃ§ão</dt>
+                <dt>Status da sincronização</dt>
                 <dd>
                   {syncStatus === "warning" ? "Falha parcial" : "Atualizado"}
                 </dd>
@@ -5556,7 +5664,7 @@ export default function Crm() {
                 {optionsModal === "import" && "Importar leads"}
                 {optionsModal === "funnel" && "Configurar funil"}
                 {optionsModal === "stages" && "Configurar etapas"}
-                {optionsModal === "permissions" && "Configurar permissÃµes"}
+                {optionsModal === "permissions" && "Configurar permissões"}
               </h2>
               <button type="button" onClick={() => setOptionsModal(null)}>
                 <FiX aria-hidden="true" />
@@ -5594,7 +5702,7 @@ export default function Crm() {
                   </select>
                 </label>
                 <label>
-                  <span>VisualizaÃ§ão padrão</span>
+                  <span>Visualização padrão</span>
                   <select
                     value={viewMode}
                     onChange={(event) =>
@@ -5661,7 +5769,7 @@ export default function Crm() {
                       }))
                     }
                   />
-                  Equipe pode mover cartÃµes
+                  Equipe pode mover cartões
                 </label>
                 <label className={styles.checkRow}>
                   <input
@@ -5674,7 +5782,7 @@ export default function Crm() {
                       }))
                     }
                   />
-                  Equipe pode editar cartÃµes
+                  Equipe pode editar cartões
                 </label>
                 <label className={styles.checkRow}>
                   <input
@@ -5722,10 +5830,10 @@ export default function Crm() {
                   onClick={() => {
                     setOptionsModal(null);
                     setSyncStatus("success");
-                    setSyncMessage("ConfiguraÃ§ão salva para esta sessão.");
+                    setSyncMessage("Configuração salva para esta sessão.");
                   }}
                 >
-                  Salvar configuraÃ§ão
+                  Salvar configuração
                 </button>
               )}
               <button
@@ -5744,7 +5852,7 @@ export default function Crm() {
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <section className={styles.syncModal}>
             <header>
-              <h2>HistÃ³rico de sincronizaÃ§ão</h2>
+              <h2>Histórico de sincronização</h2>
               <button type="button" onClick={() => setSyncDetailsOpen(false)}>
                 <FiX aria-hidden="true" />
               </button>
@@ -5764,5 +5872,3 @@ export default function Crm() {
     </main>
   );
 }
-
-

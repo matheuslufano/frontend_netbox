@@ -6,10 +6,14 @@ import { createPortal } from "react-dom";
 import {
   ContactRecord,
   getApiErrorMessage,
+  editarContato,
+  apagarContato,
   listarContatos,
 } from "@/lib/api";
+import { notify } from "@/lib/notifications/notify";
 import {
   FiCalendar,
+  FiEdit3,
   FiMessageCircle,
   FiPhone,
   FiRefreshCw,
@@ -17,6 +21,7 @@ import {
   FiUserX,
   FiUsers,
   FiX,
+  FiTrash2,
 } from "react-icons/fi";
 import { RealtimeEventName, useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./contatos.module.css";
@@ -34,6 +39,9 @@ export default function ContatosPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", phone: "", document: "", city: "" });
+  const [savingContact, setSavingContact] = useState(false);
 
   const loadContacts = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -60,6 +68,46 @@ export default function ContatosPage() {
   }, [loadContacts]);
 
   useRealtimeEvents(refreshFromEvent, CONTACT_REALTIME_EVENTS);
+
+  const openContactEditor = (contact: ContactRecord) => {
+    setEditingContact(contact);
+    setEditForm({
+      name: contact.name || "",
+      phone: contact.phone || "",
+      document: contact.document || "",
+      city: contact.city || "",
+    });
+  };
+
+  const saveContact = async () => {
+    if (!editingContact) return;
+    setSavingContact(true);
+    try {
+      await editarContato({ ...editForm, conversionIds: editingContact.conversionIds });
+      notify.success({ title: "Contato atualizado", message: "As informações do contato foram salvas." });
+      setEditingContact(null);
+      await loadContacts(true);
+    } catch (requestError) {
+      notify.error({ title: "Não foi possível atualizar o contato", message: getApiErrorMessage(requestError, "Verifique os dados e tente novamente.") });
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const removeContact = async () => {
+    if (!editingContact || !window.confirm("Apagar este contato? O histórico de conversões será preservado.")) return;
+    setSavingContact(true);
+    try {
+      await apagarContato(editingContact);
+      notify.success({ title: "Contato apagado", message: "O contato foi removido da lista, mantendo o histórico." });
+      setEditingContact(null);
+      await loadContacts(true);
+    } catch (requestError) {
+      notify.error({ title: "Não foi possível apagar o contato", message: getApiErrorMessage(requestError, "Tente novamente em instantes.") });
+    } finally {
+      setSavingContact(false);
+    }
+  };
 
   const filteredContacts = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -164,6 +212,15 @@ export default function ContatosPage() {
                   <h2>{contact.name || "Contato não identificado"}</h2>
                   <span>{contact.source}</span>
                 </div>
+                <button
+                  type="button"
+                  className={styles.editContactButton}
+                  onClick={() => openContactEditor(contact)}
+                  aria-label={`Editar ${contact.name || "contato"}`}
+                  title="Editar contato"
+                >
+                  <FiEdit3 aria-hidden="true" />
+                </button>
                 <div className={styles.cardStats}>
                   <strong className={styles.conversionBadge}>
                     {contact.totalAttendances} atendimento{contact.totalAttendances === 1 ? "" : "s"}
@@ -192,6 +249,39 @@ export default function ContatosPage() {
             </article>
           ))}
         </section>
+      )}
+
+      {editingContact && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="contact-edit-title" onClick={(event) => {
+          if (event.target === event.currentTarget && !savingContact) setEditingContact(null);
+        }}>
+          <section className={styles.editModal}>
+            <header className={styles.editModalHeader}>
+              <div>
+                <span className={styles.eyebrow}>Cadastro de contato</span>
+                <h2 id="contact-edit-title">Editar contato</h2>
+              </div>
+              <button type="button" className={styles.modalClose} onClick={() => setEditingContact(null)} aria-label="Fechar edição" disabled={savingContact}>
+                <FiX aria-hidden="true" />
+              </button>
+            </header>
+            <div className={styles.editForm}>
+              <label><span>Nome</span><input value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} /></label>
+              <label><span>Telefone</span><input value={editForm.phone} onChange={(event) => setEditForm({ ...editForm, phone: event.target.value })} /></label>
+              <label><span>Documento</span><input value={editForm.document} onChange={(event) => setEditForm({ ...editForm, document: event.target.value })} /></label>
+              <label><span>Cidade</span><input value={editForm.city} onChange={(event) => setEditForm({ ...editForm, city: event.target.value })} /></label>
+            </div>
+            <footer className={styles.editModalFooter}>
+              <button type="button" className={styles.deleteContactButton} onClick={() => void removeContact()} disabled={savingContact}>
+                <FiTrash2 aria-hidden="true" /> Apagar contato
+              </button>
+              <div>
+                <button type="button" className={styles.modalSecondary} onClick={() => setEditingContact(null)} disabled={savingContact}>Cancelar</button>
+                <button type="button" className={styles.modalPrimary} onClick={() => void saveContact()} disabled={savingContact}>{savingContact ? "Salvando..." : "Salvar alterações"}</button>
+              </div>
+            </footer>
+          </section>
+        </div>
       )}
     </main>
   );

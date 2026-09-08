@@ -167,6 +167,9 @@
 .imagePreviewClose:focus-visible { outline: 3px solid rgba(255, 255, 255, .7); outline-offset: 2px; }
 .imagePreviewClose svg { width: 22px; height: 22px; }
 .identity { min-width: 0; flex: 1; }
+.editContactButton { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border: 1px solid #d1dae2; border-radius: 10px; background: #f1f4f6; color: #526270; cursor: pointer; transition: .16s ease; }
+.editContactButton:hover, .editContactButton:focus-visible { border-color: #9baab6; background: #e2e8ed; color: #26343f; transform: translateY(-1px); }
+.editContactButton:focus-visible, .modalClose:focus-visible, .modalPrimary:focus-visible, .modalSecondary:focus-visible, .deleteContactButton:focus-visible { outline: 3px solid rgba(75, 102, 123, .28); outline-offset: 2px; }
 .identity h2 { overflow: hidden; margin: 0; color: #25313b; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .identity span { color: #74818c; font-size: 12px; }
 .cardStats { display: grid; justify-items: end; gap: 5px; color: #74818c; font-size: 11px; white-space: nowrap; }
@@ -178,6 +181,23 @@
 .stateCard { display: grid; justify-items: center; gap: 8px; border-radius: 18px; padding: 50px 22px; color: #64717d; text-align: center; }
 .stateCard strong { color: #344250; font-size: 17px; }
 .stateCard p { max-width: 520px; margin: 0; line-height: 1.5; }
+.modalOverlay { position: fixed; z-index: 1700; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(12, 17, 22, .5); backdrop-filter: blur(8px); }
+.editModal { width: min(480px, 100%); overflow: hidden; border: 1px solid rgba(255,255,255,.65); border-radius: 20px; background: rgba(250,252,253,.96); color: #25313b; box-shadow: 0 28px 80px rgba(15,23,42,.3); }
+.editModalHeader, .editModalFooter { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px; }
+.editModalHeader { border-bottom: 1px solid #e1e7eb; }
+.editModalHeader h2 { margin: 3px 0 0; font-size: 20px; }
+.modalClose { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #ccd6de; border-radius: 10px; background: #f2f5f7; color: #526270; cursor: pointer; }
+.editForm { display: grid; gap: 14px; padding: 20px; }
+.editForm label { display: grid; gap: 6px; color: #64717d; font-size: 12px; font-weight: 800; }
+.editForm input { width: 100%; min-height: 42px; box-sizing: border-box; border: 1px solid #cfd9e0; border-radius: 10px; padding: 0 12px; background: #fff; color: #25313b; font: inherit; outline: none; }
+.editForm input:focus { border-color: #7d909f; box-shadow: 0 0 0 3px rgba(93,117,136,.14); }
+.editModalFooter { border-top: 1px solid #e1e7eb; }
+.editModalFooter > div { display: flex; gap: 8px; }
+.deleteContactButton, .modalSecondary, .modalPrimary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; border-radius: 10px; padding: 0 13px; font: inherit; font-weight: 800; cursor: pointer; }
+.deleteContactButton { border: 1px solid #efb7b7; background: #fff4f4; color: #b42318; }
+.modalSecondary { border: 1px solid #ccd6de; background: #f1f4f6; color: #526270; }
+.modalPrimary { border: 1px solid #516879; background: #516879; color: #fff; }
+.deleteContactButton:disabled, .modalSecondary:disabled, .modalPrimary:disabled, .modalClose:disabled { cursor: wait; opacity: .6; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes previewFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -219,3 +239,14 @@
 :global(html[data-theme="dark"]) .avatar,
 :global(html[data-theme="dark"]) .conversionBadge { background: #303941; color: #d3dbe0; }
 :global(html[data-theme="dark"]) .details > div { border-color: #30383f; }
+:global(html[data-theme="dark"]) .editContactButton { border-color: #4a565f; background: #2d363c; color: #d0d8de; }
+:global(html[data-theme="dark"]) .editContactButton:hover,
+:global(html[data-theme="dark"]) .editContactButton:focus-visible { border-color: #74838e; background: #39444c; color: #fff; }
+:global(html[data-theme="dark"]) .editModal { border-color: rgba(255,255,255,.12); background: rgba(31,36,40,.98); color: #eef2f5; box-shadow: 0 28px 90px rgba(0,0,0,.5); }
+:global(html[data-theme="dark"]) .editModalHeader,
+:global(html[data-theme="dark"]) .editModalFooter { border-color: #30383f; }
+:global(html[data-theme="dark"]) .modalClose,
+:global(html[data-theme="dark"]) .modalSecondary { border-color: #4a565f; background: #293137; color: #d5dde2; }
+:global(html[data-theme="dark"]) .editForm label { color: #aeb8c1; }
+:global(html[data-theme="dark"]) .editForm input { border-color: #4a565f; background: #20272c; color: #eef2f5; }
+:global(html[data-theme="dark"]) .deleteContactButton { border-color: #744246; background: #3a2528; color: #ffb4b4; }

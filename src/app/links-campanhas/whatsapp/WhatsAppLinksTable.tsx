@@ -53,7 +53,7 @@ export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSa
         <div><span className={styles.kicker}>Histórico</span><h2>Links criados</h2></div>
         <div className={styles.listHeaderActions}>
           <span>{items.length} registro{items.length === 1 ? "" : "s"}</span>
-          <Link className={styles.historyButton} href="/links-campanhas/relatorios/whatsapp">Ver relatÃ³rio</Link>
+          <Link className={styles.historyButton} href="/links-campanhas/relatorios/whatsapp">Ver relatório</Link>
         </div>
       </div>
       {items.length === 0 ? (

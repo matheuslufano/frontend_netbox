@@ -901,6 +901,25 @@ export async function listarContatos() {
   return data;
 }
 
+export async function editarContato(
+  contact: Pick<ContactRecord, "conversionIds"> & {
+    name?: string;
+    phone?: string;
+    document?: string;
+    city?: string;
+  },
+) {
+  const { data } = await api.put<{ message: string }>(`/contacts/${encodeURIComponent(contact.conversionIds.join("-"))}`, contact);
+  return data;
+}
+
+export async function apagarContato(contact: Pick<ContactRecord, "conversionIds">) {
+  const { data } = await api.delete<{ message: string }>(`/contacts/${encodeURIComponent(contact.conversionIds.join("-"))}`, {
+    data: { conversionIds: contact.conversionIds },
+  });
+  return data;
+}
+
 export async function buscarEstatisticasAfiliado(id: number) {
   const { data } = await api.get<AffiliateStats>(`/affiliate/${id}/stats`);
   return {

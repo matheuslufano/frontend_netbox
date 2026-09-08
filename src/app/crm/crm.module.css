@@ -716,6 +716,32 @@
     transform 0.18s ease;
 }
 
+.cardSelectionButton {
+  position: absolute;
+  z-index: 10;
+  top: 7px;
+  left: 7px;
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border: 1px solid #93aab8;
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, .9);
+  color: #7b909c;
+  cursor: pointer;
+}
+
+.cardSelectionButton svg { width: 15px; height: 15px; }
+.cardSelectionButton:hover, .cardSelectionButton:focus-visible { border-color: #397b94; color: #397b94; outline: 3px solid rgba(57,123,148,.2); outline-offset: 2px; }
+.cardSelectionButtonSelected {
+  border-color: #ff9b93;
+  background: radial-gradient(circle at 35% 30%, #fff0ee 0 10%, #ff7a6c 28%, #dc3c35 68%, #8e171b 100%);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 103, 93, .18), 0 0 10px rgba(248, 78, 67, .9), 0 0 20px rgba(248, 78, 67, .45), inset 0 1px 2px rgba(255, 255, 255, .72);
+}
+
 .dealCardHeader {
   display: flex;
   min-width: 0;
@@ -726,6 +752,8 @@
   color: #506987;
   font-size: 12px;
 }
+
+.dealCard:has(.cardSelectionButton) .dealCardHeader { padding-left: 28px; }
 
 .dealCustomer,
 .dealCardHeader time {
@@ -1146,6 +1174,43 @@
     0 18px 34px rgba(15, 23, 42, 0.12);
   transform: translateY(-2px);
 }
+
+.dealCardSelected {
+  border-color: #1781a5;
+  box-shadow: 0 0 0 3px rgba(23, 129, 165, 0.2), 0 18px 34px rgba(15, 23, 42, 0.12);
+}
+
+.bulkActions {
+  position: sticky;
+  z-index: 45;
+  bottom: 14px;
+  display: flex;
+  width: fit-content;
+  max-width: calc(100% - 28px);
+  align-items: center;
+  gap: 8px;
+  margin: 12px auto 0;
+  border: 1px solid rgba(126, 163, 181, .56);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: rgba(242, 249, 252, .94);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .2);
+  backdrop-filter: blur(16px);
+}
+
+.bulkActions strong { color: #244b60; font-size: 12px; }
+.bulkActions button { display: inline-flex; min-height: 32px; align-items: center; gap: 6px; border: 1px solid #a8c2ce; border-radius: 8px; padding: 0 10px; background: #e4f0f5; color: #315a70; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.bulkActions button:hover, .bulkActions button:focus-visible { border-color: #6f9caf; background: #d5e8f0; }
+.bulkActions .bulkDeleteButton { border-color: #e4a6a4; background: #fff0ef; color: #a7302c; }
+.bulkActions .bulkClearButton { background: transparent; }
+
+:global(html[data-theme="dark"]) .dealCardSelected { border-color: #83b9ce; box-shadow: 0 0 0 3px rgba(131, 185, 206, .18), 0 18px 34px rgba(0, 0, 0, .3); }
+:global(html[data-theme="dark"]) .cardSelectionButton { border-color: #718690; background: #29353b; color: #afc3cc; }
+:global(html[data-theme="dark"]) .cardSelectionButtonSelected { border-color: #ffaaa3; background: radial-gradient(circle at 35% 30%, #fff3f1 0 10%, #ff887c 28%, #e44940 68%, #8d161b 100%); color: #fff; box-shadow: 0 0 0 2px rgba(255, 122, 114, .2), 0 0 12px rgba(255, 92, 81, .95), 0 0 24px rgba(255, 92, 81, .5), inset 0 1px 2px rgba(255, 255, 255, .72); }
+:global(html[data-theme="dark"]) .bulkActions { border-color: #4d6570; background: rgba(35, 45, 50, .94); }
+:global(html[data-theme="dark"]) .bulkActions strong { color: #d8e7ee; }
+:global(html[data-theme="dark"]) .bulkActions button { border-color: #526b77; background: #354750; color: #dceaf0; }
+:global(html[data-theme="dark"]) .bulkActions .bulkDeleteButton { border-color: #7e5050; background: #482e31; color: #ffc6c2; }
 
 .dealCard:has(.cardMenu),
 .dealCard:has(.statusMiniMenu) {
