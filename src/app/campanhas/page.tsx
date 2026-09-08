@@ -16,7 +16,7 @@ import {
   listarAfiliados,
   listarCampanhas,
 } from "@/lib/api";
-import { FiArrowLeft, FiBarChart2, FiEdit2, FiGrid, FiMoreVertical, FiSearch, FiTrash2, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiBarChart2, FiEdit2, FiGrid, FiMoreVertical, FiPlus, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import {
   RealtimeEventName,
   useRealtimeEvents,
@@ -26,6 +26,7 @@ import {
   CampaignDetailDashboard,
   CampaignSummaryDashboard,
 } from "./CampaignDetailDashboard";
+import Link from "next/link";
 import styles from "./campanhas.module.css";
 
 const AUTO_REFRESH_MS = 5000;
@@ -269,6 +270,16 @@ export default function Campanhas() {
             Resumo
           </button>
         </div>}
+        <div className={styles.headerLinks}>
+          <Link className={styles.createCampaignButton} href="/criar-campanha">
+            <FiPlus aria-hidden="true" />
+            Criar campanha
+          </Link>
+          <Link className={styles.reportCampaignButton} href="/links-campanhas/relatorios/campanha">
+            <FiBarChart2 aria-hidden="true" />
+            Relatório de campanhas
+          </Link>
+        </div>
       </div>
 
       {selectedCampaign && (

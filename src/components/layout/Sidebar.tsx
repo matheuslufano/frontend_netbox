@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { BsClipboardDataFill } from "react-icons/bs";
-import { FiGitBranch, FiShare2 } from "react-icons/fi";
+import { FiGitBranch, FiShare2, FiUsers } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
 import { ImUsers } from "react-icons/im";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
@@ -196,6 +196,19 @@ export default function Sidebar() {
               <span className={styles.itemLabel}>CRM</span>
             </Link>
           </li>
+
+          <li className={styles.button}>
+            <Link
+              href="/contatos"
+              className={`${styles.menuItem} ${pathname === "/contatos" ? styles.menuItemActive : ""}`}
+              aria-label="Contatos"
+              aria-current={pathname === "/contatos" ? "page" : undefined}
+            >
+              <FiUsers className={styles.icon} />
+              <span className={styles.itemLabel}>Contatos</span>
+            </Link>
+          </li>
+
           <li className={styles.button}>
             <Link
               href="/fluxograma-conversoes"

@@ -77,6 +77,7 @@ function safe(item: AppNotification): AppNotification {
     context: item.context,
     type: item.type,
     title: events[item.context][0],
+    message: item.message,
     href: events[item.context][1] || undefined,
     read: item.read,
     readAt: item.readAt,

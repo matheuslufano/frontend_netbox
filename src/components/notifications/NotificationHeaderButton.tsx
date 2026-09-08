@@ -84,6 +84,7 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
     reload,
     markRead,
     remove,
+    removeAll,
   } = useSystemNotifications();
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -184,6 +185,16 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
             onClick={() => setUnreadOnly(true)}
           >
             Não lidas
+          </button>
+          <button
+            type="button"
+            className={styles.clearAll}
+            disabled={!history.length}
+            onClick={() => {
+              if (window.confirm("Apagar todas as notificações?")) removeAll();
+            }}
+          >
+            <FiTrash2 aria-hidden="true" /> Apagar todas
           </button>
         </div>
       </header>

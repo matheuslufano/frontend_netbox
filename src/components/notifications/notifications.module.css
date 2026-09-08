@@ -6,10 +6,10 @@
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid #bfd2dc;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: #e8f1f5;
+  color: #315a70;
   font-size: 18px;
   cursor: pointer;
   transition:
@@ -20,8 +20,9 @@
 .bell:hover,
 .bell[aria-expanded="true"] {
   outline: 0;
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 95, 52, 0.46);
+  border-color: #7faabd;
+  background: #d6e7ee;
+  color: #244b60;
   transform: translateY(-1px);
 }
 .bell:focus-visible,
@@ -120,6 +121,17 @@
   background: #c448181c;
   border-color: #bb431c;
   font-weight: 700;
+}
+.clearAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: #a53b2a;
+}
+.clearAll:hover:not(:disabled) {
+  background: #fbe8e4 !important;
+  color: #8f2f20;
 }
 .list {
   min-height: 0;

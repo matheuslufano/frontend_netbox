@@ -103,6 +103,31 @@ export type AffiliateContact = {
   conversionIds: number[];
 };
 
+export type ContactRecord = {
+  id: string;
+  identified: boolean;
+  name: string | null;
+  phone: string | null;
+  document: string | null;
+  city: string | null;
+  source: string;
+  campaignName: string | null;
+  linkName: string | null;
+  attendanceIds: string[];
+  conversionIds: number[];
+  affiliates: { id: number; name: string }[];
+  totalAttendances: number;
+  totalAffiliates: number;
+  totalConversions: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+};
+
+export type ContactsResponse = {
+  contacts: ContactRecord[];
+  total: number;
+};
+
 export type AffiliateStats = {
   affiliate: string;
   affiliatePhotoUrl: string | null;
@@ -871,6 +896,11 @@ export async function apagarConversao(id: number) {
   await api.delete(`/conversions/${id}`);
 }
 
+export async function listarContatos() {
+  const { data } = await api.get<ContactsResponse>("/contacts");
+  return data;
+}
+
 export async function buscarEstatisticasAfiliado(id: number) {
   const { data } = await api.get<AffiliateStats>(`/affiliate/${id}/stats`);
   return {
@@ -1437,10 +1467,12 @@ export async function criarCrmStage(payload: CrmStagePayload) {
 export async function atualizarCrmStage(
   id: string | number,
   payload: CrmStagePayload,
+  options?: { notify?: boolean },
 ) {
   const { data } = await api.put<{ stage: CrmStage }>(
     `/crm/stages/${id}`,
     payload,
+    { skipSystemNotification: options?.notify === false } as Parameters<typeof api.put>[2] & { skipSystemNotification: boolean },
   );
   return data.stage;
 }

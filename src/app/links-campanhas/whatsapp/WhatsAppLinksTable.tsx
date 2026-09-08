@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { FiCopy, FiEdit2, FiExternalLink, FiLayers, FiTrash2, FiX } from "react-icons/fi";
 import { Affiliate, WhatsAppLinkItem } from "@/lib/api";
 import { maskBrazilianPhone } from "./whatsappLink";
@@ -50,7 +51,10 @@ export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSa
     <section className={styles.listCard}>
       <div className={styles.listHeader}>
         <div><span className={styles.kicker}>Histórico</span><h2>Links criados</h2></div>
-        <span>{items.length} registro{items.length === 1 ? "" : "s"}</span>
+        <div className={styles.listHeaderActions}>
+          <span>{items.length} registro{items.length === 1 ? "" : "s"}</span>
+          <Link className={styles.historyButton} href="/links-campanhas/relatorios/whatsapp">Ver relatÃ³rio</Link>
+        </div>
       </div>
       {items.length === 0 ? (
         <p className={styles.empty}>Nenhum link WhatsApp salvo ainda.</p>

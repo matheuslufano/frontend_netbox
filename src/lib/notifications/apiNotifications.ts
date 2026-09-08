@@ -83,6 +83,15 @@ function successMessage(context: NotificationContext, data: unknown) {
   return `${name} foi atualizado com sucesso.`;
 }
 
+function actorName() {
+  try {
+    const user = JSON.parse(localStorage.getItem("afiliados_netbox_user") || "null");
+    return typeof user?.name === "string" && user.name.trim() ? user.name.trim() : "usuário atual";
+  } catch {
+    return "usuário atual";
+  }
+}
+
 export function notifyApiSuccess(method: string | undefined, url: string | undefined, requestOwner: string | null, toastId: string | null, data?: unknown) {
   const description = describeMutation(method, url);
   if (!description || !toastId) return;
@@ -95,11 +104,12 @@ export function notifyApiSuccess(method: string | undefined, url: string | undef
     ? "Login realizado"
     : description.successTitle || events[description.context]?.[0] || "Alterações salvas";
   const icon = description.context.endsWith("deleted") ? "deleted" : undefined;
+  const detail = `${successMessage(description.context, data)} Alterado por ${actorName()}.`;
   notify.update(toastId, {
     type: description.type,
     context: description.context,
     title,
-    message: login ? "Bem-vindo ao Afiliados Netbox." : successMessage(description.context, data),
+    message: login ? "Bem-vindo ao Afiliados Netbox." : detail,
     duration: description.type === "automation" || description.type === "crm" ? 5_000 : 4_000,
     persist: description.persist,
     icon,
@@ -120,7 +130,8 @@ export function notifyApiFailure(method: string | undefined, url: string | undef
     title,
     message: getFriendlyErrorMessage(error, integration ? "Não foi possível comunicar com a integração." : title),
     duration: 7_000,
-    persist: integration,
+    // Falhas relevantes devem permanecer disponíveis na Central após o toast.
+    persist: true,
     source: "api",
   });
 }

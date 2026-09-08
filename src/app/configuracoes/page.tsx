@@ -1,7 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Affiliate,
   ChatmixWebhookLogResponse,
@@ -156,7 +163,11 @@ const settingsSections: {
   },
 ];
 export default function Configuracoes() {
-  return <Suspense fallback={null}><ConfiguracoesContent /></Suspense>;
+  return (
+    <Suspense fallback={null}>
+      <ConfiguracoesContent />
+    </Suspense>
+  );
 }
 
 function ConfiguracoesContent() {
@@ -188,8 +199,11 @@ function ConfiguracoesContent() {
   const [activeSettingsSection, setActiveSettingsSection] =
     useState<SettingsSection>("inicio");
   useEffect(() => {
-    if (notificationParams.get('section') === 'usuarios') {
-      const timer = window.setTimeout(() => setActiveSettingsSection('usuarios'), 0);
+    if (notificationParams.get("section") === "usuarios") {
+      const timer = window.setTimeout(
+        () => setActiveSettingsSection("usuarios"),
+        0,
+      );
       return () => window.clearTimeout(timer);
     }
   }, [notificationParams]);
@@ -233,7 +247,12 @@ function ConfiguracoesContent() {
           String(value).toLowerCase().includes(normalizedProfileSearch),
         ),
     );
-  }, [normalizedProfileSearch, profileListFilter, showAllProfileResults, users]);
+  }, [
+    normalizedProfileSearch,
+    profileListFilter,
+    showAllProfileResults,
+    users,
+  ]);
 
   const filteredAffiliates = useMemo(() => {
     if (profileListFilter === "users") {
@@ -953,8 +972,16 @@ function ConfiguracoesContent() {
           </aside>
 
           <main className={styles.settingsContent}>
-            {message && <p className={styles.success} role="status">{message}</p>}
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            {message && (
+              <p className={styles.success} role="status">
+                {message}
+              </p>
+            )}
+            {error && (
+              <p className={styles.error} role="alert">
+                {error}
+              </p>
+            )}
 
             {activeSettingsSection === "inicio" && (
               <section className={styles.aboutPanel}>
@@ -1161,7 +1188,7 @@ function ConfiguracoesContent() {
                               aria-label="Voltar para pesquisar perfis"
                               title="Voltar"
                             >
-                              &lt;&lt;
+                              &lt;
                             </button>
                             <div>
                               <span>Editar perfil</span>
@@ -1436,7 +1463,9 @@ function ConfiguracoesContent() {
                             <div className={styles.profileStats}>
                               <button
                                 type="button"
-                                onClick={() => void handleShowAllProfiles("users")}
+                                onClick={() =>
+                                  void handleShowAllProfiles("users")
+                                }
                                 disabled={refreshingProfiles}
                                 aria-label="Mostrar todos os usuários"
                               >

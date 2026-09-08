@@ -6,6 +6,15 @@ const backendUrl =
 const nextConfig = {
   /* config options here */
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cataas.com",
+        pathname: "/**",
+      },
+    ],
+  },
   async rewrites() {
     return [
       {

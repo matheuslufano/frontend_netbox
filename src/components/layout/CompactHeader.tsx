@@ -95,7 +95,7 @@ export default function CompactHeader() {
           <FiArrowLeft aria-hidden="true" />
         </button>
 
-        <nav className={styles.compactBrand} aria-label="NavegaÃ§Ã£o estrutural">
+        <nav className={styles.compactBrand} aria-label="Navegação estrutural">
           <Link href="/dashboard" className={styles.breadcrumbLink}>
             Painel Netbox
           </Link>

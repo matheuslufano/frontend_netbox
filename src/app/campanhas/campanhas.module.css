@@ -13,6 +13,71 @@
   margin-bottom: 28px;
 }
 
+.headerLinks {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.createCampaignButton {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 24px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, #fff8f5, #ffe4da);
+  color: #b83218;
+  box-shadow: 0 5px 12px rgba(83, 35, 19, 0.18);
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.createCampaignButton:hover,
+.createCampaignButton:focus-visible {
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(83, 35, 19, 0.24);
+  transform: translateY(-1px);
+}
+
+.reportCampaignButton {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.3);
+  color: #4b1c13;
+  box-shadow: 0 4px 10px rgba(83, 35, 19, 0.14);
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.reportCampaignButton:hover,
+.reportCampaignButton:focus-visible {
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 7px 16px rgba(83, 35, 19, 0.2);
+  transform: translateY(-1px);
+}
+
+.reportCampaignButton:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 2px;
+}
+
+.createCampaignButton:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 2px;
+}
+
 .viewTabs {
   display: inline-flex;
   gap: 4px;
@@ -231,6 +296,18 @@
   .searchBox,
   .viewTabs {
     width: 100%;
+  }
+
+  .headerLinks {
+    width: 100%;
+  }
+
+  .createCampaignButton {
+    flex: 1;
+  }
+
+  .reportCampaignButton {
+    flex: 1;
   }
 
   .viewTabs button {

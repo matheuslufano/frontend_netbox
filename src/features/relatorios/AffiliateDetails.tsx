@@ -42,6 +42,9 @@ import { AffiliateDetail } from "./useRelatorios";
 import styles from "./relatorios.module.css";
 import integrationStyles from "@/app/integracoes/integracoes.module.css";
 
+const siteAlert = (message: string) =>
+  notifySystem({ type: "info", title: "Aviso", message });
+
 interface AffiliateDetailsProps {
   details: AffiliateDetail[];
   refresh: () => void;
@@ -191,10 +194,10 @@ export default function AffiliateDetails({
   async function handleCopyLink(link: string) {
     try {
       await navigator.clipboard.writeText(link);
-      alert("Link copiado com sucesso!");
+      siteAlert("Link copiado com sucesso!");
     } catch (error) {
       console.error("Erro ao copiar link:", error);
-      alert("Erro ao copiar o link.");
+      siteAlert("Erro ao copiar o link.");
     }
   }
 
@@ -216,7 +219,7 @@ export default function AffiliateDetails({
       });
       refresh();
     } catch (error) {
-      alert(getApiErrorMessage(error, "Não foi possível apagar o link."));
+      siteAlert(getApiErrorMessage(error, "Não foi possível apagar o link."));
     } finally {
       setDeletingLinkId(null);
     }
@@ -1492,7 +1495,7 @@ function ConversionFlowPanel({
       });
       onRefresh();
     } catch (error) {
-      alert(
+      siteAlert(
         getApiErrorMessage(error, "Não foi possível atualizar a conversão."),
       );
     } finally {
@@ -1517,7 +1520,7 @@ function ConversionFlowPanel({
       });
       onRefresh();
     } catch (error) {
-      alert(getApiErrorMessage(error, "Não foi possível apagar a conversão."));
+      siteAlert(getApiErrorMessage(error, "Não foi possível apagar a conversão."));
     } finally {
       setDeletingConversionId(null);
     }
@@ -1558,7 +1561,7 @@ function ConversionFlowPanel({
           },
         }));
         if (showAlert) {
-          alert(
+          siteAlert(
             "Informe um CPF ou CNPJ válido no pré-cadastro para validar automaticamente no SGP.",
           );
         }
@@ -1593,7 +1596,7 @@ function ConversionFlowPanel({
             [getStageStatusKey(conversion.id, sgpStepIndex)]: false,
           }));
           if (showAlert) {
-            alert(
+          siteAlert(
               "CPF/CNPJ do pré-cadastro ainda não foi encontrado como cliente cadastrado no SGP.",
             );
           }
@@ -1637,7 +1640,7 @@ function ConversionFlowPanel({
           },
         }));
         if (showAlert) {
-          alert(getApiErrorMessage(error, "Não foi possível validar no SGP."));
+          siteAlert(getApiErrorMessage(error, "Não foi possível validar no SGP."));
         }
       } finally {
         if (showLoading) {

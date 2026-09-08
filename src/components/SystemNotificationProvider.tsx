@@ -139,11 +139,12 @@ export default function SystemNotificationProvider({ children }: { children: Rea
   const lastApiFeedbackAt = useRef(0);
 
   const persist = useCallback((toast: ToastNotification) => {
-    if (!toast.persist) return;
+    if (!toast.persist && toast.type !== "error") return;
     const context = toast.context ?? "generic";
     addHistory({
       id: toast.eventId || toast.id, context, type: toast.type,
       title: events[context][0], href: events[context][1] || undefined,
+      message: toast.message,
       read: false, createdAt: new Date().toISOString(),
     });
   }, [addHistory]);
@@ -192,7 +193,13 @@ export default function SystemNotificationProvider({ children }: { children: Rea
       }
       return current.map((toast) => {
       if (toast.id !== id) return toast;
-      const normalized = normalizeNotification({ ...toast, ...input, id, persist: input.persist ?? toast.persist });
+      const normalized = normalizeNotification({
+        ...toast,
+        ...input,
+        ...(toast.icon === "loading" && input.icon === undefined ? { icon: undefined } : {}),
+        id,
+        persist: input.persist ?? toast.persist,
+      });
       if (!normalized) return toast;
       const next = { ...normalized, exiting: false, revision: toast.revision + 1 };
       persist(next);

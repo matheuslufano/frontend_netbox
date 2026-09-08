@@ -77,11 +77,11 @@ export const notify = {
     try {
       const value = await promise;
       const next = typeof states.success === "function" ? states.success(value) : states.success;
-      notify.update(id, { ...next, type: "success", duration: next.duration ?? 4_000 });
+      notify.update(id, { ...next, type: "success", icon: next.icon, duration: next.duration ?? 4_000 });
       return value;
     } catch (error) {
       const next = typeof states.error === "function" ? states.error(error) : states.error;
-      notify.update(id, { ...next, type: "error", duration: next.duration ?? 7_000 });
+      notify.update(id, { ...next, type: "error", icon: next.icon, duration: next.duration ?? 7_000 });
       throw error;
     }
   },

@@ -26,7 +26,6 @@
   gap: 12px;
   padding: 8px 14px 5px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(18px);
 }
 
@@ -69,6 +68,51 @@
   width: 100%;
   min-width: 0;
   margin: 0;
+}
+
+.crmTopbar > header .viewButton,
+.crmTopbar > header .viewButtonActive,
+.crmTopbar > header .iconButton,
+.crmTopbar > header .createButton {
+  min-width: 36px;
+  min-height: 36px;
+  border: 1px solid #bfd2dc;
+  border-radius: 9px;
+  background: #e8f1f5;
+  color: #315a70;
+  box-shadow: none;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.crmTopbar > header .viewButtonActive,
+.crmTopbar > header .createButton {
+  border-color: #7faabd;
+  background: #7faabd;
+  color: #f7fbfd;
+}
+
+.crmTopbar > header .viewButton:hover,
+.crmTopbar > header .iconButton:hover,
+.crmTopbar > header .viewButtonActive:hover,
+.crmTopbar > header .createButton:hover {
+  border-color: #6f9caf;
+  background: #d6e7ee;
+  color: #244b60;
+  transform: translateY(-1px);
+}
+
+:global(html[data-theme="dark"]) .crmTopbar > header .viewButton,
+:global(html[data-theme="dark"]) .crmTopbar > header .iconButton {
+  border-color: #52636c;
+  background: #35434a;
+  color: #c9dce5;
+}
+
+:global(html[data-theme="dark"]) .crmTopbar > header .viewButtonActive,
+:global(html[data-theme="dark"]) .crmTopbar > header .createButton {
+  border-color: #7098aa;
+  background: #668d9f;
+  color: #f1f7fa;
 }
 
 .viewSwitcher {
@@ -2883,9 +2927,8 @@
 :global(html[data-theme="dark"]) .optionModal,
 :global(html[data-theme="dark"]) .syncModal {
   border-color: #555852;
-  background: linear-gradient(145deg, #393a36, #30312e);
+  background: linear-gradient(145deg, #393a3602, #30312e00);
   color: var(--nb-text-primary);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
 }
 
 :global(html[data-theme="dark"]) .dealCard,
@@ -2951,8 +2994,8 @@
 }
 
 :global(html[data-theme="dark"]) .crmTopbar {
-  border-bottom-color: #4d504a;
-  background: rgba(42, 43, 40, 0.9);
+  border-bottom-color: #4d504a00;
+  background: rgba(42, 43, 40, 0);
 }
 
 @media (max-width: 1180px) {

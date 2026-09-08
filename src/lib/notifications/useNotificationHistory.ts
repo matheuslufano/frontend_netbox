@@ -47,5 +47,6 @@ export function useNotificationHistory() {
   const add = useCallback((item: AppNotification) => change(current => current.some(n => n.id === item.id) ? current : [item, ...current]), [change]);
   const markRead = useCallback((id?: string) => change(current => current.map(n => (!id || n.id === id) && !n.read ? { ...n, read: true, readAt: new Date().toISOString() } : n)), [change]);
   const remove = useCallback((id: string) => change(current => current.filter(n => n.id !== id)), [change]);
-  return { history, loading, error, offline, reload, add, markRead, remove, unreadCount: history.filter(n => !n.read).length };
+  const removeAll = useCallback(() => change(() => []), [change]);
+  return { history, loading, error, offline, reload, add, markRead, remove, removeAll, unreadCount: history.filter(n => !n.read).length };
 }

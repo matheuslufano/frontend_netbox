@@ -32,6 +32,7 @@ import {
   buildPreviewMessage,
   maskBrazilianPhone,
   normalizeBrazilianPhone,
+  isValidWhatsAppNumber,
 } from "./whatsappLink";
 import styles from "./whatsapp.module.css";
 
@@ -46,6 +47,7 @@ export default function WhatsAppLinkPage() {
   const [codeMode, setCodeMode] = useState<"existing" | "new">("existing");
   const [affiliateCodeId, setAffiliateCodeId] = useState("");
   const [phone, setPhone] = useState("");
+  const [savedPhones, setSavedPhones] = useState<string[]>([]);
   const [message, setMessage] = useState(initialMessage);
   const [appendCode, setAppendCode] = useState(true);
   const [template, setTemplate] = useState(DEFAULT_IDENTIFICATION_TEMPLATE);
@@ -83,6 +85,7 @@ export default function WhatsAppLinkPage() {
   );
 
   useEffect(() => {
+    try { setSavedPhones(JSON.parse(localStorage.getItem("netbox:whatsapp-phones") || "[]")); } catch { setSavedPhones([]); }
     Promise.all([
       listarAfiliados(),
       listarLinksWhatsApp(),
@@ -102,6 +105,15 @@ export default function WhatsAppLinkPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  function savePhoneContact() {
+    const normalized = normalizeBrazilianPhone(phone);
+    if (!isValidWhatsAppNumber(normalized)) return;
+    const next = [...new Set([normalized, ...savedPhones])].slice(0, 30);
+    setSavedPhones(next);
+    localStorage.setItem("netbox:whatsapp-phones", JSON.stringify(next));
+    notify.success({ title: "Contato salvo", message: "O número foi adicionado à sua lista de WhatsApp." });
+  }
+
   useEffect(() => {
     if (!affiliateId) return;
     listarCodigosAfiliados({ affiliateId: Number(affiliateId) })
@@ -116,7 +128,7 @@ export default function WhatsAppLinkPage() {
     if (!affiliateId) return "Selecione um afiliado.";
     if (codeMode === "existing" && !affiliateCodeId)
       return "Selecione um código de afiliado.";
-    if (!/^55[1-9]{2}9?\d{8}$/.test(normalizeBrazilianPhone(phone)))
+    if (!isValidWhatsAppNumber(phone))
       return "Informe um WhatsApp brasileiro válido, com DDD.";
     if (message.length > 1000)
       return "A mensagem deve ter no máximo 1000 caracteres.";
@@ -188,7 +200,7 @@ export default function WhatsAppLinkPage() {
   function tablePayload(item: WhatsAppLinkItem, draft: WhatsAppLinkDraft) {
     if (!draft.name.trim()) throw new Error("Informe um nome para o link.");
     if (!draft.affiliateId) throw new Error("Selecione o afiliado responsável.");
-    if (!/^55[1-9]{2}9?\d{8}$/.test(normalizeBrazilianPhone(draft.whatsappNumber)))
+    if (!isValidWhatsAppNumber(draft.whatsappNumber))
       throw new Error("Informe um WhatsApp brasileiro válido, com DDD.");
     if (draft.appendAffiliateCode && !draft.identificationTemplate.includes("{{codigo}}"))
       throw new Error("O texto de identificação deve conter {{codigo}}.");
@@ -367,12 +379,19 @@ export default function WhatsAppLinkPage() {
           </fieldset>
           <label className={styles.field}>
             <span>Número do WhatsApp</span>
+            <div className={styles.phoneFieldRow}>
             <input
               value={phone}
               onChange={(e) => setPhone(maskBrazilianPhone(e.target.value))}
               inputMode="tel"
-              placeholder="(63) 99999-9999"
+              placeholder="+55 800 602 2732"
             />
+            <select aria-label="Números usados anteriormente" value="" onChange={(event) => event.target.value && setPhone(maskBrazilianPhone(event.target.value))}>
+              <option value="">Usados</option>
+              {savedPhones.map((item) => <option key={item} value={item}>{maskBrazilianPhone(item)}</option>)}
+            </select>
+            <button type="button" className={styles.savePhoneButton} onClick={savePhoneContact}>Salvar número</button>
+            </div>
           </label>
           <label className={styles.field} htmlFor="whatsapp-message">
             <span>Mensagem que será enviada pelo cliente</span>
