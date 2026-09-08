@@ -28,6 +28,7 @@ import {
   type SavedCrmFilter,
   type User,
 } from "@/lib/api";
+import NotificationHeaderButton from "@/components/notifications/NotificationHeaderButton";
 import styles from "./CrmFilterHeader.module.css";
 
 type Option = { id: string; name: string };
@@ -382,6 +383,7 @@ export default function CrmFilterHeader(props: Props) {
       </label>
 
       <div className={styles.panelWrap} ref={panelRef}>
+        <NotificationHeaderButton />
         <button
           type="button"
           className={`${styles.filterButton} ${props.conditions.length ? styles.active : ""}`}

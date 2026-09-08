@@ -649,9 +649,7 @@
 :global(html[data-theme="dark"]) .chartCardLarge,
 :global(html[data-theme="dark"]) .chartCardCompact {
   border-color: #565952;
-  background: #393a36;
   color: var(--nb-text-primary);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
 :global(html[data-theme="dark"]) .summaryBadge,

@@ -1,3 +1,6 @@
+import { beginApiNotification, notifyApiFailure, notifyApiSuccess } from "./notifications/apiNotifications";
+import { getFriendlyErrorMessage } from "./notifications/getFriendlyErrorMessage";
+import { sessionOwner } from "./notifications/repository";
 import axios from "axios";
 
 export type Affiliate = {
@@ -573,7 +576,35 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || defaultApiUrl,
 });
 
+const notificationRequests = new WeakMap<object, { owner: string | null; toastId: string | null }>();
+api.interceptors.response.use(
+  (response) => {
+    const request = notificationRequests.get(response.config);
+    try { notifyApiSuccess(response.config.method, response.config.url, request?.owner ?? null, request?.toastId ?? null, response.data); } catch { /* O feedback nunca pode invalidar uma ação confirmada. */ }
+    return response;
+  },
+  (error) => {
+    const request = error?.config ? notificationRequests.get(error.config) : undefined;
+    try { notifyApiFailure(error?.config?.method, error?.config?.url, error, request?.toastId ?? null); } catch { /* Mantém o erro original da API. */ }
+    return Promise.reject(error);
+  },
+);
+
 api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    let owner: string | null = null;
+    try { owner = sessionOwner(); } catch { owner = null; }
+    const skipNotification = Boolean(
+      (config as typeof config & { skipSystemNotification?: boolean })
+        .skipSystemNotification,
+    );
+    notificationRequests.set(config, {
+      owner,
+      toastId: skipNotification
+        ? null
+        : beginApiNotification(config.method, config.url),
+    });
+  }
   if (typeof window !== "undefined") {
     const token = window.localStorage.getItem("afiliados_netbox_token");
     if (token) {
@@ -643,67 +674,7 @@ function normalizeConversionEvent(event: AffiliateConversionEvent) {
 }
 
 export function getApiErrorMessage(error: unknown, fallback: string) {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data;
-    const status = error.response?.status;
-    const statusText = error.response?.statusText;
-    const messages: string[] = [];
-
-    if (data && typeof data === "object") {
-      const payload = data as {
-        error?: unknown;
-        message?: unknown;
-        details?: unknown;
-      };
-
-      if (payload.error) {
-        messages.push(String(payload.error));
-      }
-
-      if (payload.message && payload.message !== payload.error) {
-        messages.push(String(payload.message));
-      }
-
-      if (payload.details) {
-        if (typeof payload.details === "string") {
-          messages.push(payload.details);
-        } else {
-          messages.push(JSON.stringify(payload.details));
-        }
-      }
-    } else if (typeof data === "string" && data.trim()) {
-      const text = data.trim();
-      // Remove HTML tags when backend returns an error page (e.g. Express error)
-      const stripped = text.includes("<")
-        ? text
-            .replace(/<[^>]*>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim()
-        : text;
-
-      if (stripped) {
-        messages.push(stripped);
-      }
-    }
-
-    if (messages.length > 0) {
-      return messages.join(" - ");
-    }
-
-    if (status) {
-      return `${fallback} (${status}${statusText ? ` ${statusText}` : ""})`;
-    }
-
-    if (error.request) {
-      return `${fallback} - API indisponivel ou sem resposta`;
-    }
-
-    if (error.message) {
-      return `${fallback} - ${error.message}`;
-    }
-  }
-
-  return fallback;
+  return getFriendlyErrorMessage(error, fallback);
 }
 
 export async function listarAfiliados() {
@@ -1414,15 +1385,24 @@ export async function definirFiltroCrmPadrao(id: string) {
 export async function atualizarCrmDeal(
   id: string | number,
   payload: Record<string, unknown>,
+  options?: { notify?: boolean },
 ) {
-  const { data } = await api.put(`/crm/deals/${id}`, payload);
+  const { data } = await api.put(`/crm/deals/${id}`, payload, {
+    skipSystemNotification: options?.notify === false,
+  } as Parameters<typeof api.put>[2] & { skipSystemNotification: boolean });
   return data;
 }
 
-export async function criarCrmDeal(payload: Record<string, unknown>) {
+export async function criarCrmDeal(
+  payload: Record<string, unknown>,
+  options?: { notify?: boolean },
+) {
   const { data } = await api.post<{ deal?: CrmDeal } | CrmDeal>(
     "/crm/deals",
     payload,
+    {
+      skipSystemNotification: options?.notify === false,
+    } as Parameters<typeof api.post>[2] & { skipSystemNotification: boolean },
   );
 
   if (data && typeof data === "object" && "deal" in data) {

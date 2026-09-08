@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { notify } from "@/lib/notifications/notify";
 import { FaWhatsapp } from "react-icons/fa";
 import {
   FiArrowLeft,
-  FiCheck,
   FiCopy,
   FiDownload,
   FiExternalLink,
@@ -170,8 +170,18 @@ export default function WhatsAppLinkPage() {
       await navigator.clipboard.writeText(url);
       setNotice(success);
       setError("");
+      notify.info({
+        context: "copied",
+        icon: "copied",
+        title: "Link copiado",
+        message: "O link do WhatsApp foi copiado para a área de transferência.",
+      });
     } catch {
       setError("Não foi possível copiar o link.");
+      notify.error({
+        title: "Não foi possível copiar o link",
+        message: "Permita o acesso à área de transferência e tente novamente.",
+      });
     }
   }
 
@@ -262,16 +272,12 @@ export default function WhatsAppLinkPage() {
           </p>
         </div>
       </header>
-      {(notice || error) && (
+      {error && (
         <div
-          className={error ? styles.toastError : styles.toast}
-          role={error ? "alert" : "status"}
+          className={styles.toastError}
+          role="alert"
         >
-          {error || (
-            <>
-              <FiCheck /> {notice}
-            </>
-          )}
+          {error}
         </div>
       )}
       <div className={styles.builderGrid}>
@@ -451,6 +457,7 @@ export default function WhatsAppLinkPage() {
       <WhatsAppLinksTable
         items={items}
         affiliates={affiliates}
+        onCopy={copyUrl}
         onSaveEdit={saveTableEdit}
         onSaveDuplicate={saveTableDuplicate}
         onDelete={deleteTableItem}

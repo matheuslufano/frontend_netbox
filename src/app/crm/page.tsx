@@ -70,6 +70,7 @@ import {
   type RealtimeEventName,
 } from "@/lib/useRealtimeEvents";
 import { getDarkThemeColor } from "@/lib/themeColors";
+import { notify } from "@/lib/notifications/notify";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import styles from "./crm.module.css";
 import CrmFilterHeader from "./CrmFilterHeader";
@@ -1408,9 +1409,21 @@ export default function Crm() {
                   stageId: newContactStageId,
                   status: "new",
                   activity: "Novo atendimento recebido via webhook",
-                }),
+                }, { notify: false }),
               ),
           );
+          notify.crm({
+            context: "crm-card-created",
+            title:
+              incomingWebhookDeals.length === 1
+                ? "Cartão criado automaticamente"
+                : "Cartões criados automaticamente",
+            message:
+              incomingWebhookDeals.length === 1
+                ? "Um novo atendimento foi adicionado à etapa Novo contato."
+                : `${incomingWebhookDeals.length} novos atendimentos foram adicionados à etapa Novo contato.`,
+            persist: true,
+          });
         }
 
         setSyncStatus("success");
@@ -2440,6 +2453,10 @@ export default function Crm() {
     URL.revokeObjectURL(url);
     setSyncStatus("success");
     setSyncMessage(`${filteredDeals.length} negociação(oes) exportada(s).`);
+    notify.info({
+      title: "Relatório exportado",
+      message: `${filteredDeals.length} negociação(ões) foram incluídas no arquivo CSV.`,
+    });
   }
 
   async function importLeadsFromText() {
@@ -2451,6 +2468,10 @@ export default function Crm() {
     if (lines.length === 0) {
       setSyncStatus("warning");
       setSyncMessage("Cole ao menos um lead para importar.");
+      notify.warning({
+        title: "Nenhum lead para importar",
+        message: "Cole ao menos uma linha com os dados do lead.",
+      });
       return;
     }
 
@@ -2504,8 +2525,15 @@ export default function Crm() {
     setSyncStatus("info");
     setSyncMessage(`Salvando ${importedDeals.length} lead(s) no backend...`);
 
+    const importToastId = notify.loading({
+      title: "Importando leads",
+      message: `Salvando ${importedDeals.length} lead(s) no CRM…`,
+      icon: "crm",
+    });
     const results = await Promise.allSettled(
-      importedDeals.map((deal) => criarCrmDeal(createBackendDealPayload(deal))),
+      importedDeals.map((deal) =>
+        criarCrmDeal(createBackendDealPayload(deal), { notify: false }),
+      ),
     );
     const savedDeals = results
       .map((result, index) =>
@@ -2537,12 +2565,27 @@ export default function Crm() {
     setSyncMessage(
       `${savedDeals.length} de ${importedDeals.length} lead(s) importado(s) foram salvos no backend.`,
     );
+    notify.update(importToastId, {
+      type: savedDeals.length === importedDeals.length ? "crm" : "warning",
+      icon: savedDeals.length === importedDeals.length ? "crm" : "warning",
+      title:
+        savedDeals.length === importedDeals.length
+          ? "Importação concluída"
+          : "Importação parcialmente concluída",
+      message: `${savedDeals.length} de ${importedDeals.length} lead(s) foram salvos no CRM.`,
+      duration: savedDeals.length === importedDeals.length ? 5_000 : 6_000,
+    });
   }
 
   async function syncChatmix() {
     setSyncStatus("info");
     setSyncMessage("Sincronizando com Chatmix...");
 
+    const toastId = notify.loading({
+      title: "Sincronizando com Chatmix",
+      message: "Consultando os eventos mais recentes…",
+      icon: "automation",
+    });
     try {
       const logs = await listarChatmixWebhookLogs(20);
 
@@ -2550,9 +2593,24 @@ export default function Crm() {
       setSyncMessage(
         `${logs.length} evento(s) recentes do Chatmix consultado(s).`,
       );
-    } catch {
+      notify.update(toastId, {
+        type: "automation",
+        icon: "automation",
+        title: "Chatmix sincronizado",
+        message: `${logs.length} evento(s) recentes foram consultados.`,
+        duration: 5_000,
+      });
+    } catch (error) {
       setSyncStatus("warning");
       setSyncMessage("Não foi possível sincronizar com Chatmix.");
+      notify.update(toastId, {
+        type: "error",
+        context: "integration-error",
+        title: "Falha na integração com Chatmix",
+        message: getApiErrorMessage(error, "Não foi possível consultar o Chatmix."),
+        duration: 7_000,
+        persist: true,
+      });
     }
   }
 
@@ -2560,14 +2618,34 @@ export default function Crm() {
     setSyncStatus("info");
     setSyncMessage("Sincronizando com SGP...");
 
+    const toastId = notify.loading({
+      title: "Sincronizando com SGP",
+      message: "Consultando a base de clientes…",
+      icon: "automation",
+    });
     try {
       const data = await listarClientesSgp();
 
       setSyncStatus("success");
       setSyncMessage(`${data.summary.total} cliente(s) consultado(s) no SGP.`);
-    } catch {
+      notify.update(toastId, {
+        type: "automation",
+        icon: "automation",
+        title: "SGP sincronizado",
+        message: `${data.summary.total} cliente(s) foram consultados.`,
+        duration: 5_000,
+      });
+    } catch (error) {
       setSyncStatus("warning");
       setSyncMessage("Não foi possível sincronizar com SGP.");
+      notify.update(toastId, {
+        type: "error",
+        context: "integration-error",
+        title: "Falha na integração com SGP",
+        message: getApiErrorMessage(error, "Não foi possível consultar o SGP."),
+        duration: 7_000,
+        persist: true,
+      });
     }
   }
 

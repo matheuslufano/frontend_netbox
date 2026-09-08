@@ -21,6 +21,7 @@ import {
   RealtimeEventName,
   useRealtimeEvents,
 } from "@/lib/useRealtimeEvents";
+import { notify } from "@/lib/notifications/notify";
 import {
   CampaignDetailDashboard,
   CampaignSummaryDashboard,
@@ -41,7 +42,6 @@ export default function Campanhas() {
     useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copyHint, setCopyHint] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"campaigns" | "summary">("summary");
   const [deletingCampaignId, setDeletingCampaignId] =
@@ -160,10 +160,17 @@ export default function Campanhas() {
   async function copyLink(link: string) {
     try {
       await navigator.clipboard.writeText(link);
-      setCopyHint("Link copiado.");
-      window.setTimeout(() => setCopyHint(null), 2200);
+      notify.info({
+        context: "copied",
+        icon: "copied",
+        title: "Link copiado",
+        message: "O link da campanha foi copiado para a área de transferência.",
+      });
     } catch {
-      setCopyHint("Não foi possível copiar.");
+      notify.error({
+        title: "Não foi possível copiar o link",
+        message: "Permita o acesso à área de transferência e tente novamente.",
+      });
     }
   }
 
@@ -185,10 +192,8 @@ export default function Campanhas() {
       setExpandedCampaignId((current) =>
         current === campaign.id ? null : current
       );
-      setCopyHint("Campanha apagada.");
-      window.setTimeout(() => setCopyHint(null), 2200);
     } catch (err) {
-      setCopyHint(
+      setError(
         getApiErrorMessage(
           err,
           "Não foi possível apagar a campanha."
@@ -210,8 +215,6 @@ export default function Campanhas() {
       current.map((item) => item.id === updated.id ? updated : item)
     );
     setEditingCampaign(null);
-    setCopyHint("Campanha atualizada.");
-    window.setTimeout(() => setCopyHint(null), 2200);
   }
 
   if (loading) {
@@ -291,11 +294,6 @@ export default function Campanhas() {
         </div>
       )}
 
-      {copyHint && (
-        <p className={styles.copyHint}>
-          {copyHint}
-        </p>
-      )}
 
       {campaigns.length === 0 ? (
         <div className={styles.emptyCard}>

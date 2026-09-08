@@ -2,6 +2,7 @@
 
 import Head from "next/head";
 import { useCallback, useEffect, useState } from "react";
+import { notify } from "@/lib/notifications/notify";
 import {
   FiCopy,
   FiDownload,
@@ -42,7 +43,6 @@ export default function Links() {
   const [submitting, setSubmitting] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copyHint, setCopyHint] = useState<string | null>(null);
   const [linksModalOpen, setLinksModalOpen] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
@@ -87,7 +87,6 @@ export default function Links() {
     e.preventDefault();
     setError(null);
     setCreatedLink(null);
-    setCopyHint(null);
 
     const trimmed = url.trim();
     if (!trimmed) {
@@ -134,9 +133,17 @@ export default function Links() {
 
     try {
       await navigator.clipboard.writeText(createdLink);
-      setCopyHint("Copiado para a área de transferencia.");
+      notify.info({
+        context: "copied",
+        icon: "copied",
+        title: "Link copiado",
+        message: "O link de divulgação foi copiado para a área de transferência.",
+      });
     } catch {
-      setCopyHint("Não foi possível copiar automaticamente.");
+      notify.error({
+        title: "Não foi possível copiar o link",
+        message: "Permita o acesso à área de transferência e tente novamente.",
+      });
     }
   }
 
@@ -278,9 +285,19 @@ export default function Links() {
     try {
       await navigator.clipboard.writeText(link.promoLink);
       setCopiedLinkId(link.id);
+      notify.info({
+        context: "copied",
+        icon: "copied",
+        title: "Link copiado",
+        message: "O link de divulgação foi copiado para a área de transferência.",
+      });
       window.setTimeout(() => setCopiedLinkId(null), 2000);
     } catch {
       setLinksError("Não foi possível copiar o link.");
+      notify.error({
+        title: "Não foi possível copiar o link",
+        message: "Permita o acesso à área de transferência e tente novamente.",
+      });
     }
   }
 
@@ -443,9 +460,6 @@ export default function Links() {
                 Copiar
               </button>
 
-              {copyHint && (
-                <p className={styles.copyHint}>{copyHint}</p>
-              )}
             </div>
           )}
         </section>

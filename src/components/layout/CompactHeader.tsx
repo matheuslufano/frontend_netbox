@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import { consultarSaudeSistema } from "@/lib/api";
 import styles from "./header.module.css";
+import NotificationHeaderButton from "@/components/notifications/NotificationHeaderButton";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type ConnectionState = "checking" | "online" | "offline";
@@ -118,6 +119,7 @@ export default function CompactHeader() {
 
       <div className={styles.compactTools}>
         <ThemeToggle className={styles.themeToggle} />
+        <NotificationHeaderButton />
         <div className={styles.compactHealth} title={`Backend: ${getConnectionLabel(backendState)}`}>
         <span
           className={`${styles.compactLed} ${

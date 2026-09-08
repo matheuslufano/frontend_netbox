@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiEdit2, FiExternalLink, FiLayers, FiTrash2, FiX } from "react-icons/fi";
+import { FiCopy, FiEdit2, FiExternalLink, FiLayers, FiTrash2, FiX } from "react-icons/fi";
 import { Affiliate, WhatsAppLinkItem } from "@/lib/api";
 import { maskBrazilianPhone } from "./whatsappLink";
 import styles from "./whatsapp.module.css";
@@ -25,6 +25,7 @@ type Props = {
   onSaveEdit: (item: WhatsAppLinkItem, draft: WhatsAppLinkDraft) => Promise<void>;
   onSaveDuplicate: (item: WhatsAppLinkItem, draft: WhatsAppLinkDraft) => Promise<void>;
   onDelete: (item: WhatsAppLinkItem) => Promise<void>;
+  onCopy: (url: string, successMessage?: string) => Promise<void>;
 };
 
 function createDraft(item: WhatsAppLinkItem, duplicate: boolean): WhatsAppLinkDraft {
@@ -38,7 +39,7 @@ function createDraft(item: WhatsAppLinkItem, duplicate: boolean): WhatsAppLinkDr
   };
 }
 
-export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSaveDuplicate, onDelete }: Props) {
+export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSaveDuplicate, onDelete, onCopy }: Props) {
   const [activeEditor, setActiveEditor] = useState<ActiveEditor | null>(null);
 
   function openEditor(item: WhatsAppLinkItem, mode: EditorMode, anchor: HTMLButtonElement) {
@@ -69,6 +70,7 @@ export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSa
                   <td>
                     <div className={styles.rowActions}>
                       <a href={item.whatsappUrl} target="_blank" rel="noreferrer" title="Abrir" aria-label={`Abrir ${item.name}`}><FiExternalLink aria-hidden="true" /></a>
+                      <button type="button" onClick={() => void onCopy(item.whatsappUrl, "Link copiado com sucesso.")} title="Copiar link" aria-label={`Copiar link ${item.name}`}><FiCopy aria-hidden="true" /></button>
                       <button type="button" onClick={(event) => openEditor(item, "edit", event.currentTarget)} title="Editar" aria-label={`Editar ${item.name}`}><FiEdit2 aria-hidden="true" /></button>
                       <button type="button" onClick={(event) => openEditor(item, "duplicate", event.currentTarget)} title="Duplicar" aria-label={`Duplicar ${item.name}`}><FiLayers aria-hidden="true" /></button>
                       <button type="button" className={styles.deleteIconButton} onClick={(event) => openEditor(item, "delete", event.currentTarget)} title="Apagar" aria-label={`Apagar ${item.name}`}><FiTrash2 aria-hidden="true" /></button>

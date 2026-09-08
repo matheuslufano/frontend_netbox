@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { notify } from "@/lib/notifications/notify";
 
 export type AffiliatePromoLinkItem = {
   id: number;
@@ -99,9 +100,19 @@ export default function AffiliatePromoLinks({ links }: AffiliatePromoLinksProps)
                   try {
                     await navigator.clipboard.writeText(href);
                     setCopiedId(link.id);
+                    notify.info({
+                      context: "copied",
+                      icon: "copied",
+                      title: "Link copiado",
+                      message: "O link de divulgação foi copiado para a área de transferência.",
+                    });
                     window.setTimeout(() => setCopiedId(null), 2000);
                   } catch {
                     setCopiedId(-1);
+                    notify.error({
+                      title: "Não foi possível copiar o link",
+                      message: "Permita o acesso à área de transferência e tente novamente.",
+                    });
                     window.setTimeout(() => setCopiedId(null), 2000);
                   }
                 }}

@@ -1,0 +1,61 @@
+# Central de Notificações
+
+## Implementação
+
+1. **Botão:** `Header` e `CompactHeader`, imediatamente depois do seletor de tema. Como o CRM não renderiza esses Headers, seu `CrmFilterHeader` também inclui o botão, ao lado dos filtros. Usa `FiBell` e `LuBellRing` de `react-icons`, já instalado; nenhuma biblioteca adicionada.
+2. **Componentes:** `SystemNotificationProvider` continua responsável pelos toasts; `NotificationHeaderButton` contém o acionador e `NotificationCenter`, com renderização dos itens, filtros, skeletons e estados vazios. `notifications.module.css` define o painel. `useNotificationHistory` gerencia o estado; `repository.ts` isola persistência, tipos e catálogo de destinos; `apiNotifications.ts` traduz respostas confirmadas em eventos.
+3. **Contador:** calculado a partir dos itens com `read: false`; badge oculta em zero e exibe `99+` acima de 99. Atualiza ao adicionar, ler ou excluir. Texto acessível anuncia a contagem.
+4. **Leitura:** botão por item, botão “Marcar todas como lidas” ou seleção do destino. Persiste `read` e `readAt`. Falha de gravação mantém o painel aberto e apresenta o estado de erro. Exclusão remove apenas a notificação, nunca a entidade.
+5. **Histórico:** fallback local em `netbox:notifications:v1:<id do usuário>`, até 200 itens mais recentes, sem expiração por tempo. Não contém nomes de pessoas, mensagens livres, respostas da API, credenciais, entidades ou metadata. O repositório salva somente textos genéricos do catálogo, destino conhecido, tipo, contexto, ID aleatório e datas/estado de leitura. Entradas inválidas são descartadas e JSON inválido produz erro com tentativa de recarga.
+6. **Origem compartilhada:** requisição Axios mutável → toast de carregamento → resposta real → atualização do mesmo toast para sucesso ou erro. O proprietário é capturado no início da requisição e conferido na resposta, evitando que uma resposta de outra conta entre no histórico atual. Erros de integração podem entrar no histórico; erros comuns permanecem somente no toast. Abrir o painel e carregar storage nunca emitem toast.
+7. **Destinos:** catálogo interno validado por teste contra arquivos reais do App Router; navegação com `router.push`. Parâmetros existentes são preservados ao navegar para a mesma página. Configurações aceita `section=usuarios`, inclusive quando já está aberta. Nenhuma URL arbitrária recebida em eventos/storage é encaminhada ao roteador.
+8. **Notificações com destino:** usuários e afiliados → `/configuracoes?section=usuarios`; campanhas → `/campanhas`; links individuais → `/links`; links WhatsApp → `/links-campanhas/whatsapp`; cartões → `/crm`; conversões → `/links-campanhas/relatorios`. O catálogo também contempla integração → `/integracoes`, automação → `/crm` e segurança → `/configuracoes`, mas esses três eventos não têm produtor automático nesta entrega.
+9. **Persistentes:** chamadas com `persist: true`. O interceptor já registra criação, atualização e exclusão de usuários, afiliados, campanhas, links individuais, links WhatsApp e cartões CRM, incluindo atualização de responsável, além de atualização/exclusão de conversões. Não identifica encerramento de campanha como evento separado: uma atualização confirmada é apresentada como atualização. Não inventa eventos externos ou confirmação de ações locais de demonstração do CRM.
+10. **Somente toast:** chamadas sem `persist`, copiar links, exportações, validações, alertas e feedback capturado de `role=status`/`role=alert`. A duração é limitada a 7 segundos. Feedback local imediatamente posterior ao resultado da API é suprimido por um segundo para evitar duplicação. Mensagens idênticas da interface são agrupadas por 1,5 segundo; eventos explícitos diferentes continuam válidos. `eventId` deduplica eventos externos repetidos.
+
+## Reformulação do feedback global
+
+1. **Sistema anterior:** estava em `src/components/SystemNotificationProvider.tsx` e `systemNotifications.module.css`. Era uma implementação interna, sem Sonner, React Toastify, Radix, Chakra, Material UI ou Ant Design. Páginas também mantinham mensagens e avisos visuais próprios.
+2. **Arquivos alterados:** provedor e CSS globais, `src/lib/api.ts`, páginas de CRM, campanhas, links e links WhatsApp, `AffiliatePromoLinks`, Headers e a seção de configurações ligada à Central.
+3. **Arquivos criados:** `lib/notifications/notify.ts`, `policy.ts`, `getFriendlyErrorMessage.ts`, `apiNotifications.ts`, `repository.ts`, `useNotificationHistory.ts`, componentes/CSS da Central e `tests/notifications.test.cjs`.
+4. **Biblioteca:** `react-icons`, já instalada. Os ícones contextuais usam Feather e Lucide (`react-icons/fi` e `react-icons/lu`). Nenhuma dependência foi adicionada.
+5. **Serviço:** `notify.success/error/warning/info/automation/crm/security`, `notify.loading`, `notify.update`, `notify.dismiss` e `notify.promise`. `notifySystem` permanece como adaptador compatível. Tudo converge no provedor montado no layout raiz.
+6. **Tipos:** sucesso, erro, alerta, informação, automação, CRM e segurança. Exclusões usam o tipo adequado com contexto/ícone de lixeira.
+7. **Ícones:** o provedor resolve primeiro o ícone informado, depois o contexto e por último o tipo. Usuários, campanhas, links, cópia, conversão, WhatsApp, CRM, automação, exclusão e segurança possuem glifos próprios. A Central usa o mesmo resolvedor.
+8. **Cores:** variáveis CSS por tipo controlam borda lateral, ícone, brilho e barra. Verde, vermelho, âmbar, azul, violeta e âmbar de segurança são adaptados no tema escuro.
+9. **Liquid Glass:** fundo de fallback sólido, gradiente translúcido sob `@supports`, blur de 22px, saturação, reflexo superior, brilho contextual, borda clara e duas camadas de sombra.
+10. **Dark Mode:** seletores explícitos em `html[data-theme=dark]`, fundo grafite translúcido, texto claro, cores contextuais mais luminosas e `data-theme-protected` contra a conversão automática do tema.
+11. **Duração:** política central com 4s para sucesso/info, 5s para CRM/automação, 6s para alerta/segurança e 7s para erro. `clampNotificationDuration` impede valores acima de 7000ms ou abaixo de 1500ms. Hover ou foco pausa o tempo restante e a barra; ao sair, ambos continuam.
+12. **Assíncronas:** o interceptor cria um toast `loading` antes de POST/PUT/PATCH/DELETE relevantes e atualiza o mesmo ID depois da resposta. Se uma operação ultrapassar o tempo do loading, o resultado restaura o mesmo ID e inicia o temporizador final. Importação e sincronizações do CRM seguem o mesmo padrão agregado.
+13. **Ações cobertas:** login; criação, edição e exclusão de usuários, afiliados, campanhas, links, links WhatsApp, conversões e cartões; transferência de negociação; funis, etapas e filtros do CRM; importação, exportação e sincronizações; cópias de links; avisos `alert/status` legados. Erros de mutações recebem feedback global e mensagens de campo permanecem próximas ao formulário.
+14. **Cartão automático:** após `loadCrm` receber do backend cartões novos associados ao webhook, o frontend posiciona os cartões e emite uma única notificação violeta, agregada quando há vários. As atualizações técnicas desses cartões desativam o interceptor para não gerar toasts duplicados.
+15. **Dependência de backend:** novos cartões automáticos só são reconhecidos em tempo real quando o SSE/webhook já usado pelo CRM provoca uma recarga confirmada. Outros eventos externos personalizados e notificações pessoais entre dispositivos continuam dependendo de um stream autenticado e filtrado por destinatário.
+16. **Testes:** nove testes automatizados cobrem persistência, isolamento, retenção, leitura/exclusão, dados inválidos, fluxo loading→resultado, erros amigáveis, política de duração/fila, contrato visual e rotas. TypeScript, lint e build de produção foram executados. O navegador conectado não estava disponível, então claro/escuro, desktop/tablet/mobile, hover, teclado e leitor de tela foram verificados por código e CSS, não por interação visual nesta sessão.
+17. **Lacunas conhecidas:** consultas GET silenciosas continuam sem toast para evitar ruído de carregamento e polling; sincronizações iniciadas pelo usuário foram ligadas explicitamente. Eventos automáticos que não chegam ao frontend não podem produzir confirmação verdadeira sem suporte do backend.
+11. **Mobile:** painel de largura total até 600px; tablet até 380px/80vw; desktop até 420px. Usa `100dvh`, safe areas, lista com rolagem própria, textos quebráveis e botões de pelo menos 44px.
+12. **Liquid Glass:** gradiente de alta opacidade, blur de 26px, saturação de 165%, borda iluminada e sombra lateral. Fallback sólido fora de `@supports`. Toasts também usam blur com fallback sólido.
+13. **Dark Mode:** regras próprias sob `data-theme=dark`, texto claro, fundo escuro de alta opacidade e cores contextuais ajustadas. A central usa `data-theme-protected` para não ser sobrescrita pelo conversor de cores automático do projeto. Contraste visual ainda exige validação em navegador.
+14. **Atualização:** imediata para respostas das ações do próprio usuário e sincronização entre abas via evento `storage`. Carrega na inicialização/navegação. Há SSE no projeto, porém `eventController.stream` publica para todos os assinantes, sem filtro por destinatário; por isso ele não alimenta histórico pessoal. Não há novos WebSockets, polling ou eventos simulados.
+15. **Dependências de backend:** tabela/repositório de notificações por destinatário, endpoints autenticados de listagem/leitura/exclusão, autorização por registro e stream com audiência filtrada. Necessários para sincronizar dispositivos, ter retenção central, criar notificações de conversão/CRM automático, erros externos e alterações de sessão/permissão. Backend não foi alterado. O localStorage é um fallback por conta no navegador, não uma fronteira de segurança contra acesso ao dispositivo ou adulteração. A navegação continua passando pelas páginas e APIs de autorização existentes. O fallback usa listagens, sem armazenar IDs de entidades nem abrir registros específicos; verificação de registro removido e links profundos dependem dessa integração futura. A mensagem amigável de indisponibilidade existe para falha de navegação, mas não representa uma consulta de existência ao backend.
+16. **Ações conectadas:** todas as mutações confirmadas dos endpoints `/users`, `/affiliate`, `/campaigns`, `/links`, `/whatsapp-links`, `/crm/deals`, `/crm/deals/:id/responsible` e `/conversions`. O histórico não depende de cada formulário duplicar a chamada ao provedor.
+17. **Validação:** `node --test tests/notifications.test.cjs` (6 testes: privacidade/isolamento, retenção/ordem/deduplicação, leitura/exclusão, dados inválidos/destinos seguros, eventos por operação/conta e existência de rotas); TypeScript; lint dos arquivos alterados (sem erros, com três avisos preexistentes de `<img>` em configurações); build Next.js de produção com geração das páginas. Configurações, CRM, campanhas, links e relatórios foram verificados por compilação e existência de rota, não por interação visual. O Browser foi inicializado e consultado, mas não havia navegador conectado: nenhuma página foi testada visualmente ou com teclado nesta sessão.
+
+## API de notificação
+
+```tsx
+notifySystem({
+  context: 'user-created',
+  type: 'success',
+  title: 'Usuário criado',
+  message: 'A operação foi concluída.',
+  persist: true,
+});
+
+notifySystem({ context: 'copied', title: 'Link copiado', persist: false });
+```
+
+Não acrescente outra chamada persistente nos formulários cobertos pelo interceptor. O fallback ignora `href`, `entityId`, `entityType` e mensagens livres na persistência e usa o catálogo seguro; esses campos reservam a interface para o futuro backend. `AppNotification` inclui os campos de entidade, ícone e metadata, mas nenhum componente React é serializado.
+
+## Acessibilidade
+
+O painel usa `<dialog>.showModal()`, mantendo o foco dentro do modal e tornando o restante da página inerte. Fechamento por Escape, botão, área externa ou seleção; retorno do foco ao sino; bloqueio/restauração da rolagem do body. Título associado, contagem anunciada, estados de leitura textuais para leitores de tela, foco visível, filtro com `aria-pressed` e suporte a `prefers-reduced-motion`. Cabeçalho e filtros permanecem visíveis durante a rolagem da lista.

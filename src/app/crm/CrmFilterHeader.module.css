@@ -271,3 +271,6 @@
   .panel footer { grid-template-columns: 1fr; }
   .panel footer button { justify-content: center; }
 }
+
+/* Global notifications share the final toolbar cell with filters. */
+.panelWrap { display:flex; align-items:center; gap:8px; }

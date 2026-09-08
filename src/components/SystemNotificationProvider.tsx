@@ -1,328 +1,301 @@
 "use client";
 
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
+  createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState,
+  type CSSProperties, type ReactNode,
 } from "react";
+import type { IconType } from "react-icons";
+import { FiAlertCircle, FiAlertTriangle, FiCheckCircle, FiInfo, FiX } from "react-icons/fi";
 import {
-  FiAlertCircle,
-  FiAlertTriangle,
-  FiCheckCircle,
-  FiInfo,
-  FiX,
-} from "react-icons/fi";
+  LuBadgeCheck, LuBot, LuCopyCheck, LuLink2, LuLoaderCircle, LuMegaphone,
+  LuMessageCircle, LuPanelsTopLeft, LuSave, LuShieldAlert, LuTrash2,
+  LuUserMinus, LuUserPlus, LuUserRoundCog,
+} from "react-icons/lu";
 
+import { useNotificationHistory } from "@/lib/notifications/useNotificationHistory";
+import { events, type NotificationType } from "@/lib/notifications/repository";
+import {
+  clampNotificationDuration,
+  MAX_VISIBLE_NOTIFICATIONS,
+  notificationDurations,
+} from "@/lib/notifications/policy";
+import {
+  NOTIFICATION_EVENT, notify, type NotificationCommand, type NotificationIcon,
+  type NotificationInput,
+} from "@/lib/notifications/notify";
 import styles from "./systemNotifications.module.css";
 
-export type SystemNotificationType = "success" | "error" | "warning" | "info";
+export type SystemNotificationType = NotificationType;
+export type SystemNotificationInput = NotificationInput;
 
-export type SystemNotificationInput = {
-  message: string;
-  title?: string;
-  type?: SystemNotificationType;
-  duration?: number;
-};
-
-type SystemNotification = Required<
-  Pick<SystemNotificationInput, "message" | "title" | "type" | "duration">
-> & {
-  id: number;
-};
-
-type SystemNotificationContextValue = {
-  notify: (notification: SystemNotificationInput | string) => void;
-  dismiss: (id: number) => void;
-};
-
-const NOTIFICATION_EVENT = "netbox:system-notification";
-const MAX_DURATION = 10_000;
-const MIN_DURATION = 1_500;
-const MAX_VISIBLE_NOTIFICATIONS = 5;
-
-const defaultTitles: Record<SystemNotificationType, string> = {
-  success: "Ação concluída",
-  error: "Não foi possível concluir",
-  warning: "Atenção",
-  info: "Informação",
-};
-
-const icons = {
-  success: FiCheckCircle,
-  error: FiAlertCircle,
-  warning: FiAlertTriangle,
-  info: FiInfo,
-};
-
-const SystemNotificationContext = createContext<SystemNotificationContextValue | null>(
-  null,
-);
-
-let nextNotificationId = 0;
-
-function normalizeText(value: unknown) {
-  return String(value ?? "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function normalizeNotification(
-  input: SystemNotificationInput | string,
-): Omit<SystemNotification, "id"> | null {
-  const data = typeof input === "string" ? { message: input } : input;
-  const message = normalizeText(data?.message);
-
-  if (!message) return null;
-
-  const type = data.type ?? inferNotificationType(message);
-  const requestedDuration = Number(data.duration ?? MAX_DURATION);
-  const duration = Math.min(
-    MAX_DURATION,
-    Math.max(
-      MIN_DURATION,
-      Number.isFinite(requestedDuration) ? requestedDuration : MAX_DURATION,
-    ),
-  );
-
-  return {
-    message,
-    title: normalizeText(data.title) || defaultTitles[type],
-    type,
-    duration,
+type ToastNotification = Required<Pick<NotificationInput, "title" | "message" | "type" | "duration">> &
+  Omit<NotificationInput, "title" | "message" | "type" | "duration" | "id"> & {
+    id: string;
+    revision: number;
+    exiting?: boolean;
   };
+
+type ContextValue = ReturnType<typeof useNotificationHistory> & {
+  notify: (notification: NotificationInput | string) => string;
+  update: (id: string, notification: NotificationInput) => void;
+  dismiss: (id: string) => void;
+};
+
+const EXIT_DURATION = 180;
+const titles: Record<NotificationType, string> = {
+  success: "Ação concluída", error: "Não foi possível concluir", warning: "Atenção",
+  info: "Informação", automation: "Automação concluída", crm: "Atualização do CRM",
+  security: "Aviso de segurança",
+};
+const typeIcons: Record<NotificationType, IconType> = {
+  success: FiCheckCircle, error: FiAlertCircle, warning: FiAlertTriangle, info: FiInfo,
+  automation: LuBot, crm: LuPanelsTopLeft, security: LuShieldAlert,
+};
+const customIcons: Record<NotificationIcon, IconType> = {
+  success: FiCheckCircle, error: FiAlertCircle, warning: FiAlertTriangle, info: FiInfo,
+  automation: LuBot, crm: LuPanelsTopLeft, security: LuShieldAlert,
+  "user-created": LuUserPlus, "user-updated": LuUserRoundCog, "user-deleted": LuUserMinus,
+  campaign: LuMegaphone, link: LuLink2, copied: LuCopyCheck, conversion: LuBadgeCheck,
+  whatsapp: LuMessageCircle, saved: LuSave, deleted: LuTrash2, loading: LuLoaderCircle,
+};
+const contextIcons: Partial<Record<NonNullable<NotificationInput["context"]>, IconType>> = {
+  "user-created": LuUserPlus, "user-updated": LuUserRoundCog, "user-deleted": LuUserMinus,
+  "affiliate-created": LuUserPlus, "affiliate-updated": LuUserRoundCog, "affiliate-deleted": LuUserMinus,
+  "campaign-created": LuMegaphone, "campaign-updated": LuMegaphone, "campaign-deleted": LuTrash2,
+  "link-created": LuLink2, "link-updated": LuLink2, "link-deleted": LuTrash2,
+  "whatsapp-link-created": LuMessageCircle, "whatsapp-link-updated": LuMessageCircle,
+  "whatsapp-link-deleted": LuTrash2, "crm-card-created": LuPanelsTopLeft,
+  "crm-card-updated": LuPanelsTopLeft, "crm-card-deleted": LuTrash2,
+  conversion: LuBadgeCheck, "conversion-updated": LuBadgeCheck, "conversion-deleted": LuTrash2,
+  "integration-error": FiAlertTriangle, "automation-error": LuBot, security: LuShieldAlert,
+  copied: LuCopyCheck,
+};
+
+export function NotificationGlyph({
+  type,
+  context,
+  icon,
+  className,
+}: {
+  type: NotificationType;
+  context?: NotificationInput["context"];
+  icon?: NotificationIcon;
+  className?: string;
+}) {
+  const Glyph = icon
+    ? customIcons[icon]
+    : (context && contextIcons[context]) || typeIcons[type];
+  return createElement(Glyph, { className, "aria-hidden": true });
 }
 
-function inferNotificationType(
-  message: string,
-  element?: HTMLElement,
-): SystemNotificationType {
-  const source = `${element?.className || ""} ${message}`
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+const NotificationContext = createContext<ContextValue | null>(null);
 
-  if (
-    element?.getAttribute("role") === "alert" ||
-    /\b(erro|error|falha|falhou|invalido|nao foi possivel|indisponivel)\b/.test(
-      source,
-    )
-  ) {
-    return "error";
-  }
+function clean(value: unknown) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
 
-  if (/\b(aviso|atencao|warning|cuidado)\b/.test(source)) return "warning";
-  if (
-    /\b(sucesso|concluido|salvo|atualizado|criado|apagado|copiado|enviado)\b/.test(
-      source,
-    )
-  ) {
-    return "success";
-  }
-
+function inferType(message: string, element?: HTMLElement): NotificationType {
+  const source = `${element?.className || ""} ${message}`.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (element?.getAttribute("role") === "alert" || /\b(erro|falha|falhou|invalido|nao foi possivel|indisponivel)\b/.test(source)) return "error";
+  if (/\b(aviso|atencao|cuidado|incompleto)\b/.test(source)) return "warning";
+  if (/\b(sucesso|concluido|salvo|atualizado|criado|apagado|copiado|enviado)\b/.test(source)) return "success";
   return "info";
 }
 
-export function notifySystem(notification: SystemNotificationInput | string) {
-  if (typeof window === "undefined") return;
-
-  window.dispatchEvent(
-    new CustomEvent<SystemNotificationInput | string>(NOTIFICATION_EVENT, {
-      detail: notification,
-    }),
-  );
+export function normalizeNotification(input: NotificationInput | string): Omit<ToastNotification, "revision"> | null {
+  const data: NotificationInput = typeof input === "string" ? { message: input } : input;
+  const message = clean(data.message || data.title);
+  if (!message) return null;
+  const type = data.type ?? inferType(message);
+  return {
+    ...data,
+    id: data.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+    type,
+    title: clean(data.title) || titles[type],
+    message,
+    duration: clampNotificationDuration(data.duration, type),
+  };
 }
 
+export function notifySystem(notification: NotificationInput | string) {
+  return notify.show(notification);
+}
+
+export { notify };
+
 export function useSystemNotifications() {
-  const context = useContext(SystemNotificationContext);
-
-  if (!context) {
-    throw new Error(
-      "useSystemNotifications deve ser usado dentro de SystemNotificationProvider.",
-    );
-  }
-
+  const context = useContext(NotificationContext);
+  if (!context) throw new Error("useSystemNotifications deve ser usado dentro de SystemNotificationProvider.");
   return context;
 }
 
-export default function SystemNotificationProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
-  const timers = useRef(new Map<number, number>());
-  const recentNotifications = useRef(new Map<string, number>());
+export default function SystemNotificationProvider({ children }: { children: ReactNode }) {
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const history = useNotificationHistory();
+  const addHistory = history.add;
+  const recent = useRef(new Map<string, number>());
+  const removalTimers = useRef(new Map<string, number>());
+  const lastApiFeedbackAt = useRef(0);
 
-  const dismiss = useCallback((id: number) => {
-    const timer = timers.current.get(id);
-    if (timer) window.clearTimeout(timer);
-    timers.current.delete(id);
-    setNotifications((current) => current.filter((item) => item.id !== id));
-  }, []);
+  const persist = useCallback((toast: ToastNotification) => {
+    if (!toast.persist) return;
+    const context = toast.context ?? "generic";
+    addHistory({
+      id: toast.eventId || toast.id, context, type: toast.type,
+      title: events[context][0], href: events[context][1] || undefined,
+      read: false, createdAt: new Date().toISOString(),
+    });
+  }, [addHistory]);
 
-  const notify = useCallback(
-    (input: SystemNotificationInput | string) => {
-      const normalized = normalizeNotification(input);
-      if (!normalized) return;
-
-      const now = Date.now();
-      const deduplicationKey = `${normalized.type}:${normalized.message}`;
-      const lastOccurrence = recentNotifications.current.get(deduplicationKey);
-
-      if (lastOccurrence && now - lastOccurrence < 1_500) return;
-      recentNotifications.current.set(deduplicationKey, now);
-
-      const id = ++nextNotificationId;
-      const notification = { id, ...normalized };
-
-      setNotifications((current) =>
-        [...current, notification].slice(-MAX_VISIBLE_NOTIFICATIONS),
-      );
-
-      const timer = window.setTimeout(() => dismiss(id), notification.duration);
-      timers.current.set(id, timer);
-    },
-    [dismiss],
-  );
-
-  useEffect(() => {
-    const currentTimers = timers.current;
-
-    return () => {
-      currentTimers.forEach((timer) => window.clearTimeout(timer));
-      currentTimers.clear();
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleNotification(event: Event) {
-      notify((event as CustomEvent<SystemNotificationInput | string>).detail);
+  const show = useCallback((input: NotificationInput | string) => {
+    const normalized = normalizeNotification(input);
+    if (!normalized) return "";
+    const now = Date.now();
+    if (
+      normalized.source !== "api" &&
+      ["success", "error"].includes(normalized.type) &&
+      now - lastApiFeedbackAt.current < 1_000
+    ) {
+      return normalized.id;
     }
+    const key = normalized.eventId || `${normalized.type}:${normalized.title}:${normalized.message}`;
+    const previous = recent.current.get(key);
+    if (previous && (normalized.eventId || now - previous < 1_500)) return normalized.id;
+    if (recent.current.size > 500) recent.current.clear();
+    recent.current.set(key, now);
+    if (normalized.source === "api") lastApiFeedbackAt.current = now;
+    const toast = { ...normalized, revision: 0 };
+    persist(toast);
+    setToasts((current) => [...current, toast]);
+    return toast.id;
+  }, [persist]);
 
-    window.addEventListener(NOTIFICATION_EVENT, handleNotification);
-    return () => window.removeEventListener(NOTIFICATION_EVENT, handleNotification);
-  }, [notify]);
+  const dismiss = useCallback((id: string) => {
+    setToasts((current) => current.map((toast) => toast.id === id ? { ...toast, exiting: true } : toast));
+    if (removalTimers.current.has(id)) return;
+    removalTimers.current.set(id, window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id));
+      removalTimers.current.delete(id);
+    }, EXIT_DURATION));
+  }, []);
 
-  useEffect(() => {
-    const originalAlert = window.alert;
-    const floatingAlert = (message?: unknown) => {
-      const text = normalizeText(message);
-      if (text) notify({ message: text, type: inferNotificationType(text) });
-    };
-
-    window.alert = floatingAlert;
-
-    return () => {
-      if (window.alert === floatingAlert) window.alert = originalAlert;
-    };
-  }, [notify]);
-
-  useEffect(() => {
-    const observedContent = new WeakMap<HTMLElement, string>();
-
-    function captureElement(element: HTMLElement) {
-      if (element.closest("[data-system-notifications]")) return;
-      if (element.hidden || element.getAttribute("aria-hidden") === "true") return;
-
-      const message = normalizeText(
-        element.getAttribute("aria-label") || element.textContent,
-      );
-      if (!message || observedContent.get(element) === message) return;
-
-      observedContent.set(element, message);
-      notify({
-        message,
-        type: inferNotificationType(message, element),
+  const update = useCallback((id: string, input: NotificationInput) => {
+    if (input.source === "api") lastApiFeedbackAt.current = Date.now();
+    setToasts((current) => {
+      if (!current.some((toast) => toast.id === id)) {
+        const normalized = normalizeNotification({ ...input, id });
+        if (!normalized) return current;
+        const restored = { ...normalized, revision: 0 };
+        persist(restored);
+        return [...current, restored];
+      }
+      return current.map((toast) => {
+      if (toast.id !== id) return toast;
+      const normalized = normalizeNotification({ ...toast, ...input, id, persist: input.persist ?? toast.persist });
+      if (!normalized) return toast;
+      const next = { ...normalized, exiting: false, revision: toast.revision + 1 };
+      persist(next);
+      return next;
       });
-    }
+    });
+  }, [persist]);
 
-    function inspectNode(node: Node) {
-      const element =
-        node instanceof HTMLElement ? node : node.parentElement ?? undefined;
+  useEffect(() => {
+    const timers = removalTimers.current;
+    return () => { timers.forEach(clearTimeout); timers.clear(); };
+  }, []);
+
+  useEffect(() => {
+    function handle(event: Event) {
+      const command = (event as CustomEvent<NotificationCommand>).detail;
+      if (!command || typeof command !== "object" || !("action" in command)) {
+        show(command as unknown as NotificationInput | string);
+      } else if (command.action === "show") show(command.notification);
+      else if (command.action === "update") update(command.id, command.notification);
+      else dismiss(command.id);
+    }
+    window.addEventListener(NOTIFICATION_EVENT, handle);
+    return () => window.removeEventListener(NOTIFICATION_EVENT, handle);
+  }, [dismiss, show, update]);
+
+  useEffect(() => {
+    const original = window.alert;
+    const replacement = (value?: unknown) => {
+      const message = clean(value);
+      if (message) show({ message, type: inferType(message), source: "ui" });
+    };
+    window.alert = replacement;
+    return () => { if (window.alert === replacement) window.alert = original; };
+  }, [show]);
+
+  useEffect(() => {
+    const seen = new WeakMap<HTMLElement, string>();
+    function capture(element: HTMLElement) {
+      if (element.closest("[data-system-notifications]") || element.hidden || element.getAttribute("aria-hidden") === "true") return;
+      if (Date.now() - lastApiFeedbackAt.current < 1_000 && ["alert", "status"].includes(element.getAttribute("role") || "")) return;
+      const message = clean(element.getAttribute("aria-label") || element.textContent);
+      if (!message || seen.get(element) === message) return;
+      seen.set(element, message);
+      show({ message, type: inferType(message, element), source: "ui" });
+    }
+    function inspect(node: Node) {
+      const element = node instanceof HTMLElement ? node : node.parentElement;
       if (!element) return;
-
-      const feedback = element.closest<HTMLElement>(
-        '[role="alert"], [role="status"]',
-      );
-      if (feedback) captureElement(feedback);
-
-      element
-        .querySelectorAll<HTMLElement>('[role="alert"], [role="status"]')
-        .forEach(captureElement);
+      const feedback = element.closest<HTMLElement>('[role="alert"], [role="status"]');
+      if (feedback) capture(feedback);
+      element.querySelectorAll<HTMLElement>('[role="alert"], [role="status"]').forEach(capture);
     }
-
-    document
-      .querySelectorAll<HTMLElement>('[role="alert"], [role="status"]')
-      .forEach(captureElement);
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === "characterData") {
-          inspectNode(mutation.target);
-          return;
-        }
-
-        mutation.addedNodes.forEach(inspectNode);
-      });
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-    });
-
+    document.querySelectorAll<HTMLElement>('[role="alert"], [role="status"]').forEach(capture);
+    const observer = new MutationObserver((mutations) => mutations.forEach((mutation) => {
+      if (mutation.type === "characterData") inspect(mutation.target);
+      else mutation.addedNodes.forEach(inspect);
+    }));
+    observer.observe(document.body, { childList: true, characterData: true, subtree: true });
     return () => observer.disconnect();
-  }, [notify]);
+  }, [show]);
 
-  return (
-    <SystemNotificationContext.Provider value={{ notify, dismiss }}>
-      {children}
-      <section
-        className={styles.notificationRegion}
-        aria-label="Notificações do sistema"
-        data-system-notifications
-      >
-        {notifications.map((notification) => {
-          const Icon = icons[notification.type];
-          const notificationStyle = {
-            "--notification-duration": `${notification.duration}ms`,
-          } as CSSProperties;
+  const value = useMemo(() => ({ ...history, notify: show, update, dismiss }), [history, show, update, dismiss]);
+  return <NotificationContext.Provider value={value}>
+    {children}
+    <section className={styles.notificationRegion} aria-label="Notificações do sistema" data-system-notifications data-theme-protected>
+      {toasts.slice(0, MAX_VISIBLE_NOTIFICATIONS).map((toast) => <ToastItem key={`${toast.id}:${toast.revision}`} toast={toast} dismiss={dismiss} />)}
+    </section>
+  </NotificationContext.Provider>;
+}
 
-          return (
-            <article
-              key={notification.id}
-              className={`${styles.notification} ${styles[notification.type]}`}
-              role={notification.type === "error" ? "alert" : "status"}
-              aria-live={notification.type === "error" ? "assertive" : "polite"}
-              style={notificationStyle}
-            >
-              <span className={styles.icon} aria-hidden="true">
-                <Icon />
-              </span>
-              <span className={styles.content}>
-                <strong>{notification.title}</strong>
-                <span>{notification.message}</span>
-              </span>
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={() => dismiss(notification.id)}
-                aria-label="Fechar notificação"
-                title="Fechar"
-              >
-                <FiX aria-hidden="true" />
-              </button>
-              <span className={styles.progress} aria-hidden="true" />
-            </article>
-          );
-        })}
-      </section>
-    </SystemNotificationContext.Provider>
-  );
+function ToastItem({ toast, dismiss }: { toast: ToastNotification; dismiss: (id: string) => void }) {
+  const [paused, setPaused] = useState(false);
+  const remaining = useRef(toast.duration);
+  const startedAt = useRef(0);
+  const timer = useRef<number | null>(null);
+  const arm = useCallback(() => {
+    startedAt.current = Date.now();
+    timer.current = window.setTimeout(() => dismiss(toast.id), remaining.current);
+  }, [dismiss, toast.id]);
+  useEffect(() => { arm(); return () => { if (timer.current) clearTimeout(timer.current); }; }, [arm]);
+  function pause() {
+    if (paused) return;
+    if (timer.current) clearTimeout(timer.current);
+    remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt.current));
+    setPaused(true);
+  }
+  function resume() {
+    if (!paused) return;
+    setPaused(false);
+    arm();
+  }
+  const style = { "--notification-duration": `${toast.duration}ms` } as CSSProperties;
+  return <article
+    className={`${styles.notification} ${styles[toast.type]} ${toast.exiting ? styles.exiting : ""}`}
+    role={toast.type === "error" ? "alert" : "status"}
+    aria-live={toast.type === "error" ? "assertive" : "polite"}
+    aria-atomic="true" style={style} onMouseEnter={pause} onMouseLeave={resume}
+    onFocusCapture={pause} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) resume(); }}
+  >
+    <span className={`${styles.icon} ${toast.icon === "loading" ? styles.spinning : ""}`} aria-hidden="true"><NotificationGlyph type={toast.type} context={toast.context} icon={toast.icon} /></span>
+    <span className={styles.content}><strong>{toast.title}</strong><span>{toast.message}</span></span>
+    <button type="button" className={styles.closeButton} onClick={() => dismiss(toast.id)} aria-label="Fechar notificação" title="Fechar"><FiX aria-hidden="true" /></button>
+    <span className={`${styles.progress} ${paused ? styles.paused : ""}`} aria-hidden="true" />
+  </article>;
 }

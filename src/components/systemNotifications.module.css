@@ -1,114 +1,141 @@
 .notificationRegion {
   position: fixed;
   z-index: 10050;
-  top: 18px;
+  top: max(18px, env(safe-area-inset-top));
   right: 18px;
   display: grid;
-  width: min(390px, calc(100vw - 36px));
+  width: min(420px, calc(100vw - 36px));
+  max-height: calc(100dvh - max(36px, env(safe-area-inset-top)));
   gap: 12px;
+  overflow: hidden;
   pointer-events: none;
 }
 
 .notification {
-  --notification-accent: var(--nb-info);
-  --notification-accent-soft: color-mix(
-    in srgb,
-    var(--notification-accent) 13%,
-    transparent
-  );
+  --notification-accent: #2563eb;
+  --notification-soft: rgba(37, 99, 235, 0.14);
   position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 34px;
+  grid-template-columns: 44px minmax(0, 1fr) 36px;
   align-items: start;
-  min-height: 82px;
+  min-height: 92px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--notification-accent) 35%, var(--nb-border));
-  border-radius: 15px;
-  background:
-    radial-gradient(
-      circle at 0 0,
-      var(--notification-accent-soft),
-      transparent 46%
-    ),
-    var(--nb-surface-elevated);
-  color: var(--nb-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-left: 3px solid var(--notification-accent);
+  border-radius: 20px;
+  background: #f8fafc;
+  color: #0f172a;
   box-shadow:
-    0 18px 44px color-mix(in srgb, var(--nb-shadow) 88%, transparent),
-    0 3px 10px color-mix(in srgb, var(--nb-shadow) 70%, transparent);
+    0 22px 54px rgba(15, 23, 42, 0.2),
+    0 5px 14px rgba(15, 23, 42, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
   pointer-events: auto;
-  animation: notificationEnter 220ms ease-out both;
+  animation: notificationEnter 240ms cubic-bezier(.2, .8, .2, 1) both;
 }
 
-.success {
-  --notification-accent: var(--nb-success);
+.notification::before,
+.notification::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
 }
 
-.error {
-  --notification-accent: var(--nb-error);
+.notification::before {
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.72), transparent 36%, rgba(255, 255, 255, 0.12)),
+    radial-gradient(circle at 8% 26%, var(--notification-soft), transparent 42%);
 }
 
-.warning {
-  --notification-accent: var(--nb-warning);
+.notification::after {
+  top: 0;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.92), transparent);
 }
 
-.info {
-  --notification-accent: var(--nb-info);
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .notification {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(248, 250, 252, 0.72));
+    backdrop-filter: blur(22px) saturate(165%);
+    -webkit-backdrop-filter: blur(22px) saturate(165%);
+  }
 }
+
+.success { --notification-accent: #15803d; --notification-soft: rgba(34, 197, 94, 0.17); }
+.error { --notification-accent: #dc2626; --notification-soft: rgba(239, 68, 68, 0.17); }
+.warning { --notification-accent: #c56a08; --notification-soft: rgba(245, 158, 11, 0.19); }
+.info { --notification-accent: #2563eb; --notification-soft: rgba(59, 130, 246, 0.17); }
+.automation,
+.crm { --notification-accent: #7c3aed; --notification-soft: rgba(139, 92, 246, 0.18); }
+.security { --notification-accent: #b45309; --notification-soft: rgba(180, 83, 9, 0.18); }
 
 .icon {
   display: grid;
-  width: 34px;
-  height: 34px;
-  margin: 15px 0 0 14px;
+  width: 38px;
+  height: 38px;
+  margin: 16px 0 0 12px;
   place-items: center;
-  border-radius: 10px;
-  background: var(--notification-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--notification-accent) 25%, transparent);
+  border-radius: 13px;
+  background: var(--notification-soft);
   color: var(--notification-accent);
-  font-size: 20px;
+  box-shadow: 0 8px 22px var(--notification-soft), inset 0 1px rgba(255, 255, 255, 0.54);
+  font-size: 21px;
 }
 
 .content {
   display: grid;
   min-width: 0;
-  gap: 4px;
-  padding: 15px 10px 18px 13px;
+  gap: 5px;
+  padding: 16px 10px 20px 14px;
 }
 
 .content strong {
-  color: var(--nb-text-primary);
-  font-size: 0.9rem;
-  line-height: 1.25;
+  overflow-wrap: anywhere;
+  color: inherit;
+  font-size: 0.94rem;
+  font-weight: 750;
+  line-height: 1.3;
 }
 
 .content > span {
+  display: -webkit-box;
+  overflow: hidden;
   overflow-wrap: anywhere;
-  color: var(--nb-text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.4;
+  color: #475569;
+  font-size: 0.84rem;
+  line-height: 1.48;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .closeButton {
   display: grid;
-  width: 30px;
-  height: 30px;
-  margin: 9px 8px 0 0;
+  width: 32px;
+  height: 32px;
+  margin: 9px 7px 0 0;
   padding: 0;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: 10px;
   background: transparent;
-  color: var(--nb-text-muted);
+  color: #64748b;
   cursor: pointer;
+  font-size: 17px;
 }
 
 .closeButton:hover {
-  border-color: var(--nb-border);
-  background: var(--nb-hover);
-  color: var(--nb-text-primary);
+  border-color: rgba(100, 116, 139, 0.22);
+  background: rgba(100, 116, 139, 0.1);
+  color: #0f172a;
 }
 
 .closeButton:focus-visible {
-  outline: 3px solid var(--nb-focus-ring);
+  outline: 3px solid color-mix(in srgb, var(--notification-accent) 32%, transparent);
   outline-offset: 1px;
 }
 
@@ -120,42 +147,81 @@
   height: 3px;
   transform-origin: left;
   border-radius: 0 3px 3px 0;
-  background: var(--notification-accent);
+  background: linear-gradient(90deg, var(--notification-accent), color-mix(in srgb, var(--notification-accent) 62%, white));
+  box-shadow: 0 0 10px var(--notification-soft);
   animation: notificationProgress var(--notification-duration) linear forwards;
 }
 
+.paused { animation-play-state: paused; }
+.spinning { animation: spin 1s linear infinite; }
+.exiting { animation: notificationExit 180ms ease-in both; }
+
+:global(html[data-theme="dark"]) .notification {
+  border-color: rgba(255, 255, 255, 0.12);
+  border-left-color: var(--notification-accent);
+  background: #242627;
+  color: #f1f0ee;
+  box-shadow:
+    0 24px 58px rgba(0, 0, 0, 0.48),
+    0 5px 16px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
+}
+
+:global(html[data-theme="dark"]) .notification::before {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.13), transparent 34%, rgba(255, 255, 255, 0.025)),
+    radial-gradient(circle at 8% 26%, var(--notification-soft), transparent 44%);
+}
+
+:global(html[data-theme="dark"]) .content > span { color: #d2cfca; }
+:global(html[data-theme="dark"]) .closeButton { color: #b9b7b2; }
+:global(html[data-theme="dark"]) .closeButton:hover { color: #fff; background: rgba(255, 255, 255, 0.09); }
+:global(html[data-theme="dark"]) .success { --notification-accent: #4ade80; }
+:global(html[data-theme="dark"]) .error { --notification-accent: #fb7185; }
+:global(html[data-theme="dark"]) .warning,
+:global(html[data-theme="dark"]) .security { --notification-accent: #fbbf24; }
+:global(html[data-theme="dark"]) .info { --notification-accent: #60a5fa; }
+:global(html[data-theme="dark"]) .automation,
+:global(html[data-theme="dark"]) .crm { --notification-accent: #a78bfa; }
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :global(html[data-theme="dark"]) .notification {
+    background: linear-gradient(135deg, rgba(38, 40, 42, 0.94), rgba(24, 26, 27, 0.86));
+  }
+}
+
 @keyframes notificationEnter {
-  from {
-    transform: translate3d(22px, -5px, 0);
-    opacity: 0;
-  }
-  to {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
+  from { opacity: 0; transform: translate3d(20px, -7px, 0) scale(.965); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
-@keyframes notificationProgress {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
+@keyframes notificationExit {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to { opacity: 0; transform: translate3d(14px, -3px, 0) scale(.975); }
 }
 
-@media (max-width: 560px) {
+@keyframes notificationProgress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) {
   .notificationRegion {
-    top: 10px;
+    top: calc(10px + env(safe-area-inset-top));
     right: 10px;
     left: 10px;
     width: auto;
+    gap: 9px;
   }
+  .notification { grid-template-columns: 40px minmax(0, 1fr) 34px; min-height: 82px; border-radius: 17px; }
+  .icon { width: 34px; height: 34px; margin: 13px 0 0 9px; border-radius: 11px; font-size: 19px; }
+  .content { padding: 13px 7px 17px 11px; }
+  .content strong { font-size: .9rem; }
+  .content > span { font-size: .8rem; -webkit-line-clamp: 2; }
+  .closeButton { margin: 7px 5px 0 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .notification,
-  .progress {
-    animation: none;
-  }
+  .exiting,
+  .progress,
+  .spinning { animation-duration: 1ms; }
 }

@@ -1510,6 +1510,19 @@
   margin-bottom: 18px;
 }
 
+.sectionHeading > * {
+  min-width: 0;
+}
+
+.sectionHeading > a {
+  flex: 0 1 55%;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .sectionHeading h2 {
   margin: 4px 0 0;
   color: #101828;
@@ -2199,6 +2212,11 @@
 
   .sectionHeading {
     flex-direction: column;
+  }
+
+  .sectionHeading > a {
+    width: 100%;
+    text-align: left;
   }
 
   .metricTabs,

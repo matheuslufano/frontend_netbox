@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Affiliate,
   ChatmixWebhookLogResponse,
@@ -155,6 +156,11 @@ const settingsSections: {
   },
 ];
 export default function Configuracoes() {
+  return <Suspense fallback={null}><ConfiguracoesContent /></Suspense>;
+}
+
+function ConfiguracoesContent() {
+  const notificationParams = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -181,6 +187,12 @@ export default function Configuracoes() {
     useState<UserSettingsPanel>("novoUsuario");
   const [activeSettingsSection, setActiveSettingsSection] =
     useState<SettingsSection>("inicio");
+  useEffect(() => {
+    if (notificationParams.get('section') === 'usuarios') {
+      const timer = window.setTimeout(() => setActiveSettingsSection('usuarios'), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [notificationParams]);
   const [profileSearchTerm, setProfileSearchTerm] = useState("");
   const [showAllProfileResults, setShowAllProfileResults] = useState(false);
   const [profileListFilter, setProfileListFilter] = useState<
