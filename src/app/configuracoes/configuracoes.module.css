@@ -343,6 +343,62 @@
   opacity: 0.65;
 }
 
+.dangerZone {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 16px;
+}
+
+.dangerZoneHeader {
+  padding: 4px 2px;
+}
+
+.dangerZoneHeader span,
+.dangerConfirmBadge {
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dangerZoneHeader h2 { margin: 5px 0; color: #7f1d1d; font-size: 22px; }
+.dangerZoneHeader p, .dangerActionCard p { margin: 0; color: #7c5656; line-height: 1.5; }
+.dangerGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.dangerActionCard { min-height: 250px; grid-template-rows: auto auto 1fr auto; border: 1px solid rgba(239, 180, 180, .55); }
+.dangerActionCard > span { color: #b91c1c; text-transform: uppercase; letter-spacing: .06em; }
+.dangerActionCard > strong { margin-top: 0; color: #582626; font-size: 22px; line-height: 1.12; }
+.dangerActionCard button { align-self: end; margin-top: auto; border: 1px solid #efb4b4; border-radius: 12px; background: #fff1f1; color: #b42323; cursor: pointer; }
+.dangerActionCard .dangerTrashButton { display: grid; width: 42px; height: 42px; place-items: center; justify-self: center; padding: 0; }
+.dangerTrashButton svg { width: 18px; height: 18px; }
+.dangerActionCard button:hover { background: #ffe2e2; }
+.dangerActionCritical { border-color: #ef8f8f; }
+.dangerActionCritical button { border-color: #dc2626; background: #dc2626; color: #fff; }
+.dangerActionCritical button:hover { background: #b91c1c; }
+.adminOnlyNotice { margin: 0; padding: 20px 22px; color: #7c5656; }
+
+.dangerConfirmOverlay { position: fixed; z-index: 4000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(35, 12, 12, .68); }
+.dangerConfirmModal { width: min(500px, 95vw); border: 1px solid #fecaca; border-radius: 18px; padding: 24px; background: #fff; box-shadow: 0 28px 80px rgba(50, 10, 10, .35); }
+.dangerConfirmModal h2 { margin: 7px 0 8px; color: #7f1d1d; }
+.dangerConfirmModal > p { margin: 0 0 20px; color: #6b4f4f; line-height: 1.55; }
+.dangerConfirmModal label { display: grid; gap: 8px; color: #573737; font-size: 13px; }
+.dangerConfirmModal input { width: 100%; border: 1px solid #efb4b4; border-radius: 10px; padding: 11px 12px; background: #fffafa; color: #521d1d; font: inherit; font-weight: 800; }
+.dangerConfirmModal input:focus { border-color: #dc2626; outline: 3px solid rgba(220, 38, 38, .14); }
+.dangerConfirmActions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; }
+.dangerConfirmActions button { border: 0; border-radius: 10px; padding: 10px 14px; font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; }
+.dangerConfirmActions button:first-child { background: #f3f4f6; color: #4b5563; }
+.dangerConfirmActions .dangerConfirmButton { background: #dc2626; color: #fff; }
+.dangerConfirmActions button:disabled { opacity: .55; cursor: not-allowed; }
+
+@media (max-width: 1100px) {
+  .dangerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .dangerGrid { grid-template-columns: 1fr; }
+  .dangerActionCard { min-height: 0; }
+}
+
 .success,
 .error {
   margin: 0;
@@ -929,14 +985,21 @@
   font-size: 14px;
   font-weight: 900;
   text-decoration: none;
+  border: 0;
+  cursor: pointer;
   transition:
     opacity 0.2s ease,
     transform 0.2s ease;
 }
 
-.databaseButton:hover {
+.databaseButton:hover:not(:disabled) {
   opacity: 0.92;
   transform: translateY(-1px);
+}
+
+.databaseButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @media (max-width: 1100px) {
@@ -1730,7 +1793,7 @@
 .photoCropOverlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 2000;
   display: grid;
   place-items: center;
   padding: 20px;

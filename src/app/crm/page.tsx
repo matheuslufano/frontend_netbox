@@ -43,6 +43,7 @@ import {
   atualizarCrmStage,
   criarAfiliado,
   criarCampanha,
+  criarCrmFunnel,
   criarCrmStage,
   criarCrmDeal,
   editarConversao,
@@ -2461,6 +2462,21 @@ export default function Crm() {
     }
   }
 
+  function toggleSelectAllColumn(stageDeals: Deal[]) {
+    if (!stageDeals.length) return;
+
+    setSelectedDealIds((current) => {
+      const next = new Set(current);
+      const allSelected = stageDeals.every((deal) => next.has(deal.id));
+
+      stageDeals.forEach((deal) => {
+        if (allSelected) next.delete(deal.id);
+        else next.add(deal.id);
+      });
+      return next;
+    });
+  }
+
   function clearAdvancedFilters() {
     setAdvancedFilters({
       affiliate: "",
@@ -2766,6 +2782,35 @@ export default function Crm() {
 
     if (label === "Configurar permissões") {
       setOptionsModal("permissions");
+    }
+  }
+
+  async function handleCreateFunnelFromOptions() {
+    const name = window.prompt("Nome do novo funil:")?.trim();
+    if (!name) return;
+
+    const description = window.prompt("Descrição do funil (opcional):")?.trim() || "";
+    setSyncStatus("info");
+    setSyncMessage("Criando funil...");
+
+    try {
+      const funnel = await criarCrmFunnel({
+        name,
+        description,
+        sourceFunnelId: selectedFunnelId || undefined,
+      });
+      setAvailableFunnels((current) => [
+        ...current.filter((item) => item.id !== funnel.id),
+        { id: funnel.id, name: funnel.name },
+      ]);
+      setSelectedFunnelId(funnel.id);
+      setSelectedFunnel(funnel.name);
+      setOptionsModal(null);
+      setSyncStatus("success");
+      setSyncMessage(`Funil “${funnel.name}” criado com sucesso.`);
+    } catch (error) {
+      setSyncStatus("warning");
+      setSyncMessage(getApiErrorMessage(error, "Não foi possível criar o funil."));
     }
   }
 
@@ -4052,6 +4097,21 @@ export default function Crm() {
                     </div>
                     <div className={styles.columnTools}>
                       <span>{formatCurrency(amount)}</span>
+                      {selectedDealIds.size > 0 && stageDeals.length > 0 && (
+                        <button
+                          type="button"
+                          className={styles.columnSelectAllButton}
+                          title={stageDeals.every((deal) => selectedDealIds.has(deal.id))
+                            ? "Desmarcar cartões da coluna"
+                            : "Selecionar todos os cartões da coluna"}
+                          aria-label={stageDeals.every((deal) => selectedDealIds.has(deal.id))
+                            ? `Desmarcar cartões da coluna ${stage.title}`
+                            : `Selecionar todos os cartões da coluna ${stage.title}`}
+                          onClick={() => toggleSelectAllColumn(stageDeals)}
+                        >
+                          <FiCheckCircle aria-hidden="true" />
+                        </button>
+                      )}
                       <button
                         type="button"
                         className={styles.columnDragHandle}
@@ -5691,16 +5751,30 @@ export default function Crm() {
                 <label>
                   <span>Funil ativo</span>
                   <select
-                    value={selectedFunnel}
-                    onChange={(event) => setSelectedFunnel(event.target.value)}
+                    value={selectedFunnelId}
+                    onChange={(event) => {
+                      const funnel = availableFunnels.find((item) => item.id === event.target.value);
+                      if (funnel) {
+                        setSelectedFunnelId(funnel.id);
+                        setSelectedFunnel(funnel.name);
+                      }
+                    }}
                   >
-                    {funnels.map((funnel) => (
-                      <option key={funnel} value={funnel}>
-                        {funnel}
+                    {availableFunnels.map((funnel) => (
+                      <option key={funnel.id} value={funnel.id}>
+                        {funnel.name}
                       </option>
                     ))}
                   </select>
                 </label>
+                <button
+                  type="button"
+                  className={styles.primaryAction}
+                  onClick={() => void handleCreateFunnelFromOptions()}
+                >
+                  <FiPlus aria-hidden="true" />
+                  Criar novo funil
+                </button>
                 <label>
                   <span>Visualização padrão</span>
                   <select

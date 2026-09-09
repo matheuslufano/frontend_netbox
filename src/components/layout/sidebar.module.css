@@ -293,6 +293,40 @@
     box-shadow 0.2s ease;
 }
 
+.groupChevron {
+  margin-left: auto;
+  flex: 0 0 auto;
+  transition: transform 0.2s ease;
+}
+
+.groupChevronOpen {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  display: grid;
+  gap: 5px;
+  margin: 6px 0 0 18px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.submenuLink {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.submenuLink:hover,
+.submenuLinkActive {
+  background: rgba(255, 95, 52, 0.2);
+  color: #fff;
+}
+
 .menuItem::before {
   content: "";
 
@@ -527,7 +561,8 @@
   top: 46vh;
   left: 198px;
   right: auto;
-  z-index: 99999;
+  /* Acima da sidebar, mas abaixo da camada global de modais. */
+  z-index: 1001;
 
   width: 32px;
   height: 32px;
@@ -739,6 +774,11 @@
     gap: 0;
 
     padding: 7px;
+  }
+
+  .sidebar.collapsed .groupChevron,
+  .sidebar.collapsed .submenu {
+    display: none;
   }
 
   .sidebar.collapsed .button:hover {

@@ -5,7 +5,13 @@ const prismaStudioUrl =
 
 export function GET(request: NextRequest) {
   const destination = new URL(prismaStudioUrl);
-  destination.search = request.nextUrl.search;
+  const token = request.nextUrl.searchParams.get("token");
+  if (token) {
+    destination.pathname = `${destination.pathname.replace(/\/+$/, "")}/auth`;
+    destination.searchParams.set("token", token);
+  } else {
+    destination.search = request.nextUrl.search;
+  }
 
   return NextResponse.redirect(destination);
 }

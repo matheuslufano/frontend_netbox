@@ -453,6 +453,182 @@
   cursor: pointer;
 }
 
+.calendarButton {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #bfd2dc;
+  border-radius: 9px;
+  background: #e8f1f5;
+  color: #315a70;
+  cursor: pointer;
+}
+
+.calendarButton:hover,
+.calendarButton:focus-visible {
+  border-color: #7faabd;
+  background: #d6e7ee;
+  outline: 0;
+}
+
+.calendarOverlay {
+  position: fixed;
+  z-index: 3000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 30, 40, 0.58);
+}
+
+.calendarModal {
+  width: min(1180px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  border: 1px solid #cbdce7;
+  border-radius: 18px;
+  background: #f4f9fb;
+  box-shadow: 0 24px 70px rgba(9, 32, 48, 0.34);
+}
+
+.calendarModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 12px;
+  background: #fff;
+}
+
+.calendarModalHeader span {
+  color: #668092;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.calendarModalHeader h2 {
+  margin: 4px 0 0;
+  color: #203543;
+  font-size: 24px;
+}
+
+.calendarModalHeader button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #cbdce7;
+  border-radius: 9px;
+  background: #f6fafc;
+  color: #36586b;
+  cursor: pointer;
+}
+
+.calendarModalHeader button:hover,
+.calendarModalHeader button:focus-visible {
+  border-color: #7faabd;
+  outline: 0;
+}
+
+.calendarLoading {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  color: #607d8b;
+}
+
+.reminderOverlay {
+  position: fixed;
+  z-index: 3010;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 30, 40, 0.46);
+}
+
+.reminderModal {
+  width: min(460px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid #cbdce7;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 22px 60px rgba(9, 32, 48, 0.3);
+}
+
+.reminderModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e2ebef;
+}
+
+.reminderModalHeader h3 { margin: 0; color: #203543; font-size: 18px; }
+.reminderModalHeader button { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #cbdce7; border-radius: 8px; background: #f6fafc; color: #36586b; cursor: pointer; }
+.reminderDetails, .reminderForm { display: grid; gap: 12px; padding: 18px; }
+.reminderDetails strong { color: #203543; font-size: 18px; }
+.reminderDetails span, .reminderDetails time, .reminderDetails small { color: #607d8b; font-size: 13px; }
+.reminderForm label { display: grid; gap: 5px; color: #52718a; font-size: 12px; font-weight: 800; }
+.reminderForm input, .reminderForm select, .reminderForm textarea { width: 100%; border: 1px solid #cbdce7; border-radius: 8px; padding: 9px 10px; background: #fbfdff; color: #203543; font: inherit; font-size: 13px; }
+.reminderForm textarea { min-height: 76px; resize: vertical; }
+.reminderFullField { grid-column: 1 / -1; }
+.reminderDetailTitle { display: flex; align-items: center; gap: 9px; border-left: 5px solid; border-radius: 9px; padding: 12px 14px; }
+.reminderColorField { margin: 0; border: 1px solid #dce6eb; border-radius: 12px; padding: 12px; }
+.reminderColorField legend { padding: 0 5px; color: #52718a; font-size: 12px; font-weight: 800; }
+.reminderColorChoices { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.reminderColorChoices > button { width: 26px; height: 26px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #cbdce7; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.reminderColorChoices > button:hover { transform: scale(1.08); }
+.reminderColorChoices > .reminderColorActive { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #315a70; transform: scale(.9); }
+.reminderCustomColor { display: inline-flex !important; grid-template-columns: auto 34px; align-items: center; gap: 7px !important; margin-left: auto; }
+.reminderCustomColor input { width: 34px !important; height: 30px; padding: 2px !important; cursor: pointer; }
+.reminderColorPreview { display: flex; align-items: center; gap: 8px; margin-top: 12px; border-left: 5px solid; border-radius: 8px; padding: 10px 12px; color: #294d60; font-size: 13px; font-weight: 800; }
+.reminderPrimaryButton { justify-self: end; border: 0; border-radius: 8px; padding: 10px 14px; background: #176b88; color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+.reminderPrimaryButton:disabled { opacity: .6; cursor: not-allowed; }
+.reminderActions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 4px; }
+.reminderDeleteButton { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #efb4b4; border-radius: 8px; padding: 9px 12px; background: #fff1f1; color: #b42323; font-size: 12px; font-weight: 800; cursor: pointer; }
+.reminderDeleteButton:hover { background: #ffe2e2; }
+.reminderDeleteButton:disabled { opacity: .6; cursor: not-allowed; }
+
+:global(html[data-theme="dark"]) .reminderModal { border-color: #555852; background: #30312e; }
+:global(html[data-theme="dark"]) .reminderModalHeader { border-color: #555852; }
+:global(html[data-theme="dark"]) .reminderModalHeader h3,
+:global(html[data-theme="dark"]) .reminderDetails strong { color: #f1efea; }
+:global(html[data-theme="dark"]) .reminderForm input,
+:global(html[data-theme="dark"]) .reminderForm select,
+:global(html[data-theme="dark"]) .reminderForm textarea { border-color: #555852; background: #292a27; color: #f1efea; }
+:global(html[data-theme="dark"]) .reminderColorField { border-color: #555852; }
+
+:global(html[data-theme="dark"]) .calendarButton {
+  border-color: #52636c;
+  background: #35434a;
+  color: #c9dce5;
+}
+
+:global(html[data-theme="dark"]) .calendarButton:hover,
+:global(html[data-theme="dark"]) .calendarButton:focus-visible {
+  border-color: #7098aa;
+  background: #465b65;
+}
+
+:global(html[data-theme="dark"]) .calendarModal {
+  border-color: #555852;
+  background: #292a27;
+}
+
+:global(html[data-theme="dark"]) .calendarModalHeader {
+  background: #30312e;
+}
+
+:global(html[data-theme="dark"]) .calendarModalHeader h2,
+:global(html[data-theme="dark"]) .calendarModalHeader button {
+  color: #f1efea;
+}
+
 .themeToggle:hover,
 .themeToggle:focus-visible {
   border-color: #7faabd;

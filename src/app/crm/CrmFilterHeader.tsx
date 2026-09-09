@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FiChevronDown,
   FiCopy,
+  FiCalendar,
   FiFilter,
   FiList,
   FiPlus,
@@ -16,6 +18,7 @@ import {
 } from "react-icons/fi";
 import {
   apagarFiltroCrmSalvo,
+  apagarAgendamentoContato,
   atualizarFiltroCrmSalvo,
   criarCrmFunnel,
   criarFiltroCrmSalvo,
@@ -23,16 +26,24 @@ import {
   duplicarFiltroCrmSalvo,
   getApiErrorMessage,
   listarFiltrosCrmSalvos,
+  listarAgendaContatos,
+  criarAgendamentoContato,
+  atualizarAgendamentoContato,
   type CrmFilterCondition,
   type CrmPermissions,
+  type AgendaContact,
   type SavedCrmFilter,
   type User,
 } from "@/lib/api";
 import NotificationHeaderButton from "@/components/notifications/NotificationHeaderButton";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import { CalendarView } from "@/app/contatos/page";
 import styles from "./CrmFilterHeader.module.css";
 
 type Option = { id: string; name: string };
+type ReminderForm = { title: string; scheduledAt: string; durationMinutes: string; reminderMinutes: string; description: string; color: string };
+type CalendarReminder = { id: string; title: string; scheduledAt: string; status: string; color?: string | null };
+const REMINDER_COLORS = ["#176b88", "#2563eb", "#7c3aed", "#db2777", "#ea580c", "#16a34a", "#dc2626", "#475569"];
 type Props = {
   funnels: Option[];
   funnelId: string;
@@ -165,6 +176,13 @@ export default function CrmFilterHeader(props: Props) {
   const [savedFilters, setSavedFilters] = useState<SavedCrmFilter[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarContacts, setCalendarContacts] = useState<AgendaContact[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [reminderModal, setReminderModal] = useState<"view" | "edit" | "new" | null>(null);
+  const [reminderContact, setReminderContact] = useState<AgendaContact | null>(null);
+  const [reminder, setReminder] = useState<CalendarReminder | null>(null);
+  const [reminderForm, setReminderForm] = useState<ReminderForm>({ title: "Retorno com cliente", scheduledAt: "", durationMinutes: "30", reminderMinutes: "15", description: "", color: "#176b88" });
   const panelRef = useRef<HTMLDivElement>(null);
   const loadedDefaultRef = useRef(false);
   const initialCallbacksRef = useRef({
@@ -222,9 +240,91 @@ export default function CrmFilterHeader(props: Props) {
     };
   }, [panelOpen]);
 
+  useEffect(() => {
+    if (!calendarOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCalendarOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [calendarOpen]);
+
   function openPanel() {
     setDraft(props.conditions.map((condition) => ({ ...condition })));
     setPanelOpen((current) => !current);
+  }
+
+  function openCalendar() {
+    setCalendarOpen(true);
+    setCalendarLoading(true);
+    void listarAgendaContatos()
+      .then((result) => setCalendarContacts(result.contacts || []))
+      .catch(() => setCalendarContacts([]))
+      .finally(() => setCalendarLoading(false));
+  }
+
+  function toDateTimeLocal(value: string) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16);
+  }
+
+  function openNewReminder(date: Date) {
+    setReminderContact(null);
+    setReminder(null);
+    setReminderForm({ title: "Retorno com cliente", scheduledAt: toDateTimeLocal(date.toISOString()), durationMinutes: "30", reminderMinutes: "15", description: "", color: "#176b88" });
+    setReminderModal("new");
+  }
+
+  function openReminder(contact: AgendaContact, appointment?: CalendarReminder) {
+    const selectedReminder = appointment || contact.nextAppointment;
+    if (!selectedReminder) return;
+    setReminderContact(contact);
+    setReminder(selectedReminder);
+    setReminderModal("view");
+  }
+
+  function editReminder() {
+    if (!reminder) return;
+    setReminderForm({ title: reminder.title, scheduledAt: toDateTimeLocal(reminder.scheduledAt), durationMinutes: "30", reminderMinutes: "15", description: "", color: reminder.color || "#176b88" });
+    setReminderModal("edit");
+  }
+
+  async function saveReminder() {
+    if (!reminderContact || !reminderForm.title.trim() || !reminderForm.scheduledAt) return;
+    setBusy(true);
+    try {
+      const payload = { ...reminderForm, durationMinutes: Number(reminderForm.durationMinutes), reminderMinutes: Number(reminderForm.reminderMinutes) };
+      if (reminderModal === "edit" && reminder) await atualizarAgendamentoContato(reminderContact.id, Number(reminder.id), payload);
+      else await criarAgendamentoContato(reminderContact.id, payload);
+      setReminderModal(null);
+      setReminder(null);
+      setReminderContact(null);
+      await listarAgendaContatos().then((result) => setCalendarContacts(result.contacts || []));
+      props.onResultMessage(reminderModal === "edit" ? "Lembrete atualizado." : "Lembrete criado.");
+    } catch (error) {
+      props.onResultMessage(getApiErrorMessage(error, "Não foi possível salvar o lembrete."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteReminder() {
+    if (!reminderContact || !reminder || !window.confirm(`Apagar o lembrete “${reminder.title}”?`)) return;
+    setBusy(true);
+    try {
+      await apagarAgendamentoContato(reminderContact.id, Number(reminder.id));
+      setReminderModal(null);
+      setReminder(null);
+      setReminderContact(null);
+      await listarAgendaContatos().then((result) => setCalendarContacts(result.contacts || []));
+      props.onResultMessage("Lembrete apagado.");
+    } catch (error) {
+      props.onResultMessage(getApiErrorMessage(error, "Não foi possível apagar o lembrete."));
+    } finally {
+      setBusy(false);
+    }
   }
 
   function updateCondition(id: string | undefined, patch: Partial<CrmFilterCondition>) {
@@ -386,6 +486,15 @@ export default function CrmFilterHeader(props: Props) {
         <NotificationHeaderButton />
         <button
           type="button"
+          className={styles.calendarButton}
+          onClick={openCalendar}
+          title="Abrir agenda"
+          aria-label="Abrir agenda"
+        >
+          <FiCalendar aria-hidden="true" />
+        </button>
+        <button
+          type="button"
           className={`${styles.filterButton} ${props.conditions.length ? styles.active : ""}`}
           onClick={openPanel}
           aria-expanded={panelOpen}
@@ -504,6 +613,78 @@ export default function CrmFilterHeader(props: Props) {
             </footer>
           </div>
         )}
+
+        {calendarOpen && typeof document !== "undefined" && createPortal((
+          <div
+            className={styles.calendarOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Agenda de contatos"
+            onClick={(event) => event.target === event.currentTarget && setCalendarOpen(false)}
+          >
+            <section className={styles.calendarModal}>
+              <header className={styles.calendarModalHeader}>
+                <div>
+                  <span>Agenda de clientes</span>
+                  <h2>Calendário</h2>
+                </div>
+                <button type="button" onClick={() => setCalendarOpen(false)} aria-label="Fechar agenda">
+                  <FiX />
+                </button>
+              </header>
+              {calendarLoading ? (
+                <div className={styles.calendarLoading}>Carregando agenda...</div>
+              ) : (
+                <CalendarView
+                  contacts={calendarContacts.filter((contact) => Boolean(contact.name || contact.phone || contact.document))}
+                  onOpen={(contact) => openReminder(contact)}
+                  onEdit={(contact, appointment) => openReminder(contact, appointment)}
+                  onCreateDate={openNewReminder}
+                />
+              )}
+              {reminderModal && (
+                <div className={styles.reminderOverlay} role="dialog" aria-modal="true" aria-label={reminderModal === "view" ? "Detalhes do lembrete" : "Agendar lembrete"} onClick={(event) => event.target === event.currentTarget && setReminderModal(null)}>
+                  <section className={styles.reminderModal}>
+                    <header className={styles.reminderModalHeader}>
+                      <h3>{reminderModal === "view" ? "Lembrete" : reminderModal === "edit" ? "Editar lembrete" : "Novo lembrete"}</h3>
+                      <button type="button" onClick={() => setReminderModal(null)} aria-label="Fechar lembrete"><FiX /></button>
+                    </header>
+                    {reminderModal === "view" && reminder ? (
+                      <div className={styles.reminderDetails}>
+                        <div className={styles.reminderDetailTitle} style={{ borderLeftColor: reminder.color || "#176b88", backgroundColor: reminder.color ? `${reminder.color}18` : undefined }}><FiCalendar /><strong>{reminder.title}</strong></div>
+                        <span>{reminderContact?.name || "Contato"}</span>
+                        <time>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "full", timeStyle: "short" }).format(new Date(reminder.scheduledAt))}</time>
+                        <small>Status: {reminder.status}</small>
+                        <div className={styles.reminderActions}>
+                          <button type="button" className={styles.reminderDeleteButton} onClick={() => void deleteReminder()} disabled={busy}><FiTrash2 /> Apagar</button>
+                          <button type="button" className={styles.reminderPrimaryButton} onClick={editReminder} disabled={busy}>Editar lembrete</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={styles.reminderForm}>
+                        {reminderModal === "new" && <label><span>Contato</span><select value={reminderContact?.id || ""} onChange={(event) => setReminderContact(calendarContacts.find((contact) => contact.id === event.target.value) || null)}><option value="">Selecione o contato</option>{calendarContacts.filter((contact) => Boolean(contact.name || contact.phone || contact.document)).map((contact) => <option key={contact.id} value={contact.id}>{contact.name || "Contato"}</option>)}</select></label>}
+                        <label><span>Título</span><input value={reminderForm.title} onChange={(event) => setReminderForm({ ...reminderForm, title: event.target.value })} /></label>
+                        <label><span>Data e hora</span><input type="datetime-local" value={reminderForm.scheduledAt} onChange={(event) => setReminderForm({ ...reminderForm, scheduledAt: event.target.value })} /></label>
+                        <label><span>Duração (minutos)</span><input type="number" min="5" value={reminderForm.durationMinutes} onChange={(event) => setReminderForm({ ...reminderForm, durationMinutes: event.target.value })} /></label>
+                        <label><span>Lembrete (minutos antes)</span><input type="number" min="0" value={reminderForm.reminderMinutes} onChange={(event) => setReminderForm({ ...reminderForm, reminderMinutes: event.target.value })} /></label>
+                        <fieldset className={styles.reminderColorField}>
+                          <legend>Cor do lembrete</legend>
+                          <div className={styles.reminderColorChoices}>
+                            {REMINDER_COLORS.map((color) => <button type="button" key={color} className={reminderForm.color === color ? styles.reminderColorActive : ""} style={{ backgroundColor: color }} onClick={() => setReminderForm({ ...reminderForm, color })} aria-label={`Selecionar cor ${color}`} aria-pressed={reminderForm.color === color} />)}
+                            <label className={styles.reminderCustomColor}><span>Personalizada</span><input type="color" value={reminderForm.color} onChange={(event) => setReminderForm({ ...reminderForm, color: event.target.value })} /></label>
+                          </div>
+                          <div className={styles.reminderColorPreview} style={{ borderLeftColor: reminderForm.color, backgroundColor: `${reminderForm.color}18` }}><FiCalendar /><span>{reminderForm.title || "Prévia do lembrete"}</span></div>
+                        </fieldset>
+                        <label className={styles.reminderFullField}><span>Observação</span><textarea value={reminderForm.description} onChange={(event) => setReminderForm({ ...reminderForm, description: event.target.value })} /></label>
+                        <button type="button" className={styles.reminderPrimaryButton} onClick={() => void saveReminder()} disabled={busy || !reminderContact || !reminderForm.title.trim() || !reminderForm.scheduledAt}>{busy ? "Salvando..." : "Salvar lembrete"}</button>
+                      </div>
+                    )}
+                  </section>
+                </div>
+              )}
+            </section>
+          </div>
+        ), document.body)}
       </div>
       <span className={styles.srOnly} aria-live="polite">{props.conditions.length} filtros adicionais aplicados</span>
     </section>

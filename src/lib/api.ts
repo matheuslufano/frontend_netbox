@@ -128,6 +128,49 @@ export type ContactsResponse = {
   total: number;
 };
 
+export type AgendaContact = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  document: string | null;
+  city: string | null;
+  neighborhood: string | null;
+  address: string | null;
+  status: string;
+  preferredChannel: string;
+  notes: string | null;
+  avatarUrl: string | null;
+  owner: { id: number; name: string } | null;
+  totalConversions: number;
+  totalDeals: number;
+  totalInteractions: number;
+  nextAppointment: { id: string; title: string; scheduledAt: string; status: string; color?: string | null } | null;
+  appointments: { id: string; title: string; scheduledAt: string; status: string; color?: string | null }[];
+  lastInteraction: { type: string; content: string; occurredAt: string } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AgendaContactsResponse = {
+  contacts: AgendaContact[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type AgendaContactDetails = {
+  contact: AgendaContact;
+  conversions: unknown[];
+  deals: { id: number; customerName: string; status: { key: string; name: string }; updatedAt: string }[];
+  appointments: ContactAppointment[];
+  interactions: ContactInteraction[];
+};
+
+export type ContactInteraction = { id: number; type: string; content: string; occurredAt: string; createdAt: string };
+export type ContactAppointment = { id: number; title: string; description: string | null; scheduledAt: string; durationMinutes: number; status: string; reminderMinutes: number | null; color: string | null; completedAt: string | null };
+
 export type AffiliateStats = {
   affiliate: string;
   affiliatePhotoUrl: string | null;
@@ -917,6 +960,74 @@ export async function apagarContato(contact: Pick<ContactRecord, "conversionIds"
   const { data } = await api.delete<{ message: string }>(`/contacts/${encodeURIComponent(contact.conversionIds.join("-"))}`, {
     data: { conversionIds: contact.conversionIds },
   });
+  return data;
+}
+
+export async function listarAgendaContatos(params: { search?: string; status?: string; page?: number; pageSize?: number } = {}) {
+  const { data } = await api.get<AgendaContactsResponse>("/agenda/contacts", { params });
+  return data;
+}
+
+export async function criarContatoAgenda(payload: Record<string, unknown>) {
+  const { data } = await api.post<{ contact: AgendaContact }>("/agenda/contacts", payload);
+  return data.contact;
+}
+
+export async function detalharContatoAgenda(id: string) {
+  const { data } = await api.get<AgendaContactDetails>(`/agenda/contacts/${encodeURIComponent(id)}`);
+  return data;
+}
+
+export async function atualizarContatoAgenda(id: string, payload: Record<string, unknown>) {
+  const { data } = await api.put<{ contact: AgendaContact }>(`/agenda/contacts/${encodeURIComponent(id)}`, payload);
+  return data.contact;
+}
+
+export async function apagarContatoAgenda(id: string) {
+  await api.delete(`/agenda/contacts/${encodeURIComponent(id)}`);
+}
+
+export async function registrarInteracaoContato(id: string, payload: Record<string, unknown>) {
+  const { data } = await api.post<{ interaction: ContactInteraction }>(`/agenda/contacts/${encodeURIComponent(id)}/interactions`, payload);
+  return data.interaction;
+}
+
+export async function criarAgendamentoContato(id: string, payload: Record<string, unknown>) {
+  const { data } = await api.post<{ appointment: ContactAppointment }>(`/agenda/contacts/${encodeURIComponent(id)}/appointments`, payload);
+  return data.appointment;
+}
+
+export async function atualizarAgendamentoContato(id: string, appointmentId: number, payload: Record<string, unknown>) {
+  const { data } = await api.put<{ appointment: ContactAppointment }>(`/agenda/contacts/${encodeURIComponent(id)}/appointments/${appointmentId}`, payload);
+  return data.appointment;
+}
+
+export async function apagarAgendamentoContato(id: string, appointmentId: number) {
+  await api.delete(`/agenda/contacts/${encodeURIComponent(id)}/appointments/${appointmentId}`);
+}
+
+export type MaintenanceResult = {
+  message: string;
+  deleted: Record<string, number>;
+};
+
+export async function apagarTodosLinks(confirmation: string) {
+  const { data } = await api.post<MaintenanceResult>("/admin/maintenance/purge-links", { confirmation });
+  return data;
+}
+
+export async function apagarTodoCrm(confirmation: string) {
+  const { data } = await api.post<MaintenanceResult>("/admin/maintenance/purge-crm", { confirmation });
+  return data;
+}
+
+export async function limparBancoMantendoUsuarios(confirmation: string) {
+  const { data } = await api.post<MaintenanceResult>("/admin/maintenance/purge-database", { confirmation });
+  return data;
+}
+
+export async function criarSessaoPrismaStudio() {
+  const { data } = await api.post<{ token: string; expiresInSeconds: number }>("/admin/prisma-studio-session");
   return data;
 }
 

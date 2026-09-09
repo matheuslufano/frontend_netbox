@@ -571,6 +571,15 @@
   gap: 4px;
 }
 
+.columnSelectAllButton {
+  color: #2563eb;
+}
+
+.columnSelectAllButton:hover {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+}
+
 .columnTools > span {
   max-width: 72px;
   overflow: hidden;
@@ -1791,7 +1800,7 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 2000;
   display: grid;
   place-items: center;
   padding: 18px;

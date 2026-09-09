@@ -1,399 +1,94 @@
 "use client";
 
-import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  ContactRecord,
-  getApiErrorMessage,
-  editarContato,
-  apagarContato,
-  listarContatos,
+  AgendaContact, AgendaContactDetails, ContactAppointment,
+  apagarContatoAgenda, atualizarAgendamentoContato, atualizarContatoAgenda,
+  criarAgendamentoContato, criarContatoAgenda, detalharContatoAgenda,
+  getApiErrorMessage, listarAgendaContatos, registrarInteracaoContato,
 } from "@/lib/api";
 import { notify } from "@/lib/notifications/notify";
-import {
-  FiCalendar,
-  FiEdit3,
-  FiMessageCircle,
-  FiPhone,
-  FiRefreshCw,
-  FiSearch,
-  FiUserX,
-  FiUsers,
-  FiX,
-  FiTrash2,
-} from "react-icons/fi";
-import { RealtimeEventName, useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import { FiCalendar, FiEdit3, FiGrid, FiList, FiMessageCircle, FiPhone, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUser, FiUsers, FiX } from "react-icons/fi";
 import styles from "./contatos.module.css";
+import Afiliado from "@/app/afiliado/page";
 
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
-});
-const CONTACT_REALTIME_EVENTS: RealtimeEventName[] = ["chatmix-webhook", "link-converted"];
+type ViewMode = "cards" | "list" | "calendar";
+type ContactForm = { name: string; phone: string; email: string; document: string; city: string; neighborhood: string; address: string; ownerUserId: string; status: string; notes: string };
+type AppointmentForm = { title: string; scheduledAt: string; durationMinutes: string; reminderMinutes: string; description: string };
+const emptyForm: ContactForm = { name: "", phone: "", email: "", document: "", city: "", neighborhood: "", address: "", ownerUserId: "", status: "ACTIVE", notes: "" };
+const emptyAppointment: AppointmentForm = { title: "Retorno com cliente", scheduledAt: "", durationMinutes: "30", reminderMinutes: "15", description: "" };
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+const dateOnlyFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
+
+export { CalendarView };
+
+function SectionSwitcher({ activeSection, onChange }: { activeSection: "contacts" | "affiliates"; onChange: (section: "contacts" | "affiliates") => void }) { return <nav className={styles.sectionSwitcher} aria-label="Seções da agenda"><button type="button" className={activeSection === "contacts" ? styles.sectionActive : ""} onClick={() => onChange("contacts")}><FiUsers /> Contatos</button><button type="button" className={activeSection === "affiliates" ? styles.sectionActive : ""} onClick={() => onChange("affiliates")}><FiUser /> Afiliados</button></nav>; }
 
 export default function ContatosPage() {
-  const [contacts, setContacts] = useState<ContactRecord[]>([]);
+  const [contacts, setContacts] = useState<AgendaContact[]>([]);
+  const [selected, setSelected] = useState<AgendaContactDetails | null>(null);
   const [search, setSearch] = useState("");
-  const [showUnidentified, setShowUnidentified] = useState(false);
+  const [status, setStatus] = useState("ALL");
+  const [view, setView] = useState<ViewMode>("cards");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", phone: "", document: "", city: "" });
-  const [savingContact, setSavingContact] = useState(false);
+  const [modal, setModal] = useState<"new" | "edit" | "interaction" | "appointment" | null>(null);
+  const [form, setForm] = useState<ContactForm>(emptyForm);
+  const [appointmentForm, setAppointmentForm] = useState<AppointmentForm>(emptyAppointment);
+  const [editingAppointmentId, setEditingAppointmentId] = useState<number | null>(null);
+  const [appointmentContactId, setAppointmentContactId] = useState("");
+  const [interaction, setInteraction] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [activeSection, setActiveSection] = useState<"contacts" | "affiliates">("contacts");
 
-  const loadContacts = useCallback(async (silent = false) => {
-    if (silent) setRefreshing(true);
-    else setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    silent ? setRefreshing(true) : setLoading(true);
+    try { const result = await listarAgendaContatos({ search: search || undefined, status: status === "ALL" ? undefined : status }); setContacts(result.contacts || []); setError(null); }
+    catch (requestError) { setError(getApiErrorMessage(requestError, "Não foi possível carregar a agenda.")); }
+    finally { setLoading(false); setRefreshing(false); }
+  }, [search, status]);
+  useEffect(() => { void load(); }, [load]);
 
-    try {
-      const response = await listarContatos();
-      setContacts(response.contacts || []);
-      setError(null);
-    } catch (requestError) {
-      setError(getApiErrorMessage(requestError, "Não foi possível carregar os contatos."));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const displayed = useMemo(() => contacts.filter((contact) => Boolean(contact.name || contact.phone || contact.document)), [contacts]);
+  const today = new Date();
+  const todayAppointments = contacts.filter((c) => c.nextAppointment && new Date(c.nextAppointment.scheduledAt).toDateString() === today.toDateString());
+  const overdue = contacts.filter((c) => c.nextAppointment && new Date(c.nextAppointment.scheduledAt) < today);
+  function openNew() { setForm(emptyForm); setModal("new"); }
+  async function openDetails(contact: AgendaContact) { try { setSelected(await detalharContatoAgenda(contact.id)); } catch (e) { notify.error({ title: "Não foi possível abrir o contato", message: getApiErrorMessage(e, "Tente novamente.") }); } }
+  function openEdit() { if (!selected) return; const c = selected.contact; setForm({ name: c.name || "", phone: c.phone || "", email: c.email || "", document: c.document || "", city: c.city || "", neighborhood: c.neighborhood || "", address: c.address || "", ownerUserId: c.owner ? String(c.owner.id) : "", status: c.status, notes: c.notes || "" }); setModal("edit"); }
+  async function saveContact() { setBusy(true); try { const payload = { ...form, ownerUserId: form.ownerUserId ? Number(form.ownerUserId) : null }; const c = modal === "edit" && selected ? await atualizarContatoAgenda(selected.contact.id, payload) : await criarContatoAgenda(payload); notify.success({ title: modal === "edit" ? "Contato atualizado" : "Contato criado", message: "Os dados foram salvos na agenda." }); setModal(null); setSelected(null); await load(true); if (modal === "new") await openDetails(c); } catch (e) { notify.error({ title: "Não foi possível salvar", message: getApiErrorMessage(e, "Verifique os dados e tente novamente.") }); } finally { setBusy(false); } }
+  async function saveInteraction() { if (!selected || !interaction.trim()) return; setBusy(true); try { await registrarInteracaoContato(selected.contact.id, { type: "NOTE", content: interaction }); setInteraction(""); setModal(null); setSelected(await detalharContatoAgenda(selected.contact.id)); await load(true); notify.success({ title: "Interação registrada", message: "O histórico foi atualizado." }); } catch (e) { notify.error({ title: "Não foi possível registrar", message: getApiErrorMessage(e, "Tente novamente.") }); } finally { setBusy(false); } }
+  async function editAppointment(contact: AgendaContact, appointment: { id: string; title: string; scheduledAt: string; status: string }) { try { const details = await detalharContatoAgenda(contact.id); setSelected(details); const full = details.appointments.find((item) => item.id === Number(appointment.id)); setEditingAppointmentId(Number(appointment.id)); setAppointmentForm({ title: full?.title || appointment.title, scheduledAt: toDateTimeLocal(full?.scheduledAt || appointment.scheduledAt), durationMinutes: String(full?.durationMinutes || 30), reminderMinutes: String(full?.reminderMinutes || 0), description: full?.description || "" }); setModal("appointment"); } catch (e) { notify.error({ title: "Não foi possível editar", message: getApiErrorMessage(e, "Tente novamente.") }); } }
+  async function saveAppointment() { const targetId = selected?.contact.id || appointmentContactId; if (!targetId) { notify.error({ title: "Selecione um contato", message: "Escolha o cliente que receberá este lembrete." }); return; } setBusy(true); try { const payload = { ...appointmentForm, durationMinutes: Number(appointmentForm.durationMinutes), reminderMinutes: Number(appointmentForm.reminderMinutes) }; if (editingAppointmentId) await atualizarAgendamentoContato(targetId, editingAppointmentId, payload); else await criarAgendamentoContato(targetId, payload); setEditingAppointmentId(null); setAppointmentContactId(""); setModal(null); setSelected(selected ? await detalharContatoAgenda(targetId) : null); await load(true); notify.success({ title: editingAppointmentId ? "Lembrete atualizado" : "Agendamento criado", message: "A agenda foi atualizada." }); } catch (e) { notify.error({ title: "Não foi possível salvar", message: getApiErrorMessage(e, "Informe uma data válida.") }); } finally { setBusy(false); } }
+  function openAppointmentForDate(date: Date) { setSelected(null); setEditingAppointmentId(null); setAppointmentContactId(""); setAppointmentForm({ ...emptyAppointment, scheduledAt: toDateTimeLocal(date.toISOString()) }); setModal("appointment"); }
+  async function deleteContact() { if (!selected || !window.confirm("Arquivar este contato? O histórico será preservado.")) return; setBusy(true); try { await apagarContatoAgenda(selected.contact.id); setSelected(null); await load(true); notify.success({ title: "Contato arquivado", message: "O contato foi removido da agenda ativa." }); } catch (e) { notify.error({ title: "Não foi possível arquivar", message: getApiErrorMessage(e, "Tente novamente.") }); } finally { setBusy(false); } }
+  async function completeAppointment(appointment: ContactAppointment) { if (!selected) return; try { await atualizarAgendamentoContato(selected.contact.id, appointment.id, { status: "COMPLETED" }); setSelected(await detalharContatoAgenda(selected.contact.id)); await load(true); } catch (e) { notify.error({ title: "Não foi possível concluir", message: getApiErrorMessage(e, "Tente novamente.") }); } }
 
-  useEffect(() => {
-    void loadContacts();
-  }, [loadContacts]);
-
-  const refreshFromEvent = useCallback(() => {
-    void loadContacts(true);
-  }, [loadContacts]);
-
-  useRealtimeEvents(refreshFromEvent, CONTACT_REALTIME_EVENTS);
-
-  const openContactEditor = (contact: ContactRecord) => {
-    setEditingContact(contact);
-    setEditForm({
-      name: contact.name || "",
-      phone: contact.phone || "",
-      document: contact.document || "",
-      city: contact.city || "",
-    });
-  };
-
-  const saveContact = async () => {
-    if (!editingContact) return;
-    setSavingContact(true);
-    try {
-      await editarContato({ ...editForm, conversionIds: editingContact.conversionIds });
-      notify.success({ title: "Contato atualizado", message: "As informações do contato foram salvas." });
-      setEditingContact(null);
-      await loadContacts(true);
-    } catch (requestError) {
-      notify.error({ title: "Não foi possível atualizar o contato", message: getApiErrorMessage(requestError, "Verifique os dados e tente novamente.") });
-    } finally {
-      setSavingContact(false);
-    }
-  };
-
-  const removeContact = async () => {
-    if (!editingContact || !window.confirm("Apagar este contato? O histórico de conversões será preservado.")) return;
-    setSavingContact(true);
-    try {
-      await apagarContato(editingContact);
-      notify.success({ title: "Contato apagado", message: "O contato foi removido da lista, mantendo o histórico." });
-      setEditingContact(null);
-      await loadContacts(true);
-    } catch (requestError) {
-      notify.error({ title: "Não foi possível apagar o contato", message: getApiErrorMessage(requestError, "Tente novamente em instantes.") });
-    } finally {
-      setSavingContact(false);
-    }
-  };
-
-  const filteredContacts = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase("pt-BR");
-    return contacts.filter((contact) => {
-      if (isIdentified(contact) === showUnidentified) return false;
-      if (!term) return true;
-
-      return [
-          contact.name,
-          contact.phone,
-          contact.document,
-          contact.city,
-          contact.source,
-          contact.campaignName,
-          ...contact.affiliates.map((affiliate) => affiliate.name),
-          contact.linkName,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLocaleLowerCase("pt-BR")
-          .includes(term);
-    });
-  }, [contacts, search, showUnidentified]);
-
-  const unidentifiedCount = useMemo(
-    () => contacts.filter((contact) => !isIdentified(contact)).length,
-    [contacts],
-  );
-
-  return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}><FiUsers aria-hidden="true" /> Cadastro de clientes</p>
-          <h1>Contatos</h1>
-          <p className={styles.subtitle}>
-            Clientes identificados nas conversões e atendimentos recebidos pelo Chatmix.
-          </p>
-        </div>
-        <button
-          type="button"
-          className={styles.refreshButton}
-          onClick={() => void loadContacts(true)}
-          disabled={refreshing}
-        >
-          <FiRefreshCw aria-hidden="true" className={refreshing ? styles.spinning : undefined} />
-          Atualizar
-        </button>
-      </header>
-
-      <section className={styles.toolbar} aria-label="Filtros de contatos">
-        <label className={styles.searchBox}>
-          <FiSearch aria-hidden="true" />
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nome, telefone, cidade ou campanha"
-            aria-label="Buscar contatos"
-          />
-        </label>
-        <div className={styles.toolbarActions}>
-          <span className={styles.count}>{filteredContacts.length} contato(s)</span>
-          <button
-            type="button"
-            className={`${styles.iconFilterButton} ${showUnidentified ? styles.iconFilterButtonActive : ""}`}
-            onClick={() => setShowUnidentified((current) => !current)}
-            aria-label={showUnidentified ? "Mostrar contatos identificados" : `Mostrar ${unidentifiedCount} contatos não identificados`}
-            aria-pressed={showUnidentified}
-            title={showUnidentified ? "Mostrar contatos identificados" : "Mostrar contatos não identificados"}
-          >
-            <FiUserX aria-hidden="true" />
-          </button>
-        </div>
-      </section>
-
-      {loading ? (
-        <section className={styles.stateCard}>Carregando contatos...</section>
-      ) : error ? (
-        <section className={styles.stateCard} role="alert">
-          <strong>Não foi possível carregar os contatos.</strong>
-          <p>{error}</p>
-          <button type="button" className={styles.retryButton} onClick={() => void loadContacts()}>
-            Tentar novamente
-          </button>
-        </section>
-      ) : filteredContacts.length === 0 ? (
-        <section className={styles.stateCard}>
-          <FiUsers aria-hidden="true" />
-          <strong>{showUnidentified ? "Nenhuma conversão não identificada" : "Nenhum contato identificado"}</strong>
-          <p>{showUnidentified
-            ? "As conversões sem nome, telefone ou documento aparecerão nesta visualização."
-            : "Novos clientes identificados aparecerão aqui quando uma conversão for registrada pelo Chatmix."}</p>
-        </section>
-      ) : (
-        <section className={styles.contactGrid} aria-label="Lista de contatos">
-          {filteredContacts.map((contact) => (
-            <article className={styles.contactCard} key={contact.id}>
-              <div className={styles.cardHeader}>
-                <ContactAvatar contact={contact} />
-                <div className={styles.identity}>
-                  <h2>{contact.name || "Contato não identificado"}</h2>
-                  <span>{contact.source}</span>
-                </div>
-                <button
-                  type="button"
-                  className={styles.editContactButton}
-                  onClick={() => openContactEditor(contact)}
-                  aria-label={`Editar ${contact.name || "contato"}`}
-                  title="Editar contato"
-                >
-                  <FiEdit3 aria-hidden="true" />
-                </button>
-                <div className={styles.cardStats}>
-                  <strong className={styles.conversionBadge}>
-                    {contact.totalAttendances} atendimento{contact.totalAttendances === 1 ? "" : "s"}
-                  </strong>
-                  <span>{contact.totalAffiliates} afiliado{contact.totalAffiliates === 1 ? "" : "s"}</span>
-                </div>
-              </div>
-
-              <dl className={styles.details}>
-                <div><dt><FiPhone aria-hidden="true" /> Telefone</dt><dd>{contact.phone || "Não informado"}</dd></div>
-                <div><dt><FiMessageCircle aria-hidden="true" /> Atendimentos</dt><dd>{contact.totalAttendances}</dd></div>
-                <div><dt>Conversões</dt><dd>{contact.totalConversions}</dd></div>
-                <div><dt>Cidade</dt><dd>{contact.city || "Não informada"}</dd></div>
-                <div><dt>Campanha</dt><dd>{contact.campaignName || contact.linkName || "Não identificada"}</dd></div>
-                <div>
-                  <dt>Afiliados vinculados</dt>
-                  <dd title={contact.affiliates.map((affiliate) => affiliate.name).join(", ")}>
-                    {contact.affiliates.length
-                      ? contact.affiliates.map((affiliate) => affiliate.name).join(", ")
-                      : "Nenhum afiliado vinculado"}
-                  </dd>
-                </div>
-                <div><dt><FiCalendar aria-hidden="true" /> Primeiro cadastro</dt><dd>{formatDate(contact.firstSeenAt)}</dd></div>
-                <div><dt><FiCalendar aria-hidden="true" /> Último registro</dt><dd>{formatDate(contact.lastSeenAt)}</dd></div>
-              </dl>
-            </article>
-          ))}
-        </section>
-      )}
-
-      {editingContact && (
-        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="contact-edit-title" onClick={(event) => {
-          if (event.target === event.currentTarget && !savingContact) setEditingContact(null);
-        }}>
-          <section className={styles.editModal}>
-            <header className={styles.editModalHeader}>
-              <div>
-                <span className={styles.eyebrow}>Cadastro de contato</span>
-                <h2 id="contact-edit-title">Editar contato</h2>
-              </div>
-              <button type="button" className={styles.modalClose} onClick={() => setEditingContact(null)} aria-label="Fechar edição" disabled={savingContact}>
-                <FiX aria-hidden="true" />
-              </button>
-            </header>
-            <div className={styles.editForm}>
-              <label><span>Nome</span><input value={editForm.name} onChange={(event) => setEditForm({ ...editForm, name: event.target.value })} /></label>
-              <label><span>Telefone</span><input value={editForm.phone} onChange={(event) => setEditForm({ ...editForm, phone: event.target.value })} /></label>
-              <label><span>Documento</span><input value={editForm.document} onChange={(event) => setEditForm({ ...editForm, document: event.target.value })} /></label>
-              <label><span>Cidade</span><input value={editForm.city} onChange={(event) => setEditForm({ ...editForm, city: event.target.value })} /></label>
-            </div>
-            <footer className={styles.editModalFooter}>
-              <button type="button" className={styles.deleteContactButton} onClick={() => void removeContact()} disabled={savingContact}>
-                <FiTrash2 aria-hidden="true" /> Apagar contato
-              </button>
-              <div>
-                <button type="button" className={styles.modalSecondary} onClick={() => setEditingContact(null)} disabled={savingContact}>Cancelar</button>
-                <button type="button" className={styles.modalPrimary} onClick={() => void saveContact()} disabled={savingContact}>{savingContact ? "Salvando..." : "Salvar alterações"}</button>
-              </div>
-            </footer>
-          </section>
-        </div>
-      )}
-    </main>
-  );
+  if (activeSection === "affiliates") return <main className={styles.page}><SectionSwitcher activeSection={activeSection} onChange={setActiveSection} /><Afiliado /></main>;
+  return <main className={styles.page}>
+    <SectionSwitcher activeSection={activeSection} onChange={setActiveSection} />
+    <header className={styles.header}><div><p className={styles.eyebrow}><FiUsers aria-hidden="true" /> Agenda de clientes</p><h1>Contatos</h1><p className={styles.subtitle}>Organize clientes, retornos e histórico de relacionamento em um só lugar.</p></div><div className={styles.headerActions}><button type="button" className={styles.iconOnlyButton} onClick={() => void load(true)} disabled={refreshing} title="Atualizar" aria-label="Atualizar"><FiRefreshCw className={refreshing ? styles.spinning : undefined} /></button><button type="button" className={`${styles.iconOnlyButton} ${styles.iconOnlyPrimary}`} onClick={openNew} title="Novo contato" aria-label="Novo contato"><FiPlus /></button></div></header>
+    <section className={styles.toolbar} aria-label="Filtros da agenda"><label className={styles.searchBox}><FiSearch /><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome, telefone, cidade ou campanha" aria-label="Buscar contatos" /></label><div className={styles.filters}><select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filtrar por status"><option value="ALL">Todos os status</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="BLOCKED">Bloqueados</option></select><span className={styles.count}>{displayed.length} contato(s)</span></div></section>
+    <section className={styles.metrics}><div><strong>{contacts.length}</strong><span>contatos ativos</span></div><div><strong>{todayAppointments.length}</strong><span>agendamentos hoje</span></div><div><strong>{overdue.length}</strong><span>retornos atrasados</span></div><div className={styles.viewSwitcher}><button className={view === "cards" ? styles.activeView : ""} onClick={() => setView("cards")} title="Cards" aria-label="Cards"><FiGrid /></button><button className={view === "list" ? styles.activeView : ""} onClick={() => setView("list")} title="Lista" aria-label="Lista"><FiList /></button><button className={view === "calendar" ? styles.activeView : ""} onClick={() => setView("calendar")} title="Agenda" aria-label="Agenda"><FiCalendar /></button></div></section>
+    {loading ? <section className={styles.stateCard}>Carregando agenda...</section> : error ? <section className={styles.stateCard} role="alert"><strong>Não foi possível carregar a agenda.</strong><p>{error}</p><button className={styles.retryButton} onClick={() => void load()}>Tentar novamente</button></section> : displayed.length === 0 ? <section className={styles.stateCard}><FiUsers /><strong>Nenhum contato encontrado</strong><p>Crie um contato ou aguarde uma nova conversão identificada.</p></section> : view === "cards" ? <section className={styles.contactGrid} aria-label="Cards de contatos">{displayed.map((c) => <ContactCard key={c.id} contact={c} onOpen={() => void openDetails(c)} />)}</section> : view === "list" ? <ContactTable contacts={displayed} onOpen={(c) => void openDetails(c)} /> : <CalendarView contacts={displayed} onOpen={(c) => void openDetails(c)} onEdit={(c, a) => void editAppointment(c, a)} onCreateDate={openAppointmentForDate} />}
+    {selected && <ContactDrawer details={selected} onClose={() => setSelected(null)} onEdit={openEdit} onInteraction={() => setModal("interaction")} onAppointment={() => { setAppointmentForm(emptyAppointment); setModal("appointment"); }} onDelete={() => void deleteContact()} onComplete={completeAppointment} busy={busy} />}
+    {modal && <Modal title={modal === "new" ? "Novo contato" : modal === "edit" ? "Editar contato" : modal === "interaction" ? "Registrar interação" : editingAppointmentId ? "Editar lembrete" : "Novo agendamento"} onClose={() => !busy && setModal(null)}><>{(modal === "new" || modal === "edit") && <ContactFormView form={form} setForm={setForm} />}{modal === "interaction" && <label className={styles.fullField}><span>O que aconteceu?</span><textarea value={interaction} onChange={(e) => setInteraction(e.target.value)} placeholder="Ex.: Cliente pediu retorno amanhã às 14h." autoFocus /></label>}{modal === "appointment" && <AppointmentFormView form={appointmentForm} setForm={setAppointmentForm} contactOptions={selected ? [] : displayed} contactId={appointmentContactId} setContactId={setAppointmentContactId} />}</><footer className={styles.modalFooter}><button className={styles.modalSecondary} onClick={() => setModal(null)} disabled={busy}>Cancelar</button><button className={styles.modalPrimary} onClick={() => void (modal === "interaction" ? saveInteraction() : modal === "appointment" ? saveAppointment() : saveContact())} disabled={busy}>{busy ? "Salvando..." : modal === "appointment" ? editingAppointmentId ? "Salvar alterações" : "Agendar" : "Salvar"}</button></footer></Modal>}
+  </main>;
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Data não informada" : dateFormatter.format(date);
-}
+function ContactCard({ contact, onOpen }: { contact: AgendaContact; onOpen: () => void }) { const overdue = contact.nextAppointment && new Date(contact.nextAppointment.scheduledAt) < new Date(); return <article className={styles.contactCard} onClick={onOpen} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onOpen()}><div className={styles.cardHeader}><AnimalAvatar contact={contact} /><div className={styles.identity}><h2>{contact.name || "Contato não identificado"}</h2><span>{contact.phone || "Sem telefone"}</span></div><span className={`${styles.statusBadge} ${overdue ? styles.statusOverdue : ""}`}>{overdue ? "Atrasado" : contact.status === "ACTIVE" ? "Ativo" : contact.status}</span></div><dl className={styles.details}><div><dt><FiPhone /> Telefone</dt><dd>{contact.phone || "Não informado"}</dd></div><div><dt><FiCalendar /> Próximo retorno</dt><dd>{contact.nextAppointment ? dateFormatter.format(new Date(contact.nextAppointment.scheduledAt)) : "Não agendado"}</dd></div><div><dt><FiMessageCircle /> Última interação</dt><dd>{contact.lastInteraction ? dateFormatter.format(new Date(contact.lastInteraction.occurredAt)) : "Nenhuma"}</dd></div><div><dt><FiUser /> Responsável</dt><dd>{contact.owner?.name || "Não atribuído"}</dd></div><div><dt>CRM</dt><dd>{contact.totalDeals} cartão(ões)</dd></div><div><dt>Conversões</dt><dd>{contact.totalConversions}</dd></div></dl><div className={styles.cardActions}><button onClick={(e) => { e.stopPropagation(); if (contact.phone) window.open(`https://wa.me/${contact.phone.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer"); }}><FiMessageCircle /> WhatsApp</button><button onClick={(e) => { e.stopPropagation(); if (contact.phone) window.location.href = `tel:${contact.phone}`; }}><FiPhone /> Ligar</button><button onClick={(e) => { e.stopPropagation(); onOpen(); }}><FiEdit3 /> Detalhes</button></div></article>; }
 
-function isIdentified(contact: ContactRecord) {
-  return contact.identified ?? Boolean(contact.name || contact.phone || contact.document);
-}
+function AnimalAvatar({ contact }: { contact: AgendaContact }) { const [failed, setFailed] = useState(false); const [previewOpen, setPreviewOpen] = useState(false); const url = `https://cataas.com/cat?type=square&width=900&height=900&seed=${encodeURIComponent(contact.id)}`; const close = useCallback(() => setPreviewOpen(false), []); useEffect(() => { if (!previewOpen) return; const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && close(); document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown); }, [close, previewOpen]); if (failed) return <div className={styles.avatar}>{(contact.name || "C").slice(0, 1).toUpperCase()}</div>; return <><button type="button" className={`${styles.avatar} ${styles.avatarButton}`} onClick={(event) => { event.stopPropagation(); setPreviewOpen(true); }} aria-label={`Ampliar foto de ${contact.name || "contato"}`}><img src={url} alt={`Animal fofo no perfil de ${contact.name || "contato"}`} onError={() => setFailed(true)} /></button>{previewOpen && typeof document !== "undefined" && createPortal(<div className={styles.imagePreviewOverlay} role="dialog" aria-modal="true" aria-label={`Foto de ${contact.name || "contato"}`} onClick={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) close(); }}><div className={styles.imagePreviewCard}><button type="button" className={styles.imagePreviewClose} onClick={close} aria-label="Fechar foto"><FiX /></button><img className={styles.imagePreview} src={url} alt={`Foto ampliada de ${contact.name || "contato"}`} /></div></div>, document.body)}</>; }
+function ContactTable({ contacts, onOpen }: { contacts: AgendaContact[]; onOpen: (contact: AgendaContact) => void }) { return <section className={styles.tableWrap}><table><thead><tr><th>Cliente</th><th>Telefone</th><th>Status</th><th>Próximo retorno</th><th>Responsável</th><th>CRM</th></tr></thead><tbody>{contacts.map((c) => <tr key={c.id} onClick={() => onOpen(c)}><td><strong>{c.name || "Não identificado"}</strong><small>{c.email || "Sem e-mail"}</small></td><td>{c.phone || "-"}</td><td>{c.status}</td><td>{c.nextAppointment ? dateOnlyFormatter.format(new Date(c.nextAppointment.scheduledAt)) : "-"}</td><td>{c.owner?.name || "-"}</td><td>{c.totalDeals}</td></tr>)}</tbody></table></section>; }
+function CalendarView({ contacts, onOpen, onEdit, onCreateDate }: { contacts: AgendaContact[]; onOpen: (contact: AgendaContact) => void; onEdit: (contact: AgendaContact, appointment: { id: string; title: string; scheduledAt: string; status: string; color?: string | null }) => void; onCreateDate: (date: Date) => void }) { const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1)); const year = month.getFullYear(); const monthIndex = month.getMonth(); const firstDay = new Date(year, monthIndex, 1).getDay(); const days = new Date(year, monthIndex + 1, 0).getDate(); const holidays = brazilianHolidays(year); const cells = Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }, () => null).concat(Array.from({ length: days }, (_, i) => i + 1)); const appointments = contacts.flatMap((contact) => (contact.appointments || []).map((appointment) => ({ contact, appointment }))); return <section className={styles.calendarView}><div className={styles.calendarHeader}><button onClick={() => setMonth(new Date(year, monthIndex - 1, 1))} aria-label="Mês anterior">‹</button><h2><FiCalendar /> {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(month)}</h2><button onClick={() => setMonth(new Date(year, monthIndex + 1, 1))} aria-label="Próximo mês">›</button></div><div className={styles.calendarLegend}><span className={styles.holidayDot} /> Feriado <span className={styles.reminderDot} /> Lembrete <span className={styles.calendarHint}>Clique em uma data para criar</span></div><div className={styles.calendarWeekdays}>{["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day) => <strong key={day}>{day}</strong>)}</div><div className={styles.calendarGrid}>{cells.map((day, index) => { const key = day ? `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}` : `empty-${index}`; const holiday = day ? holidays[key] : undefined; const dayEvents = day ? appointments.filter(({ appointment }) => { const date = new Date(appointment.scheduledAt); return date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day; }) : []; const date = day ? new Date(year, monthIndex, day, 9, 0) : null; return <div className={`${styles.calendarCell} ${holiday ? styles.holidayCell : ""}`} key={key} role={day ? "button" : undefined} tabIndex={day ? 0 : undefined} onClick={() => date && onCreateDate(date)} onKeyDown={(event) => { if (date && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onCreateDate(date); } }}>{day && <><div className={styles.calendarCellHeader}><strong>{day}</strong>{holiday && <span title={holiday}>Feriado</span>}</div>{dayEvents.map(({ contact, appointment }) => <div className={styles.calendarReminder} style={{ borderLeftColor: appointment.color || "#5c8ca7", backgroundColor: appointment.color ? `${appointment.color}18` : undefined }} key={`${contact.id}-${appointment.id}`} onClick={(event) => event.stopPropagation()}><button type="button" className={styles.calendarReminderMain} onClick={() => onOpen(contact)}><FiCalendar /><span>{appointment.title}</span><small>{contact.name || "Contato"}</small></button><button type="button" className={styles.calendarReminderEdit} onClick={() => onEdit(contact, appointment)} aria-label={`Editar lembrete ${appointment.title}`} title="Editar lembrete"><FiEdit3 /></button></div>)}</>}</div>; })}</div></section>; }
 
-function ContactAvatar({ contact }: { contact: ContactRecord }) {
-  const [failed, setFailed] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const imageUrl = `https://cataas.com/cat?type=square&width=900&height=900&contact=${avatarSeed(contact.id)}`;
-
-  const closePreview = useCallback(() => {
-    setPreviewOpen(false);
-    window.requestAnimationFrame(() => triggerRef.current?.focus());
-  }, []);
-
-  useEffect(() => {
-    if (!previewOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closePreview();
-    };
-
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [closePreview, previewOpen]);
-
-  if (failed) {
-    return (
-      <div className={styles.avatar} aria-hidden="true">
-        {(contact.name || "C").slice(0, 1).toUpperCase()}
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`${styles.avatar} ${styles.avatarButton}`}
-        onClick={() => setPreviewOpen(true)}
-        aria-label={`Ampliar foto de ${contact.name || "contato não identificado"}`}
-        title="Visualizar foto"
-      >
-        <Image
-          src={imageUrl}
-          alt={`Foto de animal para ${contact.name || "contato não identificado"}`}
-          width={48}
-          height={48}
-          unoptimized
-          onError={() => setFailed(true)}
-        />
-      </button>
-
-      {previewOpen && createPortal(
-        <div
-          className={styles.imagePreviewOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Foto de ${contact.name || "contato não identificado"}`}
-          onClick={(event) => {
-            if (event.target === event.currentTarget) closePreview();
-          }}
-        >
-          <div className={styles.imagePreviewCard}>
-            <button
-              type="button"
-              className={styles.imagePreviewClose}
-              onClick={closePreview}
-              aria-label="Fechar visualização da foto"
-              autoFocus
-            >
-              <FiX aria-hidden="true" />
-            </button>
-            <Image
-              className={styles.imagePreview}
-              src={imageUrl}
-              alt={`Foto ampliada de animal para ${contact.name || "contato não identificado"}`}
-              width={900}
-              height={900}
-              unoptimized
-              priority
-            />
-            <strong>{contact.name || "Contato não identificado"}</strong>
-          </div>
-        </div>,
-        document.body,
-      )}
-    </>
-  );
-}
-
-function avatarSeed(value: string) {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return `contato-${hash >>> 0}`;
-}
+function brazilianHolidays(year: number): Record<string, string> { const fixed: Record<string, string> = { [`${year}-01-01`]: "Confraternização Universal", [`${year}-04-21`]: "Tiradentes", [`${year}-05-01`]: "Dia do Trabalho", [`${year}-09-07`]: "Independência do Brasil", [`${year}-10-12`]: "Nossa Senhora Aparecida", [`${year}-11-02`]: "Finados", [`${year}-11-15`]: "Proclamação da República", [`${year}-12-25`]: "Natal" }; const a = year % 19; const b = Math.floor(year / 100); const c = year % 100; const d = Math.floor(b / 4); const e = b % 4; const f = Math.floor((b + 8) / 25); const g = Math.floor((b - f + 1) / 3); const h = (19 * a + b - d - g + 15) % 30; const i = Math.floor(c / 4); const k = c % 4; const l = (32 + 2 * e + 2 * i - h - k) % 7; const m = Math.floor((a + 11 * h + 22 * l) / 451); const easter = new Date(year, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1); const goodFriday = new Date(easter); goodFriday.setDate(goodFriday.getDate() - 2); fixed[isoDate(goodFriday)] = "Paixão de Cristo"; const corpus = new Date(easter); corpus.setDate(corpus.getDate() + 60); fixed[isoDate(corpus)] = "Corpus Christi"; return fixed; }
+function isoDate(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
+function toDateTimeLocal(value: string) { const date = new Date(value); if (Number.isNaN(date.getTime())) return ""; const offset = date.getTimezoneOffset(); return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16); }
+function ContactDrawer({ details, onClose, onEdit, onInteraction, onAppointment, onDelete, onComplete, busy }: { details: AgendaContactDetails; onClose: () => void; onEdit: () => void; onInteraction: () => void; onAppointment: () => void; onDelete: () => void; onComplete: (appointment: ContactAppointment) => void; busy: boolean }) { return <div className={styles.drawerOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}><aside className={styles.drawer} role="dialog" aria-modal="true"><header><div><span className={styles.eyebrow}>Ficha do cliente</span><h2>{details.contact.name || "Contato não identificado"}</h2><p>{details.contact.phone || "Sem telefone"}</p></div><button onClick={onClose} aria-label="Fechar"><FiX /></button></header><div className={styles.drawerBody}><div className={styles.drawerActions}><button onClick={onEdit}><FiEdit3 /> Editar</button><button onClick={onInteraction}><FiMessageCircle /> Registrar contato</button><button onClick={onAppointment}><FiCalendar /> Agendar</button></div><section><h3>Dados</h3><dl className={styles.detailList}><dt>E-mail</dt><dd>{details.contact.email || "-"}</dd><dt>Cidade</dt><dd>{details.contact.city || "-"}</dd><dt>Responsável</dt><dd>{details.contact.owner?.name || "Não atribuído"}</dd><dt>Observações</dt><dd>{details.contact.notes || "-"}</dd></dl></section><section><h3>Agendamentos</h3>{details.appointments.length ? details.appointments.map((a) => <div className={styles.appointmentItem} key={a.id}><strong>{a.title}</strong><time>{dateFormatter.format(new Date(a.scheduledAt))}</time>{a.status === "PENDING" && <button onClick={() => onComplete(a)} disabled={busy}>Concluir</button>}</div>) : <p>Nenhum agendamento.</p>}</section><section><h3>Histórico</h3>{details.interactions.length ? details.interactions.map((item) => <div className={styles.timelineItem} key={item.id}><time>{dateFormatter.format(new Date(item.occurredAt))}</time><strong>{item.type}</strong><p>{item.content}</p></div>) : <p>Nenhuma interação registrada.</p>}</section><section><h3>Integrações</h3><p>{details.contact.totalConversions} conversão(ões) e {details.contact.totalDeals} cartão(ões) CRM vinculados.</p></section></div><footer className={styles.drawerFooter}><button className={styles.deleteContactButton} onClick={onDelete} disabled={busy}><FiTrash2 /> Arquivar contato</button></footer></aside></div>; }
+function ContactFormView({ form, setForm }: { form: ContactForm; setForm: (value: ContactForm) => void }) { const update = (key: keyof ContactForm) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm({ ...form, [key]: e.target.value }); const labels: Record<string, string> = { name: "Nome", phone: "Telefone", email: "E-mail", document: "Documento", city: "Cidade", neighborhood: "Bairro", address: "Endereço" }; return <div className={styles.formGrid}>{(["name", "phone", "email", "document", "city", "neighborhood", "address"] as (keyof ContactForm)[]).map((key) => <label key={key}><span>{labels[key]}</span><input value={form[key]} onChange={update(key)} /></label>)}<label><span>Status</span><select value={form.status} onChange={update("status")}><option value="ACTIVE">Ativo</option><option value="INACTIVE">Inativo</option><option value="BLOCKED">Bloqueado</option></select></label><label className={styles.fullField}><span>Observações</span><textarea value={form.notes} onChange={update("notes")} /></label></div>; }
+function AppointmentFormView({ form, setForm, contactOptions, contactId, setContactId }: { form: AppointmentForm; setForm: (value: AppointmentForm) => void; contactOptions: AgendaContact[]; contactId: string; setContactId: (value: string) => void }) { const update = (key: keyof AppointmentForm) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [key]: e.target.value }); return <div className={styles.formGrid}>{contactOptions.length > 0 && <label className={styles.fullField}><span>Contato</span><select value={contactId} onChange={(e) => setContactId(e.target.value)}><option value="">Selecione o contato</option>{contactOptions.map((contact) => <option key={contact.id} value={contact.id}>{contact.name || "Contato não identificado"} {contact.phone ? `— ${contact.phone}` : ""}</option>)}</select></label>}<label><span>Título</span><input value={form.title} onChange={update("title")} /></label><label><span>Data e hora</span><input type="datetime-local" value={form.scheduledAt} onChange={update("scheduledAt")} required /></label><label><span>Duração (minutos)</span><input type="number" min="5" value={form.durationMinutes} onChange={update("durationMinutes")} /></label><label><span>Lembrete (minutos)</span><input type="number" min="0" value={form.reminderMinutes} onChange={update("reminderMinutes")} /></label><label className={styles.fullField}><span>Descrição</span><textarea value={form.description} onChange={update("description")} /></label></div>; }
+function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) { return <div className={styles.modalOverlay} role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && onClose()}><section className={styles.editModal}><header className={styles.editModalHeader}><div><span className={styles.eyebrow}>Agenda de clientes</span><h2>{title}</h2></div><button onClick={onClose} aria-label="Fechar"><FiX /></button></header>{children}</section></div>; }

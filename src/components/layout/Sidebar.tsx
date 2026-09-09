@@ -10,7 +10,6 @@ import { createPortal } from "react-dom";
 import { BsClipboardDataFill } from "react-icons/bs";
 import { FiGitBranch, FiShare2, FiUsers } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
-import { ImUsers } from "react-icons/im";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { MdContactPhone, MdSpaceDashboard } from "react-icons/md";
 import { PiLinkFill } from "react-icons/pi";
@@ -170,17 +169,6 @@ export default function Sidebar() {
 
           <li className={styles.button}>
             <Link
-              href="/afiliado"
-              className={styles.menuItem}
-              aria-label="Afiliado"
-            >
-              <ImUsers className={styles.icon} />
-              <span className={styles.itemLabel}>Afiliado</span>
-            </Link>
-          </li>
-
-          <li className={styles.button}>
-            <Link
               href="/dashboard"
               className={styles.menuItem}
               aria-label="Dashboard"
@@ -200,9 +188,9 @@ export default function Sidebar() {
           <li className={styles.button}>
             <Link
               href="/contatos"
-              className={`${styles.menuItem} ${pathname === "/contatos" ? styles.menuItemActive : ""}`}
-              aria-label="Contatos"
-              aria-current={pathname === "/contatos" ? "page" : undefined}
+              className={`${styles.menuItem} ${pathname === "/contatos" || pathname === "/afiliado" ? styles.menuItemActive : ""}`}
+              aria-label="Contatos e afiliados"
+              aria-current={pathname === "/contatos" || pathname === "/afiliado" ? "page" : undefined}
             >
               <FiUsers className={styles.icon} />
               <span className={styles.itemLabel}>Contatos</span>

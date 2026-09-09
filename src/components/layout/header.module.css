@@ -81,6 +81,107 @@
   align-items: center;
   gap: 8px;
 }
+
+.calendarButton {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.calendarButton:hover,
+.calendarButton:focus-visible {
+  outline: 0;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 95, 52, 0.46);
+  transform: translateY(-1px);
+}
+
+.calendarOverlay {
+  position: fixed;
+  z-index: 3000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 30, 40, 0.58);
+}
+
+.calendarModal {
+  width: min(1180px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  border: 1px solid #cbdce7;
+  border-radius: 18px;
+  background: #f4f9fb;
+  box-shadow: 0 24px 70px rgba(9, 32, 48, 0.34);
+}
+
+.calendarModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 12px;
+  background: #fff;
+}
+
+.calendarModalHeader span { color: #668092; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.calendarModalHeader h2 { margin: 4px 0 0; color: #203543; font-size: 24px; }
+.calendarModalHeader button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #cbdce7; border-radius: 9px; background: #f6fafc; color: #36586b; cursor: pointer; }
+.calendarLoading { min-height: 300px; display: grid; place-items: center; color: #607d8b; }
+
+.headerReminderOverlay { position: fixed; z-index: 3010; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(15, 30, 40, .46); }
+.headerReminderModal { width: min(560px, 94vw); max-height: 90vh; overflow: auto; border: 1px solid #cbdce7; border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(9, 32, 48, .34); }
+.headerReminderModal > header { position: sticky; z-index: 2; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #e2ebef; background: rgba(255,255,255,.96); backdrop-filter: blur(14px); }
+.headerReminderModal h3 { margin: 0; color: #203543; font-size: 20px; }
+.headerReminderModal header button { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #cbdce7; border-radius: 8px; background: #f6fafc; color: #36586b; cursor: pointer; }
+.headerReminderDetails { display: grid; gap: 12px; padding: 20px; }
+.headerReminderForm { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px; }
+.headerReminderDetails strong { color: #203543; font-size: 18px; }
+.headerReminderDetails span, .headerReminderDetails time, .headerReminderDetails small { color: #607d8b; font-size: 13px; }
+.headerReminderDetails button, .headerReminderForm > button { justify-self: end; border: 0; border-radius: 8px; padding: 10px 14px; background: #176b88; color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+.headerReminderForm label { display: grid; gap: 5px; color: #52718a; font-size: 12px; font-weight: 800; }
+.headerReminderForm input, .headerReminderForm select, .headerReminderForm textarea { width: 100%; border: 1px solid #cbdce7; border-radius: 10px; padding: 10px 11px; background: #fbfdff; color: #203543; font: inherit; font-size: 13px; }
+.headerReminderForm input:focus, .headerReminderForm select:focus, .headerReminderForm textarea:focus { border-color: #2a85a7; outline: 3px solid rgba(42,133,167,.14); }
+.headerReminderForm textarea { min-height: 72px; resize: vertical; }
+.headerReminderFull { grid-column: 1 / -1; }
+.reminderColorField { grid-column: 1 / -1; margin: 0; border: 1px solid #dce6eb; border-radius: 12px; padding: 12px; }
+.reminderColorField legend { padding: 0 5px; color: #52718a; font-size: 12px; font-weight: 800; }
+.reminderColorChoices { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.reminderColorChoices > button { width: 26px; height: 26px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #cbdce7; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.reminderColorChoices > button:hover { transform: scale(1.08); }
+.reminderColorChoices > .reminderColorActive { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #315a70; transform: scale(.9); }
+.reminderCustomColor { display: inline-flex !important; grid-template-columns: auto 34px; align-items: center; gap: 7px !important; margin-left: auto; }
+.reminderCustomColor input { width: 34px !important; height: 30px; padding: 2px !important; cursor: pointer; }
+.reminderColorPreview { display: flex; align-items: center; gap: 8px; margin-top: 12px; border-left: 5px solid; border-radius: 8px; padding: 10px 12px; color: #294d60; font-size: 13px; font-weight: 800; }
+.reminderDetailTitle { display: flex; align-items: center; gap: 9px; border-left: 5px solid; border-radius: 9px; padding: 12px 14px; }
+.reminderDetailTitle strong { font-size: 17px; }
+.headerReminderActions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 4px; }
+.headerReminderActions button { display: inline-flex; align-items: center; gap: 6px; }
+.headerReminderActions .headerReminderDelete { border: 1px solid #efb4b4; background: #fff1f1; color: #b42323; }
+.headerReminderActions .headerReminderDelete:hover { background: #ffe2e2; }
+:global(html[data-theme="dark"]) .headerReminderModal, :global(html[data-theme="dark"]) .headerReminderModal > header { border-color: #555852; background: #30312e; }
+:global(html[data-theme="dark"]) .headerReminderModal h3, :global(html[data-theme="dark"]) .headerReminderDetails strong { color: #f1efea; }
+:global(html[data-theme="dark"]) .headerReminderForm input, :global(html[data-theme="dark"]) .headerReminderForm select, :global(html[data-theme="dark"]) .headerReminderForm textarea { border-color: #555852; background: #292a27; color: #f1efea; }
+:global(html[data-theme="dark"]) .reminderColorField { border-color: #555852; }
+
+@media (max-width: 620px) {
+  .headerReminderForm { grid-template-columns: 1fr; }
+  .headerReminderFull, .reminderColorField { grid-column: 1; }
+  .reminderCustomColor { width: 100%; margin-left: 0; }
+}
+
+:global(html[data-theme="dark"]) .calendarModal { border-color: #555852; background: #292a27; }
+:global(html[data-theme="dark"]) .calendarModalHeader { background: #30312e; }
+:global(html[data-theme="dark"]) .calendarModalHeader h2,
+:global(html[data-theme="dark"]) .calendarModalHeader button { color: #f1efea; }
 .themeToggle {
   width: 38px;
   height: 38px;

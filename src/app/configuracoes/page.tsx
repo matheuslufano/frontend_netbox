@@ -16,8 +16,11 @@ import {
   User,
   UserRole,
   apagarAfiliado,
+  apagarTodoCrm,
+  apagarTodosLinks,
   apagarUsuario,
   criarAfiliado,
+  criarSessaoPrismaStudio,
   criarUsuario,
   editarAfiliado,
   editarUsuario,
@@ -27,10 +30,12 @@ import {
   listarCidadesTocantins,
   listarUsuarios,
   listarUsuariosAtribuiveis,
+  limparBancoMantendoUsuarios,
 } from "@/lib/api";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import styles from "./configuracoes.module.css";
 import { FaAnglesLeft } from "react-icons/fa6";
+import { FiTrash2 } from "react-icons/fi";
 
 type UserForm = {
   name: string;
@@ -97,6 +102,34 @@ type SettingsSection =
   | "webhooks"
   | "banco"
   | "sistema";
+type DangerAction = "links" | "crm" | "database";
+
+const dangerActions: Record<
+  DangerAction,
+  { title: string; description: string; confirmation: string; button: string }
+> = {
+  links: {
+    title: "Apagar todos os links",
+    description:
+      "Remove links, links de WhatsApp, cliques e conversões associadas. Os cartões do CRM são preservados e desvinculados.",
+    confirmation: "APAGAR LINKS",
+    button: "Apagar todos os links",
+  },
+  crm: {
+    title: "Apagar todo o CRM",
+    description:
+      "Remove cartões, tarefas, históricos, funis, etapas, filtros, status e origens do CRM.",
+    confirmation: "APAGAR CRM",
+    button: "Apagar todo o CRM",
+  },
+  database: {
+    title: "Limpar banco de dados",
+    description:
+      "Remove todos os dados operacionais, contatos, afiliados, campanhas, links e CRM. Apenas os usuários serão preservados.",
+    confirmation: "LIMPAR BANCO",
+    button: "Limpar banco, preservar usuários",
+  },
+};
 
 const emptyUserForm: UserForm = {
   name: "",
@@ -217,6 +250,10 @@ function ConfiguracoesContent() {
     {},
   );
   const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
+  const [dangerAction, setDangerAction] = useState<DangerAction | null>(null);
+  const [dangerConfirmation, setDangerConfirmation] = useState("");
+  const [dangerBusy, setDangerBusy] = useState(false);
+  const [studioOpening, setStudioOpening] = useState(false);
 
   const activeAffiliates = useMemo(
     () => affiliates.filter((affiliate) => affiliate.active).length,
@@ -885,6 +922,56 @@ function ConfiguracoesContent() {
       setError(getApiErrorMessage(err, "Não foi possível apagar o afiliado."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function executeDangerAction() {
+    if (!dangerAction || currentUserRole !== "ADMIN") return;
+    const config = dangerActions[dangerAction];
+    if (dangerConfirmation !== config.confirmation) return;
+    setDangerBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result =
+        dangerAction === "links"
+          ? await apagarTodosLinks(dangerConfirmation)
+          : dangerAction === "crm"
+            ? await apagarTodoCrm(dangerConfirmation)
+            : await limparBancoMantendoUsuarios(dangerConfirmation);
+      setMessage(result.message);
+      setDangerAction(null);
+      setDangerConfirmation("");
+      if (dangerAction === "database") {
+        setAffiliates([]);
+        setChatmixLogs([]);
+      }
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Não foi possível executar a limpeza."));
+    } finally {
+      setDangerBusy(false);
+    }
+  }
+
+  async function openPrismaStudio() {
+    if (currentUserRole !== "ADMIN") {
+      setError("Somente administradores podem abrir o Prisma Studio.");
+      return;
+    }
+    const popup = window.open("about:blank", "_blank");
+    if (popup) popup.opener = null;
+    setStudioOpening(true);
+    setError(null);
+    try {
+      const session = await criarSessaoPrismaStudio();
+      const url = `/prisma-studio?token=${encodeURIComponent(session.token)}`;
+      if (popup) popup.location.href = url;
+      else window.location.href = url;
+    } catch (err) {
+      popup?.close();
+      setError(getApiErrorMessage(err, "Não foi possível abrir o Prisma Studio."));
+    } finally {
+      setStudioOpening(false);
     }
   }
 
@@ -1606,14 +1693,59 @@ function ConfiguracoesContent() {
                     Abre o visualizador online do banco conectado ao backend
                     deste projeto.
                   </p>
-                  <a
+                  <button
+                    type="button"
                     className={styles.databaseButton}
-                    href="/prisma-studio"
-                    target="_blank"
-                    rel="noreferrer"
+                    onClick={() => void openPrismaStudio()}
+                    disabled={studioOpening || currentUserRole !== "ADMIN"}
                   >
-                    Abrir banco de dados
-                  </a>
+                    {studioOpening ? "Abrindo..." : "Abrir banco de dados"}
+                  </button>
+                </div>
+                <div className={styles.dangerZone}>
+                  <div className={styles.dangerZoneHeader}>
+                    <span>Zona de perigo</span>
+                    <h2>Limpeza de dados</h2>
+                    <p>
+                      Estas ações são permanentes e não podem ser desfeitas.
+                    </p>
+                  </div>
+                  {currentUserRole === "ADMIN" ? (
+                    <div className={styles.dangerGrid}>
+                      {(Object.keys(dangerActions) as DangerAction[]).map(
+                        (action) => {
+                          const config = dangerActions[action];
+                          return (
+                            <article
+                              className={`${styles.summaryCard} ${styles.databaseCard} ${styles.dangerActionCard} ${action === "database" ? styles.dangerActionCritical : ""}`}
+                              key={action}
+                            >
+                              <span>Ação destrutiva</span>
+                              <strong>{config.title}</strong>
+                              <p>{config.description}</p>
+                              <button
+                                type="button"
+                                className={styles.dangerTrashButton}
+                                title={config.button}
+                                aria-label={config.button}
+                                onClick={() => {
+                                  setDangerAction(action);
+                                  setDangerConfirmation("");
+                                  setError(null);
+                                }}
+                              >
+                                <FiTrash2 aria-hidden="true" />
+                              </button>
+                            </article>
+                          );
+                        },
+                      )}
+                    </div>
+                  ) : (
+                    <p className={styles.adminOnlyNotice}>
+                      Somente administradores podem executar ações de limpeza.
+                    </p>
+                  )}
                 </div>
               </section>
             )}
@@ -1644,6 +1776,67 @@ function ConfiguracoesContent() {
           </main>
         </div>
       </section>
+
+      {dangerAction && (
+        <div
+          className={styles.dangerConfirmOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="danger-confirm-title"
+          onClick={(event) =>
+            event.target === event.currentTarget &&
+            !dangerBusy &&
+            setDangerAction(null)
+          }
+        >
+          <section className={styles.dangerConfirmModal}>
+            <span className={styles.dangerConfirmBadge}>Ação permanente</span>
+            <h2 id="danger-confirm-title">
+              {dangerActions[dangerAction].title}
+            </h2>
+            <p>{dangerActions[dangerAction].description}</p>
+            <label>
+              <span>
+                Digite{" "}
+                <strong>{dangerActions[dangerAction].confirmation}</strong> para
+                confirmar:
+              </span>
+              <input
+                autoFocus
+                value={dangerConfirmation}
+                onChange={(event) => setDangerConfirmation(event.target.value)}
+                disabled={dangerBusy}
+              />
+            </label>
+            <div className={styles.dangerConfirmActions}>
+              <button
+                type="button"
+                onClick={() => {
+                  setDangerAction(null);
+                  setDangerConfirmation("");
+                }}
+                disabled={dangerBusy}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={styles.dangerConfirmButton}
+                onClick={() => void executeDangerAction()}
+                disabled={
+                  dangerBusy ||
+                  dangerConfirmation !==
+                    dangerActions[dangerAction].confirmation
+                }
+              >
+                {dangerBusy
+                  ? "Executando..."
+                  : dangerActions[dangerAction].button}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {photoCrop && (
         <div
