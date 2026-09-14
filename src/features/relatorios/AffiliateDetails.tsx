@@ -12,6 +12,7 @@ import {
   FiCheckCircle,
   FiClock,
   FiCopy,
+  FiBarChart2,
   FiCreditCard,
   FiEdit2,
   FiGitBranch,
@@ -40,6 +41,7 @@ import { notifySystem } from "@/components/SystemNotificationProvider";
 import { formatDisplayLink } from "@/lib/links";
 import { AffiliateDetail } from "./useRelatorios";
 import styles from "./relatorios.module.css";
+import reportStyles from "@/components/reports/reports.module.css";
 import integrationStyles from "@/app/integracoes/integracoes.module.css";
 
 const siteAlert = (message: string) =>
@@ -59,6 +61,16 @@ interface AffiliateDetailsProps {
 
 type AffiliateLink = AffiliateDetail["links"][number];
 type AffiliateConversion = AffiliateDetail["conversionEvents"][number];
+
+function displayCompactLinkName(link: AffiliateLink, affiliateName: string) {
+  const originalName = link.name?.trim() || link.shortCode;
+  const escapedAffiliateName = affiliateName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const withoutAffiliate = originalName
+    .replace(new RegExp(`\\s*-\\s*${escapedAffiliateName}(?=\\s*-|$)`, "ig"), "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return withoutAffiliate || originalName;
+}
 
 type ConversionWithAffiliate = AffiliateConversion & {
   affiliate: string;
@@ -653,6 +665,78 @@ function AffiliateMediumCard({
   );
 }
 
+function ClickPerformanceChart({
+  block,
+  reportStyles,
+  selectedLinkId,
+  affiliateName,
+}: {
+  block: AffiliateDetail;
+  reportStyles: Record<string, string>;
+  selectedLinkId: number | null;
+  affiliateName: string;
+}) {
+  const links = Array.isArray(block.links) ? block.links : [];
+  const selectedLink = links.find((link) => link.id === selectedLinkId) || links[0] || null;
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 13);
+  start.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return date;
+  });
+  const dailyClicks = days.map((day) => {
+    const nextDay = new Date(day);
+    nextDay.setDate(day.getDate() + 1);
+      return (selectedLink?.clickEvents ?? []).filter((click) => {
+        const clickedAt = new Date(click.clickedAt).getTime();
+        return clickedAt >= day.getTime() && clickedAt < nextDay.getTime();
+      }).length;
+  });
+  const maxClicks = Math.max(...dailyClicks, 1);
+  const displayMaxClicks = Math.max(4, Math.ceil(maxClicks / 4) * 4);
+  const chartTop = 8;
+  const chartBottom = 92;
+  const chartHeight = chartBottom - chartTop;
+  const xForDay = (index: number) => (index / Math.max(days.length - 1, 1)) * 100;
+  const yForClicks = (clicks: number) => chartBottom - (clicks / displayMaxClicks) * chartHeight;
+  const yTicks = Array.from({ length: 5 }, (_, index) => (displayMaxClicks / 4) * (4 - index));
+  const linePoints = dailyClicks.map((clicks, index) => `${xForDay(index)},${yForClicks(clicks)}`).join(" ");
+  const areaPoints = `0,${chartBottom} ${linePoints} 100,${chartBottom}`;
+  const visibleDateIndexes = days.map((_, index) => index).filter((index) => index % 2 === 0 || index === days.length - 1);
+
+  return (
+    <section className={`${reportStyles.dataSection} ${styles.clickPerformanceSection}`} aria-label="Desempenho dos cliques">
+      <div className={styles.clickChartHeader}>
+        <div><strong>Desempenho dos cliques</strong><span>{selectedLink ? `${displayCompactLinkName(selectedLink, affiliateName)} · últimos 14 dias` : "Nenhum link selecionado"}</span></div>
+        <b>{selectedLink?.clicks || 0} cliques</b>
+      </div>
+      <div className={styles.clickChartArea}>
+        <div className={styles.clickChartYAxis} aria-label="Quantidade de cliques">
+          {yTicks.map((tick) => <span key={tick}>{tick}</span>)}
+        </div>
+        <div className={styles.clickChartLineWrap}>
+          <svg className={styles.clickChartLine} viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Quantidade de cliques por dia">
+          {yTicks.map((tick) => <line key={tick} x1="0" y1={yForClicks(tick)} x2="100" y2={yForClicks(tick)} />)}
+          <polygon points={areaPoints} />
+          <polyline points={linePoints} />
+          </svg>
+          <div className={styles.clickChartDots}>
+            {dailyClicks.map((clicks, index) => <span key={days[index].toISOString()} className={styles.clickChartDot} style={{ left: `${xForDay(index)}%`, top: `${yForClicks(clicks)}%` }} title={`${days[index].toLocaleDateString("pt-BR")}: ${clicks} clique${clicks === 1 ? "" : "s"}`} />)}
+          </div>
+          <div className={styles.clickChartDateLabels}>{visibleDateIndexes.map((index) => <small key={days[index].toISOString()} style={{ left: `${xForDay(index)}%` }}>{days[index].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</small>)}</div>
+        </div>
+      </div>
+      <div className={styles.clickChartLegend}>
+        {selectedLink ? <span><i />Cliques por dia <b>Passe o mouse nos pontos</b></span> : <span>Nenhum link cadastrado.</span>}
+      </div>
+    </section>
+  );
+}
+
 function AffiliateShowcaseAvatar({ block }: { block: AffiliateDetail }) {
   const photoUrl = getAffiliatePhotoUrl(block);
   const initials = getAffiliateInitials(block.affiliate);
@@ -704,6 +788,8 @@ function AffiliateDetailedCard({
   const [contactMessages, setContactMessages] = useState<ContactChatMessage[]>([]);
   const [contactModalLoading, setContactModalLoading] = useState(false);
   const [contactModalError, setContactModalError] = useState("");
+  const [contactsTab, setContactsTab] = useState<"contacts" | "clicks">("contacts");
+  const [selectedPerformanceLinkId, setSelectedPerformanceLinkId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!selectedContact) return;
@@ -777,10 +863,16 @@ function AffiliateDetailedCard({
               <AffiliateShowcaseLink
                 key={link.id}
                 link={link}
+                affiliateName={block.affiliate}
                 deleting={deletingLinkId === link.id}
                 onCopyLink={onCopyLink}
                 onDeleteLink={onDeleteLink}
                 onOpenConversions={onOpenLinkConversions}
+                selectedForPerformance={selectedPerformanceLinkId === link.id}
+                onSelectPerformance={() => {
+                  setSelectedPerformanceLinkId(link.id);
+                  setContactsTab("clicks");
+                }}
               />
             ))}
           </div>
@@ -789,13 +881,19 @@ function AffiliateDetailedCard({
 
       <div className={styles.showcaseContactsPanel}>
         <div className={styles.showcaseTopBar}>
+          <div className={styles.showcaseTabs} role="tablist" aria-label="Clientes e desempenho">
+            <button type="button" role="tab" aria-selected={contactsTab === "contacts"} className={contactsTab === "contacts" ? styles.showcaseTabActive : ""} onClick={() => setContactsTab("contacts")}><FiUsers aria-hidden="true" /> Clientes</button>
+            <button type="button" role="tab" aria-selected={contactsTab === "clicks"} className={contactsTab === "clicks" ? styles.showcaseTabActive : ""} onClick={() => setContactsTab("clicks")}><FiBarChart2 aria-hidden="true" /> Desempenho</button>
+          </div>
           <strong>Clientes alcançados</strong>
           <span className={styles.showcaseContactCount}>
             <FiUsers aria-hidden="true" /> {totalContacts}
           </span>
         </div>
 
-        {contacts.length === 0 ? (
+        {contactsTab === "clicks" ? (
+          <ClickPerformanceChart block={block} reportStyles={reportStyles} selectedLinkId={selectedPerformanceLinkId} affiliateName={block.affiliate} />
+        ) : contacts.length === 0 ? (
           <p className={styles.emptyInlineText}>
             Nenhum cliente identificado nas conversões.
           </p>
@@ -885,16 +983,22 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 */
 function AffiliateShowcaseLink({
   link,
+  affiliateName,
   deleting,
   onCopyLink,
   onDeleteLink,
   onOpenConversions,
+  selectedForPerformance,
+  onSelectPerformance,
 }: {
   link: AffiliateLink;
+  affiliateName: string;
   deleting: boolean;
   onCopyLink: (link: string) => Promise<void>;
   onDeleteLink: (id: number, name?: string | null) => Promise<void>;
   onOpenConversions: (link: AffiliateLink) => void;
+  selectedForPerformance: boolean;
+  onSelectPerformance: () => void;
 }) {
   const hasConversions = (link.conversions ?? 0) > 0;
   const typeMeta = link.linkType === "whatsapp"
@@ -909,12 +1013,23 @@ function AffiliateShowcaseLink({
       className={cx(
         styles.showcaseLinkCard,
         hasConversions && styles.showcaseLinkCardConverted,
+        selectedForPerformance && styles.showcaseLinkCardSelected,
       )}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selectedForPerformance}
+      onClick={onSelectPerformance}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelectPerformance();
+        }
+      }}
     >
       <div className={styles.showcaseLinkMain}>
         <span className={cx(styles.showcaseLinkTypeIcon, typeMeta.className)} title={typeMeta.label} aria-label={typeMeta.label}><TypeIcon aria-hidden="true" /></span>
         <div className={styles.showcaseLinkInfo}>
-          <strong>Nome: {link.name || "Link sem nome"}</strong>
+          <strong>Nome: {displayCompactLinkName(link, affiliateName)}</strong>
           <span title={link.originalUrl}>Destino: {formatDisplayLink(link.originalUrl)}</span>
           <a href={link.promoLink} target="_blank" rel="noopener noreferrer" title={link.promoLink}>Afiliado: {formatDisplayLink(link.promoLink)}</a>
         </div>
@@ -1735,7 +1850,10 @@ function ConversionFlowPanel({
 
         <div className={styles.conversionReportMain}>
           <div className={styles.conversionReportTitleRow}>
-            <h3>Conversões de clientes</h3>
+            <div className={styles.conversionTitleIntro}>
+              <span>Jornada comercial</span>
+              <h3>Conversões de clientes</h3>
+            </div>
             <div className={styles.conversionViewSwitcher}>
               <span>
                 {statusFilteredConversionEvents.length} exibidas
@@ -2215,7 +2333,15 @@ function ConversionObjectiveCard({
   const clientName = conversion.visitorName || "Cliente sem nome";
 
   return (
-    <article className={styles.conversionObjectiveCard}>
+    <article
+      className={cx(
+        styles.conversionObjectiveCard,
+        saleStatus.kind === "sold" && styles.objectiveCardSold,
+        saleStatus.kind === "in_progress" && styles.objectiveCardProgress,
+        saleStatus.kind === "lost" && styles.objectiveCardLost,
+        saleStatus.kind === "pending" && styles.objectiveCardPending,
+      )}
+    >
       <div className={styles.objectiveConversionInfo}>
         <strong>Conversão #{conversion.id}</strong>
         <span>Nome do link: {conversion.linkName || "Link sem nome"}</span>

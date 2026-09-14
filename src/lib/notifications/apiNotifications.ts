@@ -70,17 +70,39 @@ function responseName(data: unknown) {
     : null;
 }
 
+function responseDetails(data: unknown) {
+  if (!data || typeof data !== "object") return "";
+  const record = "deal" in data && data.deal && typeof data.deal === "object"
+    ? data.deal as Record<string, unknown>
+    : data as Record<string, unknown>;
+  const details: string[] = [];
+  const fields: Array<[string, string]> = [
+    ["telefone", "phone"],
+    ["código", "trackingCode"],
+    ["afiliado", "affiliate"],
+    ["origem", "source"],
+    ["campanha", "campaign"],
+    ["status", "statusName"],
+  ];
+  fields.forEach(([label, key]) => {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) details.push(`${label}: ${value.trim()}`);
+  });
+  return details.length ? ` Detalhes — ${details.join(" · ")}.` : "";
+}
+
 function successMessage(context: NotificationContext, data: unknown) {
   const name = responseName(data);
-  if (!name) return "A operação foi confirmada pelo sistema.";
-  if (context === "user-created") return `${name} foi adicionado ao sistema.`;
-  if (context === "user-updated") return `As informações de ${name} foram salvas.`;
-  if (context === "affiliate-created") return `${name} foi cadastrado como afiliado.`;
-  if (context === "affiliate-updated") return `As informações de ${name} foram salvas.`;
-  if (context === "campaign-created") return `A campanha “${name}” já está disponível.`;
-  if (context === "campaign-updated") return `As alterações da campanha “${name}” foram salvas.`;
-  if (context === "crm-card-created") return `${name} foi adicionado ao funil comercial.`;
-  return `${name} foi atualizado com sucesso.`;
+  let message = "A operação foi confirmada pelo sistema.";
+  if (name && context === "user-created") message = `${name} foi adicionado ao sistema.`;
+  else if (name && context === "user-updated") message = `As informações de ${name} foram salvas.`;
+  else if (name && context === "affiliate-created") message = `${name} foi cadastrado como afiliado.`;
+  else if (name && context === "affiliate-updated") message = `As informações de ${name} foram salvas.`;
+  else if (name && context === "campaign-created") message = `A campanha “${name}” já está disponível.`;
+  else if (name && context === "campaign-updated") message = `As alterações da campanha “${name}” foram salvas.`;
+  else if (name && context === "crm-card-created") message = `${name} foi adicionado ao funil comercial.`;
+  else if (name) message = `${name} foi atualizado com sucesso.`;
+  return `${message}${responseDetails(data)}`;
 }
 
 function actorName() {

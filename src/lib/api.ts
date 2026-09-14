@@ -191,7 +191,8 @@ export type AffiliateStats = {
     promoLink: string;
     whatsappLink: string;
     latestClickAt: string | null;
-    linkType: "individual" | "whatsapp" | "campaign";
+    clickEvents?: { id: number; clickedAt: string; city: string | null; source: string | null }[];
+    linkType: "individual" | "whatsapp" | "campaign" | "official";
     campaignName: string | null;
     conversionEvents: AffiliateConversionEvent[];
   }[];
@@ -325,6 +326,8 @@ export type CampaignConversionEvent = {
   }[];
 };
 
+export type LinkType = "individual" | "campaign" | "official" | "whatsapp";
+
 export type CampaignLink = {
   id: number;
   name: string | null;
@@ -337,7 +340,7 @@ export type CampaignLink = {
   conversions: number;
   conversionEvents: CampaignConversionEvent[];
   whatsappLink: string;
-  linkType: "individual" | "whatsapp" | "campaign";
+  linkType: LinkType;
   affiliate: {
     id: number;
     name: string;
@@ -745,6 +748,20 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
   return getFriendlyErrorMessage(error, fallback);
 }
 
+export type ClickFilters = { page?: number; limit?: number; startDate?: string; endDate?: string; affiliateId?: string; campaignId?: string; trackingLinkId?: string; status?: string; source?: string; utmMedium?: string; deviceType?: string; geoCity?: string; search?: string; sort?: string; order?: string };
+export type ClickRecord = { id: number; clickCode: string; clickedAt: string; source: string | null; utmSource: string | null; utmMedium: string | null; utmCampaign: string | null; deviceType: string | null; geoCity: string | null; geoRegion: string | null; isValid: boolean; isSuspectedBot: boolean; isUnique: boolean; destinationUrl: string | null; referrer: string | null; status: string; link: { id: number; name: string | null; shortCode: string; originalUrl: string; promoLink: string; linkType: LinkType; affiliate: { id: number; name: string; photoUrl: string | null } | null; campaign: { id: number; name: string } | null }; conversions: { id: number; visitorName: string | null; visitorPhone: string | null; convertedAt: string; type: string }[] };
+export type ClickMetrics = { totalClicks: number; uniqueClicks: number; activeLinks: number; totalLinks: number; affiliatesWithClicks: number; validClicks: number; conversionRate: number; conversions: number; whatsappClicks: number; whatsappPercentage: number; previousPeriodComparison: number | null };
+export type ClickTimelineItem = { date: string; clicks: number; uniqueClicks: number; conversions: number };
+export type ClickRankingItem = { affiliateId: number; affiliateName: string; avatar: string | null; clicks: number; uniqueClicks: number; leads: number; conversions: number; conversionRate: number; percentage: number };
+export type PaginatedClicks = { data: ClickRecord[]; pagination: { page: number; limit: number; total: number; totalPages: number } };
+
+export async function listarCliques(params: ClickFilters) { const { data } = await api.get<PaginatedClicks>("/clicks", { params }); return data; }
+export async function obterMetricasCliques(params: ClickFilters) { const { data } = await api.get<ClickMetrics>("/clicks/metrics", { params }); return data; }
+export async function obterTimelineCliques(params: ClickFilters & { group?: string }) { const { data } = await api.get<ClickTimelineItem[]>("/clicks/timeline", { params }); return Array.isArray(data) ? data : []; }
+export async function obterRankingCliques(params: ClickFilters) { const { data } = await api.get<ClickRankingItem[]>("/clicks/ranking", { params }); return Array.isArray(data) ? data : []; }
+export async function obterClique(id: number) { const { data } = await api.get<ClickRecord & Record<string, unknown>>(`/clicks/${id}`); return data; }
+export async function exportarCliques(params: ClickFilters, format: "csv" | "xlsx" = "csv") { const response = await api.get("/clicks/export", { params: { ...params, format }, responseType: "blob" }); return response.data as Blob; }
+
 export async function listarAfiliados() {
   const { data } = await api.get<Affiliate[]>("/affiliate");
   return Array.isArray(data) ? data : [];
@@ -773,7 +790,8 @@ export async function editarAfiliado(
 }
 
 export async function apagarAfiliado(id: number) {
-  await api.delete(`/affiliate/${id}`);
+  const { data } = await api.delete<{ message: string; archived?: boolean }>(`/affiliate/${id}`);
+  return data;
 }
 
 export async function listarUsuarios() {

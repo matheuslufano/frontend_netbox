@@ -30,6 +30,7 @@ const routeLabels: Record<string, string> = {
   "/links-campanhas": "Links e Campanhas",
   "/links-campanhas/whatsapp": "WhatsApp",
   "/links-campanhas/relatorios": "Relat\u00f3rios",
+  "/links-campanhas/relatorios/cliques": "Links clicados",
   "/links-campanhas/relatorios/whatsapp": "WhatsApp",
   "/links-campanhas/relatorios/link": "Link Individual",
   "/links-campanhas/relatorios/campanha": "Campanha",

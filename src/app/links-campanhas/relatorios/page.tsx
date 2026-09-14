@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
-import { FiArrowRight, FiBarChart2, FiLink } from "react-icons/fi";
+import {
+  FiArrowRight,
+  FiBarChart2,
+  FiLink,
+  FiMousePointer,
+} from "react-icons/fi";
 import { BsMegaphoneFill } from "react-icons/bs";
 import {
   ReportHeader,
@@ -24,6 +29,14 @@ const reports = [
       "Analise detalhadamente o desempenho de um link específico de divulgação.",
     icon: FiLink,
     indicators: ["Cliques únicos", "Origem", "Dispositivo", "Conversões"],
+  },
+  {
+    href: "/links-campanhas/relatorios/cliques",
+    title: "Relatório de Links Clicados",
+    description:
+      "Veja os links que receberam cliques e abra os detalhes de cada um para acompanhar seu desempenho.",
+    icon: FiMousePointer,
+    indicators: ["Links clicados", "Cliques", "Afiliados", "Período"],
   },
   {
     href: "/links-campanhas/relatorios/campanha",
@@ -57,13 +70,10 @@ export default function ReportsHubPage() {
                   >
                     <Icon aria-hidden="true" />
                   </div>
-                  {report.featured && (
-                    <span className={styles.badge}>Conversão via WhatsApp</span>
-                  )}
                 </div>
                 <h2>{report.title}</h2>
                 <p>{report.description}</p>
-                
+  
                 <Link href={report.href} className={styles.openButton}>
                   Abrir relatório <FiArrowRight aria-hidden="true" />
                 </Link>

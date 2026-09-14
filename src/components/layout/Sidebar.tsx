@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { BsClipboardDataFill } from "react-icons/bs";
-import { FiGitBranch, FiShare2, FiUsers } from "react-icons/fi";
+import { FiGitBranch, FiMousePointer, FiShare2, FiUser, FiUsers } from "react-icons/fi";
 import { FaGear } from "react-icons/fa6";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { MdContactPhone, MdSpaceDashboard } from "react-icons/md";
@@ -188,12 +188,24 @@ export default function Sidebar() {
           <li className={styles.button}>
             <Link
               href="/contatos"
-              className={`${styles.menuItem} ${pathname === "/contatos" || pathname === "/afiliado" ? styles.menuItemActive : ""}`}
-              aria-label="Contatos e afiliados"
-              aria-current={pathname === "/contatos" || pathname === "/afiliado" ? "page" : undefined}
+              className={`${styles.menuItem} ${pathname === "/contatos" ? styles.menuItemActive : ""}`}
+              aria-label="Contatos"
+              aria-current={pathname === "/contatos" ? "page" : undefined}
             >
               <FiUsers className={styles.icon} />
               <span className={styles.itemLabel}>Contatos</span>
+            </Link>
+          </li>
+
+          <li className={styles.button}>
+            <Link
+              href="/afiliado"
+              className={`${styles.menuItem} ${pathname.startsWith("/afiliado") ? styles.menuItemActive : ""}`}
+              aria-label="Afiliados"
+              aria-current={pathname.startsWith("/afiliado") ? "page" : undefined}
+            >
+              <FiUser className={styles.icon} />
+              <span className={styles.itemLabel}>Afiliados</span>
             </Link>
           </li>
 
@@ -216,6 +228,18 @@ export default function Sidebar() {
             >
               <BsClipboardDataFill className={styles.icon} />
               <span className={styles.itemLabel}>Relat&oacute;rios</span>
+            </Link>
+          </li>
+
+          <li className={styles.button}>
+            <Link
+              href="/links-campanhas/relatorios/cliques"
+              className={`${styles.menuItem} ${pathname === "/links-campanhas/relatorios/cliques" ? styles.menuItemActive : ""}`}
+              aria-label="Cliques"
+              aria-current={pathname === "/links-campanhas/relatorios/cliques" ? "page" : undefined}
+            >
+              <FiMousePointer className={styles.icon} />
+              <span className={styles.itemLabel}>Cliques</span>
             </Link>
           </li>
 

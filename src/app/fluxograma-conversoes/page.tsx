@@ -28,6 +28,7 @@ export default function FluxogramaConversoesPage() {
   return (
     <div className={`${styles.page} ${styles.transparentPage} ${styles.minimalFlowPage}`}>
       <div className={styles.minimalFlowHeading}>
+        <span>Central de acompanhamento</span>
         <h1 className={`${styles.title} ${styles.minimalFlowTitle}`}>Fluxograma de conversões</h1>
         <p>Acompanhe cada cliente da visita inicial até a validação no SGP.</p>
       </div>

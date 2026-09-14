@@ -241,13 +241,13 @@
   border: 1px solid rgba(255, 255, 255, 0.62);
   border-left: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 15px;
-  background: rgba(248, 249, 250, 0.84);
+  background: rgba(248, 249, 250, 0.96);
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18), inset 0 1px rgba(255, 255, 255, 0.8);
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .notification {
-    background: rgba(246, 247, 248, 0.72);
+    background: rgba(246, 247, 248, 0.94);
     backdrop-filter: blur(28px) saturate(150%);
     -webkit-backdrop-filter: blur(28px) saturate(150%);
   }
@@ -287,6 +287,6 @@
 
 :global(html[data-theme="dark"]) .notification {
   border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(37, 39, 40, 0.9);
+  background: rgba(37, 39, 40, 0.96);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.08);
 }

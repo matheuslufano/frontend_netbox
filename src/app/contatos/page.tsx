@@ -12,7 +12,6 @@ import {
 import { notify } from "@/lib/notifications/notify";
 import { FiCalendar, FiEdit3, FiGrid, FiList, FiMessageCircle, FiPhone, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUser, FiUsers, FiX } from "react-icons/fi";
 import styles from "./contatos.module.css";
-import Afiliado from "@/app/afiliado/page";
 
 type ViewMode = "cards" | "list" | "calendar";
 type ContactForm = { name: string; phone: string; email: string; document: string; city: string; neighborhood: string; address: string; ownerUserId: string; status: string; notes: string };
@@ -23,8 +22,6 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", tim
 const dateOnlyFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" });
 
 export { CalendarView };
-
-function SectionSwitcher({ activeSection, onChange }: { activeSection: "contacts" | "affiliates"; onChange: (section: "contacts" | "affiliates") => void }) { return <nav className={styles.sectionSwitcher} aria-label="Seções da agenda"><button type="button" className={activeSection === "contacts" ? styles.sectionActive : ""} onClick={() => onChange("contacts")}><FiUsers /> Contatos</button><button type="button" className={activeSection === "affiliates" ? styles.sectionActive : ""} onClick={() => onChange("affiliates")}><FiUser /> Afiliados</button></nav>; }
 
 export default function ContatosPage() {
   const [contacts, setContacts] = useState<AgendaContact[]>([]);
@@ -42,7 +39,6 @@ export default function ContatosPage() {
   const [appointmentContactId, setAppointmentContactId] = useState("");
   const [interaction, setInteraction] = useState("");
   const [busy, setBusy] = useState(false);
-  const [activeSection, setActiveSection] = useState<"contacts" | "affiliates">("contacts");
 
   const load = useCallback(async (silent = false) => {
     silent ? setRefreshing(true) : setLoading(true);
@@ -67,9 +63,7 @@ export default function ContatosPage() {
   async function deleteContact() { if (!selected || !window.confirm("Arquivar este contato? O histórico será preservado.")) return; setBusy(true); try { await apagarContatoAgenda(selected.contact.id); setSelected(null); await load(true); notify.success({ title: "Contato arquivado", message: "O contato foi removido da agenda ativa." }); } catch (e) { notify.error({ title: "Não foi possível arquivar", message: getApiErrorMessage(e, "Tente novamente.") }); } finally { setBusy(false); } }
   async function completeAppointment(appointment: ContactAppointment) { if (!selected) return; try { await atualizarAgendamentoContato(selected.contact.id, appointment.id, { status: "COMPLETED" }); setSelected(await detalharContatoAgenda(selected.contact.id)); await load(true); } catch (e) { notify.error({ title: "Não foi possível concluir", message: getApiErrorMessage(e, "Tente novamente.") }); } }
 
-  if (activeSection === "affiliates") return <main className={styles.page}><SectionSwitcher activeSection={activeSection} onChange={setActiveSection} /><Afiliado /></main>;
   return <main className={styles.page}>
-    <SectionSwitcher activeSection={activeSection} onChange={setActiveSection} />
     <header className={styles.header}><div><p className={styles.eyebrow}><FiUsers aria-hidden="true" /> Agenda de clientes</p><h1>Contatos</h1><p className={styles.subtitle}>Organize clientes, retornos e histórico de relacionamento em um só lugar.</p></div><div className={styles.headerActions}><button type="button" className={styles.iconOnlyButton} onClick={() => void load(true)} disabled={refreshing} title="Atualizar" aria-label="Atualizar"><FiRefreshCw className={refreshing ? styles.spinning : undefined} /></button><button type="button" className={`${styles.iconOnlyButton} ${styles.iconOnlyPrimary}`} onClick={openNew} title="Novo contato" aria-label="Novo contato"><FiPlus /></button></div></header>
     <section className={styles.toolbar} aria-label="Filtros da agenda"><label className={styles.searchBox}><FiSearch /><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome, telefone, cidade ou campanha" aria-label="Buscar contatos" /></label><div className={styles.filters}><select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filtrar por status"><option value="ALL">Todos os status</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="BLOCKED">Bloqueados</option></select><span className={styles.count}>{displayed.length} contato(s)</span></div></section>
     <section className={styles.metrics}><div><strong>{contacts.length}</strong><span>contatos ativos</span></div><div><strong>{todayAppointments.length}</strong><span>agendamentos hoje</span></div><div><strong>{overdue.length}</strong><span>retornos atrasados</span></div><div className={styles.viewSwitcher}><button className={view === "cards" ? styles.activeView : ""} onClick={() => setView("cards")} title="Cards" aria-label="Cards"><FiGrid /></button><button className={view === "list" ? styles.activeView : ""} onClick={() => setView("list")} title="Lista" aria-label="Lista"><FiList /></button><button className={view === "calendar" ? styles.activeView : ""} onClick={() => setView("calendar")} title="Agenda" aria-label="Agenda"><FiCalendar /></button></div></section>

@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -89,6 +90,8 @@ type PhotoCropTarget =
 type PhotoCropState = {
   target: PhotoCropTarget;
   source: string;
+  imageWidth: number;
+  imageHeight: number;
   zoom: number;
   offsetX: number;
   offsetY: number;
@@ -246,6 +249,12 @@ function ConfiguracoesContent() {
     "all" | "users" | "affiliates"
   >("all");
   const [photoCrop, setPhotoCrop] = useState<PhotoCropState>(null);
+  const photoDragStart = useRef<{
+    x: number;
+    y: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
   const [pendingPhotoCrops, setPendingPhotoCrops] = useState<PendingPhotoCrops>(
     {},
   );
@@ -565,17 +574,33 @@ function ConfiguracoesContent() {
       return;
     }
 
+    if (file.size > 10 * 1024 * 1024) {
+      setError("A imagem deve ter no máximo 10 MB.");
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = () => {
-      setPhotoCrop({
-        target,
-        source: String(reader.result || ""),
-        zoom: 1,
-        offsetX: 0,
-        offsetY: 0,
-      });
+      const source = String(reader.result || "");
+      const image = new Image();
+
+      image.onload = () => {
+        setPhotoCrop({
+          target,
+          source,
+          imageWidth: image.naturalWidth,
+          imageHeight: image.naturalHeight,
+          zoom: 1,
+          offsetX: 0,
+          offsetY: 0,
+        });
+      };
+      image.onerror = () => setError("Não foi possível abrir esta imagem.");
+      image.src = source;
     };
+
+    reader.onerror = () => setError("Não foi possível ler esta imagem.");
 
     reader.readAsDataURL(file);
   }
@@ -951,6 +976,27 @@ function ConfiguracoesContent() {
     } finally {
       setDangerBusy(false);
     }
+  }
+
+  function updatePhotoCrop(
+    changes: Partial<Pick<PhotoCropDraft, "zoom" | "offsetX" | "offsetY">>,
+  ) {
+    setPhotoCrop((current) => {
+      if (!current) return current;
+
+      const next = { ...current, ...changes };
+      const limits = getCropOffsetLimits(
+        next.imageWidth,
+        next.imageHeight,
+        next.zoom,
+      );
+
+      return {
+        ...next,
+        offsetX: clamp(next.offsetX, -limits.x, limits.x),
+        offsetY: clamp(next.offsetY, -limits.y, limits.y),
+      };
+    });
   }
 
   async function openPrismaStudio() {
@@ -1860,67 +1906,60 @@ function ConfiguracoesContent() {
                 src={photoCrop.source}
                 alt="Previa da foto"
                 style={{
-                  transform: `translate(${photoCrop.offsetX}px, ${photoCrop.offsetY}px) scale(${photoCrop.zoom})`,
+                  transform: `translate(${(photoCrop.offsetX / 512) * 100}%, ${(photoCrop.offsetY / 512) * 100}%) scale(${photoCrop.zoom})`,
+                }}
+                draggable={false}
+                onPointerDown={(event) => {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  photoDragStart.current = {
+                    x: event.clientX,
+                    y: event.clientY,
+                    offsetX: photoCrop.offsetX,
+                    offsetY: photoCrop.offsetY,
+                  };
+                }}
+                onPointerMove={(event) => {
+                  const drag = photoDragStart.current;
+                  if (!drag) return;
+                  const previewSize = event.currentTarget.parentElement?.clientWidth || 320;
+                  const scaleToOutput = 512 / previewSize;
+                  updatePhotoCrop({
+                    offsetX: drag.offsetX + (event.clientX - drag.x) * scaleToOutput,
+                    offsetY: drag.offsetY + (event.clientY - drag.y) * scaleToOutput,
+                  });
+                }}
+                onPointerUp={() => {
+                  photoDragStart.current = null;
+                }}
+                onPointerCancel={() => {
+                  photoDragStart.current = null;
                 }}
               />
-              <span className={styles.photoCropGuide} aria-hidden="true" />
             </div>
 
             <div className={styles.photoCropControls}>
               <label>
-                Zoom
+                Zoom ({Math.round(photoCrop.zoom * 100)}%)
                 <input
                   type="range"
                   min="1"
-                  max="2.6"
+                  max="3"
                   step="0.05"
                   value={photoCrop.zoom}
-                  onChange={(event) =>
-                    setPhotoCrop((current) =>
-                      current
-                        ? { ...current, zoom: Number(event.target.value) }
-                        : current,
-                    )
-                  }
+                  onChange={(event) => updatePhotoCrop({ zoom: Number(event.target.value) })}
                 />
               </label>
-              <label>
-                Horizontal
-                <input
-                  type="range"
-                  min="-120"
-                  max="120"
-                  step="1"
-                  value={photoCrop.offsetX}
-                  onChange={(event) =>
-                    setPhotoCrop((current) =>
-                      current
-                        ? { ...current, offsetX: Number(event.target.value) }
-                        : current,
-                    )
-                  }
-                />
-              </label>
-              <label>
-                Vertical
-                <input
-                  type="range"
-                  min="-120"
-                  max="120"
-                  step="1"
-                  value={photoCrop.offsetY}
-                  onChange={(event) =>
-                    setPhotoCrop((current) =>
-                      current
-                        ? { ...current, offsetY: Number(event.target.value) }
-                        : current,
-                    )
-                  }
-                />
-              </label>
+              <small>Arraste a foto para posicioná-la. O círculo mostra exatamente a área que será salva.</small>
             </div>
 
             <div className={styles.photoCropActions}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => updatePhotoCrop({ zoom: 1, offsetX: 0, offsetY: 0 })}
+              >
+                Centralizar
+              </button>
               <button
                 type="button"
                 className={styles.secondaryButton}
@@ -2289,18 +2328,32 @@ function cropImageToDataUrl(
       const scale = baseScale * zoom;
       const drawWidth = image.width * scale;
       const drawHeight = image.height * scale;
-      const drawX = (size - drawWidth) / 2 + offsetX * 1.8;
-      const drawY = (size - drawHeight) / 2 + offsetY * 1.8;
+      const drawX = (size - drawWidth) / 2 + offsetX;
+      const drawY = (size - drawHeight) / 2 + offsetY;
 
       context.clearRect(0, 0, size, size);
       context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
 
-      resolve(canvas.toDataURL("image/jpeg", 0.9));
+      resolve(canvas.toDataURL("image/jpeg", 0.88));
     };
 
     image.onerror = reject;
     image.src = source;
   });
+}
+
+function getCropOffsetLimits(imageWidth: number, imageHeight: number, zoom: number) {
+  const outputSize = 512;
+  const baseScale = Math.max(outputSize / imageWidth, outputSize / imageHeight);
+
+  return {
+    x: Math.max(0, (imageWidth * baseScale * zoom - outputSize) / 2),
+    y: Math.max(0, (imageHeight * baseScale * zoom - outputSize) / 2),
+  };
+}
+
+function clamp(value: number, minimum: number, maximum: number) {
+  return Math.min(Math.max(value, minimum), maximum);
 }
 
 function Field({

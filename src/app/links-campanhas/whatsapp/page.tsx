@@ -44,6 +44,7 @@ export default function WhatsAppLinkPage() {
   const [items, setItems] = useState<WhatsAppLinkItem[]>([]);
   const [linkName, setLinkName] = useState("");
   const [affiliateId, setAffiliateId] = useState("");
+  const [affiliateMenuOpen, setAffiliateMenuOpen] = useState(false);
   const [codeMode, setCodeMode] = useState<"existing" | "new">("existing");
   const [affiliateCodeId, setAffiliateCodeId] = useState("");
   const [phone, setPhone] = useState("");
@@ -313,21 +314,19 @@ export default function WhatsAppLinkPage() {
           </label>
           <label className={styles.field}>
             <span>Afiliado</span>
-            <select
-              value={affiliateId}
-              onChange={(e) => {
-                setAffiliateId(e.target.value);
-                setAffiliateCodeId("");
-                setCodes([]);
-              }}
-            >
-              <option value="">Selecione</option>
-              {activeAffiliates.map((item) => (
-                <option key={item.id} value={item.id}>
+            <div className={styles.affiliateSelect}>
+              <button type="button" className={styles.affiliateSelectTrigger} onClick={() => setAffiliateMenuOpen((open) => !open)} aria-expanded={affiliateMenuOpen}>
+                {selectedAffiliate?.photoUrl ? <img src={selectedAffiliate.photoUrl} alt="" /> : <span>{selectedAffiliate?.name?.slice(0, 1).toUpperCase() || "A"}</span>}
+                <strong>{selectedAffiliate?.name || "Selecione"}</strong>
+              </button>
+              {affiliateMenuOpen && <div className={styles.affiliateOptions} role="listbox">
+                <button type="button" onClick={() => { setAffiliateId(""); setAffiliateCodeId(""); setCodes([]); setAffiliateMenuOpen(false); }}>Selecione</button>
+                {activeAffiliates.map((item) => <button type="button" key={item.id} onClick={() => { setAffiliateId(String(item.id)); setAffiliateCodeId(""); setCodes([]); setAffiliateMenuOpen(false); }}>
+                  {item.photoUrl ? <img src={item.photoUrl} alt="" /> : <span>{item.name.slice(0, 1).toUpperCase()}</span>}
                   {item.name}
-                </option>
-              ))}
-            </select>
+                </button>)}
+              </div>}
+            </div>
           </label>
           <fieldset className={styles.codeBox}>
             <legend>Identificação do afiliado</legend>

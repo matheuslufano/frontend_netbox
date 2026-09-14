@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaWhatsapp } from "react-icons/fa";
 import { BsMegaphoneFill } from "react-icons/bs";
 import {
   FiCheck,
   FiChevronRight,
   FiFilter,
+  FiGlobe,
   FiLink,
   FiMousePointer,
   FiSearch,
@@ -19,6 +20,7 @@ import type {
   Campaign,
   CampaignConversionEvent,
   CampaignLink,
+  CampaignClickEvent,
 } from "@/lib/api";
 import {
   EmptyState,
@@ -26,6 +28,7 @@ import {
   ReportSection,
   reportStyles as styles,
 } from "./ReportsUi";
+import { Timeline } from "./ClicksReport";
 
 type Period = "today" | "7" | "30" | "custom";
 type Status =
@@ -51,6 +54,7 @@ export default function AffiliateLinkReport({
   campaigns: Campaign[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [period, setPeriod] = useState<Period>("30");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -63,11 +67,30 @@ export default function AffiliateLinkReport({
   const [selectedLinkId, setSelectedLinkId] = useState<number | null>(() =>
     readSelectedId("linkId"),
   );
+  useEffect(() => {
+    const affiliate = Number(searchParams.get("affiliateId"));
+    const link = Number(searchParams.get("linkId"));
+    const timer = window.setTimeout(() => {
+      if (Number.isInteger(affiliate) && affiliate > 0) setSelectedAffiliateId(affiliate);
+      if (Number.isInteger(link) && link > 0) setSelectedLinkId(link);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [searchParams]);
 
   const bounds = useMemo(
     () => periodBounds(period, from, to),
     [period, from, to],
   );
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (period) params.set("period", period); else params.delete("period");
+    if (from) params.set("from", from); else params.delete("from");
+    if (to) params.set("to", to); else params.delete("to");
+    if (campaignId) params.set("campaignId", campaignId); else params.delete("campaignId");
+    if (status !== "all") params.set("status", status); else params.delete("status");
+    if (search) params.set("search", search); else params.delete("search");
+    router.replace(`/links-campanhas/relatorios/link?${params.toString()}`, { scroll: false });
+  }, [campaignId, from, period, router, search, status, to]);
   const allRows = useMemo(
     () =>
       campaigns
@@ -241,6 +264,7 @@ export default function AffiliateLinkReport({
               affiliateLinks={affiliateLinks}
               onSelect={selectRow}
               boundsLabel={bounds.label}
+              bounds={bounds}
             />
           ) : (
             <EmptyState text="Nenhum afiliado ou link encontrado para os filtros selecionados." />
@@ -379,11 +403,13 @@ function AffiliateDetail({
   affiliateLinks,
   onSelect,
   boundsLabel,
+  bounds,
 }: {
   row: RankedLink;
   affiliateLinks: RankedLink[];
   onSelect: (row: RankedLink) => void;
   boundsLabel: string;
+  bounds: ReturnType<typeof periodBounds>;
 }) {
   const affiliate = row.link.affiliate;
   return (
@@ -440,6 +466,9 @@ function AffiliateDetail({
           icon={FiTarget}
         />
       </div>
+      <ReportSection title="Tendência de cliques por dia" description={`Filtros aplicados: ${boundsLabel}`}>
+        <Timeline rows={buildLinkTimeline(row.link.clickEvents, bounds)} />
+      </ReportSection>
       <ConversionFunnel row={row} />
       <ReportSection
         title="Links do afiliado"
@@ -453,6 +482,20 @@ function AffiliateDetail({
       </ReportSection>
     </>
   );
+}
+
+function buildLinkTimeline(events: CampaignClickEvent[], bounds?: { start: number | null; end: number }) {
+  const daily = new Map<string, number>();
+  events.filter((event) => !bounds || (new Date(event.clickedAt).getTime() >= (bounds.start || 0) && new Date(event.clickedAt).getTime() <= bounds.end)).forEach((event) => daily.set(event.clickedAt.slice(0, 10), (daily.get(event.clickedAt.slice(0, 10)) || 0) + 1));
+  const today = new Date();
+  const endDate = bounds ? new Date(bounds.end) : today;
+  const startDate = bounds?.start ? new Date(bounds.start) : new Date(endDate);
+  if (!bounds?.start) startDate.setDate(endDate.getDate() - 89);
+  for (const day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
+    const key = day.toISOString().slice(0, 10);
+    if (!daily.has(key)) daily.set(key, 0);
+  }
+  return [...daily.entries()].sort(([first], [second]) => first.localeCompare(second)).slice(-90).map(([date, clicks]) => ({ date, clicks, uniqueClicks: 0, conversions: 0 }));
 }
 
 function AffiliateLinksTable({
@@ -498,6 +541,7 @@ function AffiliateLinksTable({
                 }}
               >
                 <td>
+                  <LinkTypeBadge type={item.link.linkType} />
                   <span
                     className={styles.tableLinkName}
                     title={item.link.name || item.link.shortCode}
@@ -531,7 +575,9 @@ function LinkTypeHeading({
       ? { label: "WhatsApp", Icon: FaWhatsapp }
       : type === "campaign"
         ? { label: "Links de campanhas", Icon: BsMegaphoneFill }
-        : { label: "Links individuais", Icon: FiLink };
+        : type === "official"
+          ? { label: "Site oficial Netbox", Icon: FiGlobe }
+          : { label: "Links individuais", Icon: FiLink };
   const Icon = meta.Icon;
   return (
     <span
@@ -543,8 +589,20 @@ function LinkTypeHeading({
   );
 }
 
+function LinkTypeBadge({ type }: { type: CampaignLink["linkType"] }) {
+  const meta = type === "whatsapp"
+    ? { label: "WhatsApp", Icon: FaWhatsapp }
+    : type === "campaign"
+      ? { label: "Campanha", Icon: BsMegaphoneFill }
+      : type === "official"
+        ? { label: "Site oficial Netbox", Icon: FiGlobe }
+        : { label: "Individual", Icon: FiLink };
+  const Icon = meta.Icon;
+  return <span className={`${styles.linkTypeBadge} ${styles[`linkTypeBadge${type.charAt(0).toUpperCase()}${type.slice(1)}`]}`} title={meta.label} aria-label={meta.label}><Icon aria-hidden="true" /></span>;
+}
+
 function groupRankedLinks(rows: RankedLink[]) {
-  return (["individual", "whatsapp", "campaign"] as const)
+  return (["individual", "official", "campaign", "whatsapp"] as const)
     .map((type) => ({
       type,
       rows: rows.filter((row) => row.link.linkType === type),

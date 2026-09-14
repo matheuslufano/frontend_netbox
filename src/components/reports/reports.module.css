@@ -78,8 +78,277 @@
 }
 .reportGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+}
+
+.clicksHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.clicksHeader .openButton {
+  width: auto;
+  min-width: 150px;
+  margin-top: 24px;
+}
+.exportActions {
+  display: flex;
+  gap: 8px;
+}
+.clickFilters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 10px;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+.clickFilters label,
+.clickTableTools label {
+  display: grid;
+  gap: 5px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+}
+.clickFilters input,
+.clickFilters select,
+.clickTableTools input,
+.clickTableTools select {
+  min-width: 0;
+  height: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 0 10px;
+  background: #fff;
+  color: #0f172a;
+}
+.clickFilterActions {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+.primaryAction,
+.secondaryAction,
+.quickPeriods button,
+.clickPagination button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  padding: 0 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ea580c;
+  color: #fff;
+}
+.secondaryAction,
+.quickPeriods button,
+.clickPagination button {
+  background: #e2e8f0;
+  color: #334155;
+}
+.quickPeriods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.quickPeriods button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 11px;
+}
+.clickInsights {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  gap: 16px;
+}
+.clickInsights .dataSection {
+  margin: 0;
+}
+.clickTimeline {
+  height: 190px;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  padding-top: 18px;
+  overflow: auto;
+}
+.clickTimeline > div {
+  min-width: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  gap: 6px;
+}
+.clickTimeline i {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(#fb923c, #ea580c);
+}
+.clickTimeline span {
+  color: #64748b;
+  font-size: 9px;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+}
+.clickRanking {
+  display: grid;
+  gap: 10px;
+}
+.clickRanking > div {
+  position: relative;
+  display: grid;
+  grid-template-columns: 25px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  overflow: hidden;
+  padding: 8px 0;
+}
+.clickRanking b {
+  color: #ea580c;
+}
+.clickRanking span,
+.clickRanking strong {
+  position: relative;
+  z-index: 1;
+}
+.clickRanking i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: #fb923c;
+}
+.clickTableTools {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.clickTableTools > input {
+  flex: 1;
+}
+.clicksTable tbody tr {
+  cursor: pointer;
+}
+.clicksTable tbody tr:hover,
+.clicksTable tbody tr:focus {
+  background: #fff7ed;
+  outline: 0;
+}
+.clickPagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.clickPagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.clickDrawer {
+  position: fixed;
+  z-index: 3000;
+  top: 0;
+  right: 0;
+  width: min(410px, 100vw);
+  height: 100dvh;
+  overflow: auto;
+  padding: 20px;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: -20px 0 50px rgba(15, 23, 42, 0.2);
+}
+.clickDrawer header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.clickDrawer header span,
+.clickDrawer dt {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.clickDrawer header strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 19px;
+}
+.clickDrawer header button {
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+.clickDrawer nav {
+  display: flex;
+  gap: 4px;
+  margin: 16px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.clickDrawer nav button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 9px 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 800;
+}
+.clickDrawer nav .drawerTabActive {
+  border-color: #ea580c;
+  color: #ea580c;
+}
+.clickDrawer dl {
+  display: grid;
+  gap: 5px;
+}
+.clickDrawer dd {
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.clickDrawer dd button {
+  border: 0;
+  background: #fff7ed;
+  color: #c2410c;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.funnelSteps {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  list-style: none;
+  color: #94a3b8;
+}
+.funnelDone {
+  color: #16a34a;
 }
 .reportCard {
   position: relative;
@@ -493,6 +762,50 @@
   background: #fff1eb;
   color: #c2410c;
 }
+.linkTypeHeadingOfficial {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.linkTypeBadge {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  margin-right: 7px;
+  border-radius: 8px;
+  vertical-align: middle;
+  font-size: 13px;
+}
+.linkTypeBadgeIndividual { background: #fff1eb; color: #c2410c; }
+.linkTypeBadgeCampaign { background: #e0e7ff; color: #4338ca; }
+.linkTypeBadgeOfficial { background: #dbeafe; color: #1d4ed8; }
+.linkTypeBadgeWhatsapp { background: #dcfce7; color: #15803d; }
+.linkActions { min-width: 190px; white-space: nowrap; }
+.linkActions button {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  margin: 0 3px;
+  border: 1px solid #dbe3ef;
+  border-radius: 7px;
+  background: #fff;
+  color: #31527d;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+}
+.linkActions button:hover { background: #eff6ff; color: #087cff; transform: translateY(-1px); }
+.linkActions button:last-of-type:hover { background: #fff1f2; color: #e11d48; }
+.actionSuccess {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #16a34a;
+  font-size: 10px;
+  font-weight: 800;
+  animation: actionSuccessPop 400ms ease both;
+}
+@keyframes actionSuccessPop { 0% { opacity: 0; transform: scale(.7); } 65% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
 .rankingIdentity {
   min-width: 0;
   overflow: hidden;
@@ -970,6 +1283,19 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+.surface:has(.clickFilters) .kpiIcon { color:#fff !important; }
+.clickRankingRow { position:relative; display:grid; grid-template-columns:24px 30px minmax(0,1fr) auto; gap:8px; align-items:center; width:100%; border:0; border-radius:8px; padding:7px 4px; background:transparent; color:#25324c; text-align:left; cursor:pointer; }
+.clickRankingRow:hover,.clickRankingRow:focus-visible { background:#f0f6ff; outline:0; }
+.clickRankingRow > span:not(.clickRankingAvatar) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.clickRankingAvatar { width:28px; height:28px; display:grid; place-items:center; overflow:hidden; border-radius:50%; background:#dbeafe; color:#2563eb; font-size:11px; font-weight:900; }.clickRankingAvatar img { width:100%; height:100%; object-fit:cover; }
+.clickRankingRow > i { position:absolute; right:4px; bottom:2px; left:auto; height:3px; max-width:calc(100% - 74px); border-radius:99px; background:#2d8df5; opacity:.78; pointer-events:none; }
+.clickRankingRow > strong { position:relative; z-index:1; }
+.clickInsights .clickRanking > div { grid-template-columns:24px 30px minmax(0,1fr) auto; gap:8px; padding:7px 4px; border-radius:8px; }
+.clickInsights .clickRanking > div:hover { background:#f0f6ff; }
+.clickInsights .clickRanking > div[role="button"] { cursor:pointer; }
+.clickInsights .clickRanking > div[role="button"]:focus-visible { outline:2px solid #2d8df5; outline-offset:2px; }
+.clickInsights .clickRanking > div > i { right:4px; left:auto; max-width:calc(100% - 74px); border-radius:99px; background:#2d8df5; }
+
 @media (max-width: 460px) {
   .surface {
     padding: 15px;
@@ -987,6 +1313,435 @@
   .openButton {
     margin-top: 20px;
   }
+}
+
+/* Painel de inteligência de cliques */
+.surface:has(.clickFilters) {
+  width: 100%;
+  max-width: none;
+  padding: 20px;
+  border: 0;
+  border-radius: 0;
+  background: #f7f9fc;
+  box-shadow: none;
+}
+.surface:has(.clickFilters) .breadcrumb {
+  display: none;
+}
+.surface:has(.clickFilters) .reportHeader {
+  margin-bottom: 10px;
+}
+.surface:has(.clickFilters) .reportHeader h1 {
+  font-size: 32px;
+}
+.surface:has(.clickFilters) .reportHeader p {
+  margin-top: 4px;
+  color: #71809a;
+  font-size: 15px;
+}
+.clicksHeader {
+  margin-bottom: 12px;
+}
+.clicksHeader .openButton {
+  min-height: 36px;
+  margin-top: 0;
+  border: 1px solid #d8e0ec;
+  background: #fff;
+  color: #13203a;
+  box-shadow: none;
+}
+.exportActions {
+  display: flex;
+  gap: 8px;
+}
+.exportActions .openButton {
+  min-width: auto;
+}
+.clickFilters {
+  grid-template-columns: 1.25fr repeat(6, minmax(110px, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 0;
+  padding: 12px;
+  border-color: #e2e8f0;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 31, 57, 0.04);
+}
+.clickFilters label {
+  gap: 6px;
+  color: #1e2a45;
+  font-size: 10px;
+}
+.clickFilters input,
+.clickFilters select {
+  height: 35px;
+  border-color: #dbe3ef;
+  border-radius: 6px;
+  color: #4a5973;
+  font-size: 12px;
+}
+.primaryAction {
+  min-width: 128px;
+  height: 35px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ff7c16, #ff5b0a);
+}
+.secondaryAction {
+  display: none;
+}
+.quickPeriods {
+  margin: 8px 0 11px;
+}
+.quickPeriods button {
+  min-height: 27px;
+  padding: 0 9px;
+  border-radius: 5px;
+  background: transparent;
+  color: #71809a;
+  font-size: 10px;
+}
+.quickPeriods button:last-child {
+  margin-left: auto;
+  border: 1px solid #e0e7f0;
+  background: #fff;
+}
+.surface:has(.clickFilters) .kpiGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.surface:has(.clickFilters) .kpiCard {
+  min-height: 93px;
+  padding: 14px;
+  border: 1px solid #e4eaf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 31, 57, 0.035);
+}
+.surface:has(.clickFilters) .kpiIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #438dff, #1e73e8);
+}
+.surface:has(.clickFilters) .kpiCard:nth-child(2) .kpiIcon,
+.surface:has(.clickFilters) .kpiCard:nth-child(5) .kpiIcon {
+  background: linear-gradient(135deg, #19cd8d, #08ae73);
+}
+.surface:has(.clickFilters) .kpiCard:nth-child(3) .kpiIcon {
+  background: linear-gradient(135deg, #ff8a31, #ff5e1b);
+}
+.surface:has(.clickFilters) .kpiCard:nth-child(4) .kpiIcon {
+  background: linear-gradient(135deg, #8d63ff, #6935e8);
+}
+.surface:has(.clickFilters) .kpiCard strong {
+  font-size: 27px;
+  color: #111a35;
+}
+.clickInsights {
+  grid-template-columns: minmax(0, 1.85fr) minmax(300px, 0.9fr);
+  gap: 12px;
+}
+.clickInsights .dataSection,
+.surface:has(.clickFilters) > .dataSection {
+  border: 1px solid #e4eaf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 31, 57, 0.025);
+}
+.clickInsights .dataSection {
+  padding: 14px;
+}
+.clickTimeline {
+  height: 174px;
+  gap: 7px;
+  padding: 8px 9px 22px;
+  border-bottom: 1px solid #dce7f5;
+  background: linear-gradient(
+    180deg,
+    rgba(223, 238, 255, 0.42),
+    rgba(255, 255, 255, 0)
+  );
+}
+.clickTimeline i {
+  background: linear-gradient(180deg, #1887ff, #8bc5ff);
+}
+.clickTimeline span {
+  font-size: 8px;
+  transform: none;
+}
+.clickRanking > div {
+  font-size: 12px;
+}
+.clickRanking b {
+  width: 21px;
+  padding: 3px 0;
+  border-radius: 5px;
+  background: #fff0df;
+  color: #f17a18;
+  text-align: center;
+}
+.surface:has(.clickFilters) > .dataSection {
+  margin-top: 12px;
+  padding: 14px;
+}
+.clickTableTools > input {
+  max-width: 365px;
+  height: 31px;
+}
+.clickTableTools label {
+  display: none;
+}
+.clicksTable {
+  min-width: 980px;
+}
+.clicksTable th {
+  background: #f4f7fb;
+  color: #34415b;
+  font-size: 10px;
+}
+.clicksTable td {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #33415c;
+  font-size: 11px;
+}
+.clickDrawer {
+  width: 320px;
+  padding: 16px;
+  border-left: 1px solid #e4eaf2;
+  box-shadow: -10px 0 28px rgba(15, 31, 57, 0.09);
+}
+@media (max-width: 1250px) {
+  .clickFilters {
+    grid-template-columns: repeat(4, minmax(140px, 1fr));
+  }
+  .surface:has(.clickFilters) .kpiGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 780px) {
+  .surface:has(.clickFilters) {
+    padding: 12px;
+  }
+  .clicksHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .exportActions .openButton {
+    flex: 1;
+  }
+  .clickFilters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .clickFilterActions {
+    grid-column: 1/-1;
+  }
+  .primaryAction {
+    width: 100%;
+  }
+  .clickInsights {
+    grid-template-columns: 1fr;
+  }
+  .surface:has(.clickFilters) .kpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .clickDrawer {
+    width: 100vw;
+  }
+}
+
+.exportMenu {
+  position: relative;
+  flex: 0 0 auto;
+}
+.exportMenu summary {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d8e0ec;
+  border-radius: 7px;
+  padding: 0 15px;
+  background: #fff;
+  color: #13203a;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+  list-style: none;
+}
+.exportMenu summary::-webkit-details-marker {
+  display: none;
+}
+.exportMenu > div {
+  position: absolute;
+  z-index: 30;
+  top: 42px;
+  right: 0;
+  display: grid;
+  width: 150px;
+  padding: 5px;
+  border: 1px solid #dde4ee;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 31, 57, 0.15);
+}
+.exportMenu button {
+  border: 0;
+  border-radius: 5px;
+  padding: 9px;
+  background: transparent;
+  color: #25324c;
+  text-align: left;
+  cursor: pointer;
+}
+.exportMenu button:hover {
+  background: #f4f7fb;
+}
+.columnsButton {
+  height: 31px;
+  border: 1px solid #dbe3ef;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #fff;
+  color: #263450;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.clicksTable input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #ff6d13;
+}
+.clicksTable th:first-child,
+.clicksTable td:first-child {
+  width: 34px;
+  text-align: center;
+}
+.clicksTable a {
+  color: #087cff;
+  text-decoration: underline;
+}
+.clickTimelineLine {
+  position: relative;
+  height: 190px;
+}
+.clickTimelineLine svg {
+  width: 100%;
+  height: 166px;
+  overflow: visible;
+}
+.chartYAxis {
+  position: absolute;
+  top: 8px;
+  bottom: 24px;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  width: 48px;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #74829a;
+  font-size: 9px;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+.clickTimelineLine svg {
+  width: calc(100% - 50px);
+  margin-left: 50px;
+}
+.chartGridLine {
+  stroke: #e2eaf4;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.chartArea {
+  fill: rgba(24, 135, 255, 0.11);
+}
+.chartLine {
+  fill: none;
+  stroke: #1584f5;
+  stroke-width: 2.3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.chartPoint {
+  fill: #1584f5;
+  stroke: #fff;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.chartLabels {
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+  left: 42px;
+  display: flex;
+  justify-content: space-between;
+  color: #74829a;
+  font-size: 9px;
+}
+.drawerIdentity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 0 5px;
+}
+.drawerIdentity > div {
+  display: grid;
+  gap: 4px;
+}
+.drawerIdentity > div strong {
+  color: #15203a;
+  font-size: 13px;
+}
+.drawerIdentity > div span {
+  color: #71809a;
+  font-size: 12px;
+}
+.drawerIdentity > b {
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #d9f8eb;
+  color: #0c9d68;
+  font-size: 10px;
+}
+.drawerFunnelStatus {
+  display: inline-flex;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #dceeff;
+  color: #0877e8;
+  font-weight: 800;
+}
+:global(html[data-theme="dark"]) .surface:has(.clickFilters) {
+  background: var(--nb-app-bg);
+}
+:global(html[data-theme="dark"]) .clickFilters,
+:global(html[data-theme="dark"]) .surface:has(.clickFilters) .kpiCard,
+:global(html[data-theme="dark"]) .clickInsights .dataSection,
+:global(html[data-theme="dark"]) .surface:has(.clickFilters) > .dataSection,
+:global(html[data-theme="dark"]) .clickDrawer,
+:global(html[data-theme="dark"]) .exportMenu summary,
+:global(html[data-theme="dark"]) .exportMenu > div {
+  border-color: var(--nb-border);
+  background: var(--nb-surface);
+  color: var(--nb-text);
+}
+:global(html[data-theme="dark"]) .clickFilters input,
+:global(html[data-theme="dark"]) .clickFilters select,
+:global(html[data-theme="dark"]) .clickTableTools input,
+:global(html[data-theme="dark"]) .columnsButton {
+  border-color: var(--nb-border);
+  background: var(--nb-control-bg);
+  color: var(--nb-text);
 }
 
 :global(html[data-theme="dark"]) .page {
@@ -1088,7 +1843,11 @@
 :global(html[data-theme="dark"]) .chartPlaceholder,
 :global(html[data-theme="dark"]) .funnelStage > div {
   border-color: var(--nb-border);
-  background: linear-gradient(145deg, var(--nb-surface-secondary), var(--nb-surface-elevated));
+  background: linear-gradient(
+    145deg,
+    var(--nb-surface-secondary),
+    var(--nb-surface-elevated)
+  );
   color: var(--nb-orange);
 }
 

@@ -2788,6 +2788,44 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   background: #f8fafc;
   overflow: hidden;
 }
+.showcaseTabs { display: inline-flex; gap: 4px; min-width: 0; }
+.showcaseTabs button { display: inline-flex; align-items: center; gap: 5px; border: 0; border-bottom: 2px solid transparent; padding: 4px 6px; background: transparent; color: #64748b; font-size: 10px; font-weight: 850; cursor: pointer; }
+.showcaseTabs button:hover { color: #2454d6; }
+.showcaseTabs button.showcaseTabActive { border-bottom-color: #2454d6; color: #2454d6; }
+.showcaseTabs svg { width: 13px; height: 13px; }
+.clickChartHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.clickChartHeader div { display: grid; gap: 2px; }
+.clickChartHeader strong { color: #1e293b; font-size: 12px; }
+.clickChartHeader span { color: #64748b; font-size: 10px; }
+.clickChartHeader > b { color: #2454d6; font-size: 12px; }
+.clickPerformanceSection { height: 100%; min-height: 0; margin: 0 !important; padding: 14px; border-radius: 12px; box-shadow: none; }
+.clickChartBars { display: flex; align-items: end; gap: 5px; height: 102px; padding: 8px 4px 0; border-bottom: 1px solid #dbe3ef; }
+.clickChartBarGroup { display: grid; flex: 1; height: 100%; min-width: 0; align-items: end; justify-items: center; gap: 4px; }
+.clickChartBarGroup span { width: min(100%, 16px); min-height: 3px; border-radius: 4px 4px 1px 1px; background: linear-gradient(180deg, #4b8df8, #2454d6); transition: height .25s ease; }
+.clickChartBarGroup small { color: #94a3b8; font-size: 8px; }
+.clickChartLegend { display: grid; gap: 4px; max-height: 72px; margin-top: 8px; overflow-y: auto; }
+.clickChartLegend span { display: grid; grid-template-columns: 7px minmax(0, 1fr) auto; align-items: center; gap: 5px; color: #475569; font-size: 9px; }
+.clickChartLegend i { width: 7px; height: 7px; border-radius: 50%; background: #2454d6; }
+.clickChartLegend span b { color: #1e293b; }
+.clickChartArea { display: grid; grid-template-columns: 25px minmax(0, 1fr); gap: 7px; height: 126px; }
+.clickChartYAxis { display: flex; height: 96px; flex-direction: column; justify-content: space-between; padding-top: 4px; color: #64748b; font-size: 9px; line-height: 1; text-align: right; }
+.clickChartLineWrap { position: relative; height: 126px; padding-bottom: 23px; border-bottom: 1px solid #dbe3ef; }
+.clickChartLine { display: block; width: 100%; height: 96px; overflow: visible; }
+.clickChartLine line { stroke: #dbe3ef; stroke-width: .8; vector-effect: non-scaling-stroke; }
+.clickChartLine polygon { fill: rgba(36, 84, 214, .10); }
+.clickChartLine polyline { fill: none; stroke: #2454d6; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.clickChartDots { position: absolute; top: 0; right: 0; left: 0; height: 96px; pointer-events: none; }
+.clickChartDot { position: absolute; width: 8px; height: 8px; border: 2px solid #2454d6; border-radius: 50%; box-sizing: border-box; background: #fff; transform: translate(-50%, -50%); pointer-events: auto; cursor: crosshair; transition: transform .15s ease, background .15s ease; }
+.clickChartDot:hover { background: #2454d6; transform: translate(-50%, -50%) scale(1.25); }
+.clickChartDateLabels { position: absolute; right: 0; bottom: 2px; left: 0; height: 16px; color: #64748b; font-size: 8px; line-height: 1; }
+.clickChartDateLabels small { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.clickChartDateLabels small:first-child { transform: none; }
+.clickChartDateLabels small:last-child { transform: translateX(-100%); }
+.showcaseLinkCardSelected { border-color: #2454d6; box-shadow: 0 0 0 2px rgba(36, 84, 214, .14); animation: showcaseLinkSelected 420ms cubic-bezier(.2, .8, .2, 1) both; }
+.showcaseLinkCardSelected .showcaseLinkTypeIcon { animation: showcaseLinkIconSelected 420ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes showcaseLinkSelected { 0% { transform: scale(.975); box-shadow: 0 0 0 0 rgba(36, 84, 214, .34); } 65% { transform: scale(1.012); box-shadow: 0 0 0 6px rgba(36, 84, 214, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(36, 84, 214, .14); } }
+@keyframes showcaseLinkIconSelected { 0% { transform: scale(.75) rotate(-10deg); } 65% { transform: scale(1.16) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .showcaseLinkCardSelected, .showcaseLinkCardSelected .showcaseLinkTypeIcon { animation: none; } }
 
 .showcaseContactCount {
   display: inline-flex;
@@ -2996,6 +3034,7 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.showcaseContactsPanel .showcaseTopBar > strong { display: none; }
 
 .showcaseActionButtons,
 .showcaseLinkActions {
@@ -5861,4 +5900,425 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
   border-color: #555852;
   background: #30312e;
   color: #f1efea;
+}
+
+/* Central de conversões: hierarquia visual e jornadas mais fáceis de ler. */
+.minimalFlowPage {
+  min-height: 100%;
+  padding: clamp(18px, 3vw, 34px);
+  background:
+    radial-gradient(circle at 4% 2%, rgba(249, 115, 22, 0.2), transparent 26%),
+    radial-gradient(circle at 94% 10%, rgba(37, 99, 235, 0.13), transparent 23%),
+    linear-gradient(145deg, #f8fafc 0%, #eef4ff 48%, #fff7ed 100%);
+}
+
+.minimalFlowHeading {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  padding: 4px 2px;
+}
+
+.minimalFlowHeading > span,
+.conversionTitleIntro > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c2410c;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.minimalFlowHeading > span::before,
+.conversionTitleIntro > span::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+  content: "";
+}
+
+.minimalFlowTitle {
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.minimalFlowHeading p {
+  max-width: 620px;
+  margin-top: 10px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.minimalFlow .conversionReportMain {
+  max-width: 1500px;
+  margin: 0 auto;
+  gap: 14px;
+  padding: clamp(14px, 2vw, 24px);
+  border-color: rgba(255, 255, 255, 0.86);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.88));
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.12), inset 0 1px 0 #ffffff;
+}
+
+.minimalFlow .conversionReportTitleRow {
+  align-items: center;
+  padding: 2px 2px 14px;
+  border-bottom-color: #e2e8f0;
+}
+
+.conversionTitleIntro {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.minimalFlow .conversionReportTitleRow h3 {
+  color: #0f172a;
+  font-size: clamp(18px, 1.8vw, 22px) !important;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.minimalFlow .conversionViewSwitcher {
+  gap: 4px;
+  padding: 4px;
+  border-color: #dbe4f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.minimalFlow .conversionViewSwitcher span {
+  padding: 0 5px;
+  color: #64748b;
+  font-weight: 900;
+}
+
+.minimalFlow .conversionViewSwitcher button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 8px;
+  color: #64748b;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.minimalFlow .conversionViewSwitcher .conversionViewButtonActive {
+  background: linear-gradient(135deg, #f97316, #ea580c) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(234, 88, 12, 0.22);
+}
+
+.minimalFlow .conversionReportFilters,
+.minimalFlow .conversionReportShellFull .conversionReportFilters {
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.minimalFlow .conversionReportFilters label span {
+  color: #64748b;
+}
+
+.minimalFlow .conversionReportFilters select,
+.minimalFlow .conversionReportFilters input,
+.minimalFlow .conversionReportFilters button {
+  min-height: 38px;
+  border-radius: 10px;
+}
+
+.minimalFlow .conversionReportMetrics,
+.minimalFlow .conversionReportShellFull .conversionReportMetrics {
+  gap: 10px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.minimalFlow .flowMetric {
+  position: relative;
+  min-height: 82px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.minimalFlow .flowMetric::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 999px 0 0 999px;
+  background: #94a3b8;
+  content: "";
+}
+
+.minimalFlow .flowMetric:nth-child(1)::after { background: #2563eb; }
+.minimalFlow .flowMetric:nth-child(2)::after { background: #f59e0b; }
+.minimalFlow .flowMetric:nth-child(3)::after { background: #22c55e; }
+.minimalFlow .flowMetric:nth-child(4)::after { background: #ef4444; }
+
+.minimalFlow .flowMetric:hover,
+.minimalFlow .flowMetric:focus-visible {
+  border-color: #fdba74;
+  box-shadow: 0 12px 24px rgba(234, 88, 12, 0.13);
+  transform: translateY(-2px);
+}
+
+.minimalFlow .flowMetricActive {
+  border-color: #fdba74;
+  background: linear-gradient(135deg, #fff7ed, #ffffff);
+}
+
+.minimalFlow .flowMetricActive span,
+.minimalFlow .flowMetricActive strong {
+  color: #0f172a;
+}
+
+.minimalFlow .conversionFlowList,
+.minimalFlow .conversionReportShellFull .conversionFlowList {
+  gap: 14px;
+}
+
+.minimalFlow .conversionFlowCard,
+.minimalFlow .conversionReportShellFull .conversionFlowCard {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+  border-color: #e2e8f0;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.minimalFlow .conversionFlowCard::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f97316, #fbbf24 45%, #22c55e);
+  content: "";
+}
+
+.minimalFlow .conversionIdentity span {
+  color: #ea580c;
+  font-weight: 950;
+}
+
+.minimalFlow .conversionIdentity h3 {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.minimalFlow .conversionStageCard {
+  border-color: #e2e8f0;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.minimalFlow .conversionStageDone {
+  border-color: #86efac;
+  background: linear-gradient(180deg, #f0fdf4, #dcfce7);
+}
+
+.minimalFlow .conversionStageClickable:hover {
+  border-color: #fdba74;
+  box-shadow: 0 10px 18px rgba(234, 88, 12, 0.11);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .minimalFlowPage { padding: 14px; }
+  .minimalFlow .conversionReportMain { border-radius: 18px; }
+  .minimalFlow .conversionReportTitleRow { align-items: flex-start; }
+  .minimalFlow .conversionViewSwitcher { width: auto; }
+  .minimalFlow .conversionReportFilters { align-items: stretch; }
+}
+
+:global(html[data-theme="dark"]) .minimalFlowPage {
+  background: linear-gradient(145deg, #252623, #30312e 58%, #38332e);
+}
+
+:global(html[data-theme="dark"]) .minimalFlowTitle,
+:global(html[data-theme="dark"]) .minimalFlow .conversionReportTitleRow h3,
+:global(html[data-theme="dark"]) .minimalFlow .flowMetricActive span,
+:global(html[data-theme="dark"]) .minimalFlow .flowMetricActive strong,
+:global(html[data-theme="dark"]) .minimalFlow .conversionIdentity h3 {
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .minimalFlowHeading p,
+:global(html[data-theme="dark"]) .minimalFlow .conversionReportFilters label span {
+  color: #c5c1b9;
+}
+
+:global(html[data-theme="dark"]) .minimalFlow .conversionReportMain,
+:global(html[data-theme="dark"]) .minimalFlow .conversionReportFilters,
+:global(html[data-theme="dark"]) .minimalFlow .conversionFlowCard,
+:global(html[data-theme="dark"]) .minimalFlow .flowMetric {
+  border-color: #555852;
+  background: linear-gradient(145deg, #393a36, #30312e);
+}
+
+:global(html[data-theme="dark"]) .minimalFlow .flowMetricActive {
+  border-color: #c97948;
+  background: linear-gradient(145deg, #453830, #37312c);
+}
+
+:global(html[data-theme="dark"]) .minimalFlow .conversionStageCard {
+  border-color: #555852;
+  background: #343532;
+}
+
+:global(html[data-theme="dark"]) .minimalFlow .conversionStageDone {
+  border-color: #66806d;
+  background: #354238;
+}
+
+/* Correção de contraste: o ícone de link concluído não pode ficar branco. */
+.objectiveStageIconDone {
+  color: #15803d;
+}
+
+.objectiveStageIcon svg {
+  stroke-width: 2.35;
+}
+
+/* Impede que a grade compacte os cartões quando há muitas conversões. */
+.conversionObjectiveList {
+  grid-auto-rows: minmax(112px, max-content);
+  align-content: start;
+}
+
+.conversionObjectiveCard {
+  min-height: 112px;
+}
+
+/* Paleta neutra para o resumo de conversões. */
+.conversionReportMain {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.reportProfileStats {
+  border: 1px solid #dbe3ed;
+  background: #eef2f6;
+}
+
+.reportProfileStats > strong {
+  color: #334155;
+}
+
+.conversionObjectiveList {
+  border: 1px solid #dbe3ed;
+  background: #eef2f6;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.conversionObjectiveCard {
+  border-color: #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 7px 16px rgba(15, 23, 42, 0.05);
+}
+
+.objectiveInfographic {
+  border-color: #dbe3ed;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.objectiveInfographicLost {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.objectiveInfographicProgress {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.objectiveInfographicSold {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.objectiveCardSold { border-left: 4px solid #22c55e; }
+.objectiveCardProgress { border-left: 4px solid #f59e0b; }
+.objectiveCardLost { border-left: 4px solid #ef4444; }
+.objectiveCardPending { border-left: 4px solid #94a3b8; }
+
+.objectiveStatusText {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.objectiveStatusText span {
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.objectiveStatusText span::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+  content: "";
+}
+
+.objectiveInfographicSold .objectiveStatusText span::before { background: #22c55e; }
+.objectiveInfographicProgress .objectiveStatusText span::before { background: #f59e0b; }
+.objectiveInfographicLost .objectiveStatusText span::before { background: #ef4444; }
+
+.objectiveStatusText small {
+  color: #64748b;
+}
+
+.flowMetricActive,
+.conversionViewSwitcher .conversionViewButtonActive {
+  background: #334155 !important;
+}
+
+:global(html[data-theme="dark"]) .conversionReportMain,
+:global(html[data-theme="dark"]) .conversionObjectiveList,
+:global(html[data-theme="dark"]) .reportProfileStats {
+  border-color: #555852;
+  background: #30312e;
+}
+
+:global(html[data-theme="dark"]) .conversionObjectiveCard,
+:global(html[data-theme="dark"]) .objectiveInfographic,
+:global(html[data-theme="dark"]) .objectiveStatusText {
+  border-color: #555852;
+  background: #393a36;
+}
+
+:global(html[data-theme="dark"]) .objectiveStatusText span {
+  color: #f1efea;
+}
+
+:global(html[data-theme="dark"]) .objectiveStatusText small {
+  color: #c5c1b9;
 }

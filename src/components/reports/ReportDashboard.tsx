@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiBarChart2, FiCheckCircle, FiFilter, FiLink, FiMousePointer, FiTarget, FiUsers } from "react-icons/fi";
 import { Campaign, CampaignConversionEvent, CampaignLink, getApiErrorMessage, listarCampanhas, listarLinksWhatsApp, WhatsAppLinkItem } from "@/lib/api";
 import { EmptyState, ReportHeader, ReportKpiCard, ReportSection, reportStyles as styles } from "./ReportsUi";
 import AffiliateLinkReport from "./AffiliateLinkReport";
+import { Timeline } from "./ClicksReport";
 
 type ReportKind = "whatsapp" | "link" | "campanha";
 const titles = {
@@ -15,6 +17,7 @@ const titles = {
 } as const;
 
 export default function ReportDashboard({ kind }: { kind: ReportKind }) {
+  const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [whatsappLinks, setWhatsappLinks] = useState<WhatsAppLinkItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +56,8 @@ export default function ReportDashboard({ kind }: { kind: ReportKind }) {
   return <main className={styles.page}><div className={styles.surface}>
     <ReportHeader title={titles[kind][0]} subtitle={titles[kind][1]} current={kind === "whatsapp" ? "WhatsApp" : kind === "link" ? "Link Individual" : "Campanha"} />
     {error && <p className={styles.error} role="alert">{error}</p>}
+    {kind === "campanha" && selectedCampaign && <ClickInsights links={selectedCampaign.links} />}
+    {kind === "link" && <ClickInsights links={campaigns.flatMap((campaign) => campaign.links)} onAffiliateClick={(id) => router.push(`/links-campanhas/relatorios/link?affiliateId=${id}`, { scroll: false })} />}
     {kind === "whatsapp" && <>
       <div className={styles.filters}><div className={styles.filterTitle}><FiFilter aria-hidden="true" /> Filtros</div>
         <label className={styles.field}>Período inicial<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label><label className={styles.field}>Período final<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
@@ -61,6 +66,7 @@ export default function ReportDashboard({ kind }: { kind: ReportKind }) {
         <Select label="Status da conversão" value={status} onChange={setStatus} options={[["CONVERTED","Convertido"],["LEAD_IDENTIFIED","Lead identificado"],["ATTENDANCE_STARTED","Atendimento iniciado"],["LOST","Perdido"]].map(([a,b]) => [a,b])} />
       </div>
       <div className={styles.kpiGrid}><ReportKpiCard label="Cliques" value={clicks.length} icon={FiMousePointer} /><ReportKpiCard label="Atendimentos WhatsApp" value={attendances} icon={FaWhatsapp} /><ReportKpiCard label="Leads identificados" value={leads} icon={FiUsers} /><ReportKpiCard label="Conversões" value={converted} icon={FiCheckCircle} /><ReportKpiCard label="Taxa de conversão" value={rate} icon={FiTarget} /></div>
+      <ClickInsights links={filteredLinks} from={from} to={to} />
       <AffiliatePerformance links={filteredLinks} />
       <LinksPerformance links={filteredLinks} linkNames={whatsappLinkNames} />
       <Customers links={filteredLinks} linkNames={whatsappLinkNames} status={status} from={from} to={to} />
@@ -75,6 +81,54 @@ function uniqueAffiliates(links: CampaignLink[]) { return [...new Map(links.filt
 function matchesDate(date: string | null, from: string, to: string) { if (!date) return false; const value = new Date(date).getTime(); return (!from || value >= new Date(`${from}T00:00:00`).getTime()) && (!to || value <= new Date(`${to}T23:59:59`).getTime()); }
 function matchesConversion(event: CampaignConversionEvent, status: string, from: string, to: string) { return (!status || event.status === status) && matchesDate(event.convertedAt, from, to); }
 function conversionRate(conversions: number, clicks: number) { return clicks ? `${((conversions / clicks) * 100).toFixed(1)}%` : "0%"; }
+
+function ClickInsights({ links, from = "", to = "", onAffiliateClick }: { links: CampaignLink[]; from?: string; to?: string; onAffiliateClick?: (id: number) => void }) {
+  const searchParams = useSearchParams();
+  const selectedAffiliateId = Number(searchParams.get("affiliateId"));
+  const queryFrom = searchParams.get("from") || from;
+  const queryTo = searchParams.get("to") || to;
+  const queryPeriod = searchParams.get("period") || "30";
+  const queryCampaignId = searchParams.get("campaignId") || "";
+  const querySearch = (searchParams.get("search") || "").toLocaleLowerCase("pt-BR");
+  const scopedLinks = links.filter((link) =>
+    (!queryCampaignId || (link as CampaignLink & { campaignId?: number }).campaignId == null || (link as CampaignLink & { campaignId?: number }).campaignId === Number(queryCampaignId)) &&
+    (!querySearch || `${link.name || ""} ${link.shortCode} ${link.affiliate?.name || ""}`.toLocaleLowerCase("pt-BR").includes(querySearch)),
+  );
+  const graphLinks = Number.isInteger(selectedAffiliateId) && selectedAffiliateId > 0
+    ? scopedLinks.filter((link) => link.affiliate?.id === selectedAffiliateId)
+    : scopedLinks;
+  const daily = new Map<string, number>();
+  graphLinks.flatMap((link) => link.clickEvents).filter((event) => matchesDate(event.clickedAt, queryFrom, queryTo)).forEach((event) => { const key = event.clickedAt.slice(0, 10); daily.set(key, (daily.get(key) || 0) + 1); });
+  const endDate = queryTo ? new Date(`${queryTo}T00:00:00`) : new Date();
+  const startDate = queryFrom ? new Date(`${queryFrom}T00:00:00`) : new Date(endDate);
+  if (!queryFrom) {
+    const days = queryPeriod === "today" ? 1 : queryPeriod === "7" ? 7 : queryPeriod === "30" ? 30 : 30;
+    startDate.setDate(endDate.getDate() - (days - 1));
+  }
+  for (const day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
+    const key = day.toISOString().slice(0, 10);
+    if (!daily.has(key)) daily.set(key, 0);
+  }
+  const timeline = [...daily.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, clicks]) => ({ date, clicks, uniqueClicks: 0, conversions: 0 }));
+  const affiliateMap = new Map<number, { id: number; name: string; photoUrl?: string | null; clicks: number }>();
+  links.forEach((link) => { if (!link.affiliate) return; const current = affiliateMap.get(link.affiliate.id) || { id: link.affiliate.id, name: link.affiliate.name, photoUrl: link.affiliate.photoUrl, clicks: 0 }; current.clicks += link.clickEvents.filter((event) => matchesDate(event.clickedAt, from, to)).length; affiliateMap.set(current.id, current); });
+  const ranking = [...affiliateMap.values()].sort((a, b) => b.clicks - a.clicks).slice(0, 5); const total = Math.max(1, timeline.reduce((sum, row) => sum + row.clicks, 0));
+  useEffect(() => {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>(`.${styles.clickInsights} .${styles.clickRanking} > div`));
+    rows.forEach((element, index) => {
+      if (!onAffiliateClick || !ranking[index]) return;
+      element.tabIndex = 0;
+      element.setAttribute("role", "button");
+      element.setAttribute("aria-label", `Filtrar por ${ranking[index].name}`);
+      const activate = () => onAffiliateClick(ranking[index].id);
+      element.addEventListener("click", activate);
+      element.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(); } });
+      (element as HTMLElement & { cleanup?: () => void }).cleanup = () => element.removeEventListener("click", activate);
+    });
+    return () => rows.forEach((element) => (element as HTMLElement & { cleanup?: () => void }).cleanup?.());
+  }, [ranking, onAffiliateClick]);
+  return <div className={styles.clickInsights}><ReportSection title="Tendência de cliques por dia"><Timeline rows={timeline} /></ReportSection><ReportSection title="Ranking de afiliados (por cliques)"><div className={styles.clickRanking}>{ranking.map((row, index) => <div key={row.id}><b>{index + 1}º</b>{row.photoUrl ? <img className={styles.clickRankingAvatar} src={row.photoUrl} alt="" /> : <span className={styles.clickRankingAvatar}>{row.name.slice(0, 1).toUpperCase()}</span>}<span>{row.name}</span><strong>{row.clicks}</strong><i style={{ width: `${(row.clicks / total) * 100}%` }} /></div>)}{!ranking.length && <EmptyState />}</div></ReportSection></div>;
+}
 
 function AffiliatePerformance({ links }: { links: CampaignLink[] }) {
   const rows = [...new Map(links.filter((l) => l.affiliate).map((l) => [l.affiliate!.id, l.affiliate!])).values()].map((affiliate) => { const own = links.filter((l) => l.affiliate?.id === affiliate.id); const events = own.flatMap((l) => l.conversionEvents); const clicks = own.reduce((sum,l) => sum + l.clicks,0); const converted = events.filter((e) => e.convertedInSgp || e.status === "CONVERTED").length; return { affiliate, own, clicks, events, converted }; });
