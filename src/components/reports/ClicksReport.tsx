@@ -571,7 +571,7 @@ export default function ClicksReport() {
                   <tr>
                     <th>Tipo</th>
                     <th>Data e hora</th>
-                    <th>Campanha</th>
+                    <th>Nome do link</th>
                     <th>Cliques</th>
                     <th>Afiliado</th>
                     <th>Cód. afiliado</th>
@@ -593,7 +593,7 @@ export default function ClicksReport() {
                     >
                       <td><LinkTypeBadge type={click.link.linkType} /></td>
                       <td>{formatDate.format(new Date(click.clickedAt))}</td>
-                      <td>{click.link.campaign?.name || "—"}</td>
+                      <td>{click.link.name?.trim() || "—"}</td>
                       <td>{click.link.clickPosition ? `${click.link.clickPosition}º` : "—"}</td>
                       <td>{click.link.affiliate?.name || "—"}</td>
                       <td>
