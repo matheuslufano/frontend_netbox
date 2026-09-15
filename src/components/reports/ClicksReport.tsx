@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   FiDownload,
@@ -18,15 +18,20 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { BsMegaphoneFill } from "react-icons/bs";
 import {
+  Campaign,
   ClickFilters,
   ClickMetrics,
   ClickRankingItem,
   ClickRecord,
   ClickTimelineItem,
+  LinkItem,
+  WhatsAppLinkItem,
   exportarCliques,
   getApiErrorMessage,
   listarAfiliados,
   listarCampanhas,
+  listarLinks,
+  listarLinksWhatsApp,
   listarCliques,
   apagarLink,
   obterClique,
@@ -34,6 +39,7 @@ import {
   obterRankingCliques,
   obterTimelineCliques,
 } from "@/lib/api";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import {
   EmptyState,
   ReportHeader,
@@ -71,8 +77,57 @@ export default function ClicksReport() {
   const [affiliates, setAffiliates] = useState<{ id: number; name: string }[]>(
     [],
   );
-  const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>(
+  const [campaigns, setCampaigns] = useState<Campaign[]>(
     [],
+  );
+  const [individualLinks, setIndividualLinks] = useState<LinkItem[]>([]);
+  const [whatsappLinks, setWhatsappLinks] = useState<WhatsAppLinkItem[]>([]);
+  const campaignOptions = useMemo(
+    () =>
+      campaigns
+        .filter(
+          (campaign) =>
+            !filters.affiliateId ||
+            campaign.links.some(
+              (link) => link.affiliate?.id === Number(filters.affiliateId),
+            ),
+        )
+        .map((campaign) => ({ id: campaign.id, name: campaign.name }))
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    [campaigns, filters.affiliateId],
+  );
+  const linkOptions = useMemo(
+    () =>
+      [
+        ...individualLinks
+          .filter(
+            (link) =>
+              !link.campaignId &&
+              !/netbox/i.test(link.originalUrl) &&
+              (!filters.affiliateId ||
+                link.affiliate?.id === Number(filters.affiliateId)),
+          )
+          .map((link) => ({
+            id: link.id,
+            name: link.name?.trim() || link.shortCode,
+          })),
+        ...whatsappLinks
+          .filter(
+            (link) =>
+              !filters.affiliateId ||
+              link.affiliate?.id === Number(filters.affiliateId),
+          )
+          .map((link) => ({
+            id: link.link.id,
+            name: link.name?.trim() || `WhatsApp - ${link.whatsappNumber}`,
+          })),
+      ]
+        .filter(
+          (link, index, options) =>
+            options.findIndex((item) => item.id === link.id) === index,
+        )
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    [filters.affiliateId, individualLinks, whatsappLinks],
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -81,6 +136,7 @@ export default function ClicksReport() {
   >(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<number | null>(null);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
 
   const request = useMemo(
     () =>
@@ -121,11 +177,37 @@ export default function ClicksReport() {
       setLoading(false);
     }
   }, [request]);
+  const refreshFromEvent = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    if (realtimeRefreshTimerRef.current !== null) {
+      window.clearTimeout(realtimeRefreshTimerRef.current);
+    }
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      void refresh();
+    }, 250);
+  }, [refresh]);
+  useRealtimeEvents(refreshFromEvent);
+  useEffect(
+    () => () => {
+      if (realtimeRefreshTimerRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
+    },
+    [],
+  );
   useEffect(() => {
-    Promise.all([listarAfiliados(), listarCampanhas()])
-      .then(([a, c]) => {
+    Promise.all([
+      listarAfiliados(),
+      listarCampanhas(),
+      listarLinks(),
+      listarLinksWhatsApp(),
+    ])
+      .then(([a, c, links, whatsapp]) => {
         setAffiliates(a.map(({ id, name }) => ({ id, name })));
-        setCampaigns(c.map(({ id, name }) => ({ id, name })));
+        setCampaigns(c);
+        setIndividualLinks(links);
+        setWhatsappLinks(whatsapp);
       })
       .catch(() => undefined);
   }, []);
@@ -134,11 +216,37 @@ export default function ClicksReport() {
     return () => window.clearTimeout(timer);
   }, [filters.search, refresh]);
   const change = (name: keyof ClickFilters, value: string | number) =>
-    setFilters((current) => ({
-      ...current,
-      [name]: value || undefined,
-      page: 1,
-    }));
+    setFilters((current) => {
+      const next = {
+        ...current,
+        [name]: value || undefined,
+        page: 1,
+      };
+
+      if (name === "affiliateId" && value && current.trackingLinkId) {
+        const linkBelongsToAffiliate = campaigns
+          .flatMap((campaign) => campaign.links || [])
+          .some(
+            (link) =>
+              String(link.id) === String(current.trackingLinkId) &&
+              link.affiliate?.id === Number(value),
+          );
+
+        if (!linkBelongsToAffiliate) next.trackingLinkId = undefined;
+      }
+
+      if (name === "affiliateId" && value && current.campaignId) {
+        const campaignBelongsToAffiliate = campaigns.some(
+          (campaign) =>
+            String(campaign.id) === String(current.campaignId) &&
+            campaign.links.some((link) => link.affiliate?.id === Number(value)),
+        );
+
+        if (!campaignBelongsToAffiliate) next.campaignId = undefined;
+      }
+
+      return next;
+    });
   const apply = () => {
     const next = new URLSearchParams(
       Object.entries(filters)
@@ -153,7 +261,25 @@ export default function ClicksReport() {
     router.replace(pathname);
   };
   const selectAffiliate = (affiliateId: number) => {
-    const nextFilters = { ...filters, affiliateId: String(affiliateId), page: 1 };
+    const linkBelongsToAffiliate = campaigns
+      .flatMap((campaign) => campaign.links || [])
+      .some(
+        (link) =>
+          String(link.id) === String(filters.trackingLinkId) &&
+          link.affiliate?.id === affiliateId,
+      );
+    const campaignBelongsToAffiliate = campaigns.some(
+      (campaign) =>
+        String(campaign.id) === String(filters.campaignId) &&
+        campaign.links.some((link) => link.affiliate?.id === affiliateId),
+    );
+    const nextFilters = {
+      ...filters,
+      affiliateId: String(affiliateId),
+      trackingLinkId: linkBelongsToAffiliate ? filters.trackingLinkId : undefined,
+      campaignId: campaignBelongsToAffiliate ? filters.campaignId : undefined,
+      page: 1,
+    };
     setFilters(nextFilters);
     const next = new URLSearchParams(Object.entries(nextFilters).filter(([, value]) => value !== "" && value !== undefined).map(([key, value]) => [key, String(value)]));
     router.replace(`${pathname}?${next.toString()}`);
@@ -258,18 +384,6 @@ export default function ClicksReport() {
               onChange={(e) => change("endDate", e.target.value)}
             />
           </label>
-          <Select
-            label="Afiliado"
-            value={filters.affiliateId || ""}
-            onChange={(value) => change("affiliateId", value)}
-            options={affiliates}
-          />
-          <Select
-            label="Campanha"
-            value={filters.campaignId || ""}
-            onChange={(value) => change("campaignId", value)}
-            options={campaigns}
-          />
           <Select
             label="Status"
             value={filters.status || ""}
@@ -408,7 +522,7 @@ export default function ClicksReport() {
           </ReportSection>
         </div>
         <ReportSection
-          title={`Cliques — ${formatNumber.format(pagination.total)} registros encontrados`}
+          title={`Lista de cliques dos últimos (${formatNumber.format(pagination.total)}) registros encontrados:`}
         >
           <div className={styles.clickTableTools}>
             <input
@@ -416,6 +530,24 @@ export default function ClicksReport() {
               onChange={(event) => change("search", event.target.value)}
               placeholder="Buscar por ID, afiliado, link, campanha..."
               aria-label="Buscar cliques"
+            />
+            <Select
+              label="Nome do afiliado"
+              value={filters.affiliateId || ""}
+              onChange={(value) => change("affiliateId", value)}
+              options={affiliates}
+            />
+            <Select
+              label="Nome do link"
+              value={filters.trackingLinkId || ""}
+              onChange={(value) => change("trackingLinkId", value)}
+              options={linkOptions}
+            />
+            <Select
+              label="Campanha"
+              value={filters.campaignId || ""}
+              onChange={(value) => change("campaignId", value)}
+              options={campaignOptions}
             />
             <button type="button" className={styles.columnsButton}>
               ▥ Colunas
@@ -439,11 +571,11 @@ export default function ClicksReport() {
                   <tr>
                     <th>Tipo</th>
                     <th>Data e hora</th>
+                    <th>Campanha</th>
+                    <th>Cliques</th>
                     <th>Afiliado</th>
                     <th>Cód. afiliado</th>
-                    <th>Nome do link</th>
                     <th>Destino</th>
-                    <th>Campanha</th>
                     <th>Origem</th>
                     <th>Medium</th>
                     <th>Ações</th>
@@ -461,19 +593,19 @@ export default function ClicksReport() {
                     >
                       <td><LinkTypeBadge type={click.link.linkType} /></td>
                       <td>{formatDate.format(new Date(click.clickedAt))}</td>
+                      <td>{click.link.campaign?.name || "—"}</td>
+                      <td>{click.link.clickPosition ? `${click.link.clickPosition}º` : "—"}</td>
                       <td>{click.link.affiliate?.name || "—"}</td>
                       <td>
                         {click.link.affiliate
                           ? `AFI${String(click.link.affiliate.id).padStart(3, "0")}`
                           : "—"}
                       </td>
-                      <td>{click.link.name || click.link.shortCode}</td>
                       <td
                         title={click.destinationUrl || click.link.originalUrl}
                       >
-                        {click.destinationUrl || click.link.originalUrl}
+                        {formatDestination(click.destinationUrl || click.link.originalUrl)}
                       </td>
-                      <td>{click.link.campaign?.name || "—"}</td>
                       <td>{click.source || "Direto"}</td>
                       <td>{click.utmMedium || "—"}</td>
                       <td className={styles.linkActions} onClick={(event) => event.stopPropagation()}>
@@ -530,6 +662,42 @@ function LinkTypeBadge({ type }: { type: ClickRecord["link"]["linkType"] }) {
         : { label: "Individual", Icon: FiLink };
   const Icon = meta.Icon;
   return <span className={`${styles.linkTypeBadge} ${styles[`linkTypeBadge${type.charAt(0).toUpperCase()}${type.slice(1)}`]}`} title={meta.label} aria-label={meta.label}><Icon aria-hidden="true" /></span>;
+}
+
+function formatDestination(destination: string | null | undefined) {
+  const value = destination?.trim();
+  if (!value) return "—";
+
+  const phone = getWhatsAppPhone(value);
+  return phone || value;
+}
+
+function getWhatsAppPhone(destination: string) {
+  if (!/whatsapp\.com|wa\.me/i.test(destination)) return null;
+
+  let rawPhone = "";
+  try {
+    const url = new URL(destination);
+    rawPhone = url.searchParams.get("phone") || "";
+    if (!rawPhone && /(^|\.)wa\.me$/i.test(url.hostname)) {
+      rawPhone = url.pathname.split("/").filter(Boolean)[0] || "";
+    }
+  } catch {
+    rawPhone = destination.match(/(?:phone=|wa\.me\/)([^&?#]+)/i)?.[1] || "";
+  }
+
+  const digits = decodeURIComponent(rawPhone).replace(/\D/g, "");
+  if (!digits) return null;
+
+  const national = digits.startsWith("55") && [12, 13].includes(digits.length)
+    ? digits.slice(2)
+    : digits;
+  if (![10, 11].includes(national.length)) return digits;
+
+  const area = national.slice(0, 2);
+  const subscriber = national.slice(2);
+  const split = national.length === 11 ? 5 : 4;
+  return `(${area}) ${subscriber.slice(0, split)}-${subscriber.slice(split)}`;
 }
 
 function Select({

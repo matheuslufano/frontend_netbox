@@ -18,6 +18,7 @@ import {
   listarCidadesTocantins,
   obterRankingCliques,
 } from "@/lib/api";
+import { notify } from "@/lib/notifications/notify";
 
 type PhotoCrop = { target: "new" | "edit"; source: string; imageWidth: number; imageHeight: number; zoom: number; offsetX: number; offsetY: number };
 
@@ -318,18 +319,32 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
 
     setDeletingId(affiliate.id);
     try {
-      const result = await apagarAfiliado(affiliate.id);
-      setAffiliates((current) => result.archived
-        ? current.map((item) => item.id === affiliate.id ? { ...item, active: false } : item)
-        : current.filter((item) => item.id !== affiliate.id));
+      const result = await apagarAfiliado(affiliate.id, { notify: false });
+      setAffiliates((current) => current.filter((item) => item.id !== affiliate.id));
 
       if (editingId === affiliate.id) {
         handleCancelEdit();
       }
 
-      setMessage(result.archived ? "Afiliado arquivado: o histórico vinculado foi preservado." : "Afiliado apagado com sucesso.");
+      const deleteMessage = result.archived
+        ? "O afiliado foi arquivado e o histórico vinculado foi preservado."
+        : "O afiliado foi removido do banco de dados.";
+      setMessage(deleteMessage);
+      notify.success({
+        title: result.archived ? "Afiliado arquivado" : "Afiliado removido",
+        message: deleteMessage,
+        context: "affiliate-deleted",
+        source: "ui",
+      });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Não foi possível apagar o afiliado."));
+      const deleteError = getApiErrorMessage(err, "Não foi possível apagar o afiliado.");
+      setError(deleteError);
+      notify.error({
+        title: "Falha ao apagar afiliado",
+        message: deleteError,
+        context: "generic",
+        source: "ui",
+      });
       await refreshAffiliates();
     } finally {
       setDeletingId(null);

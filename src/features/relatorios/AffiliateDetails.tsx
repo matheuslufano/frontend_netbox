@@ -706,7 +706,14 @@ function ClickPerformanceChart({
   const yTicks = Array.from({ length: 5 }, (_, index) => (displayMaxClicks / 4) * (4 - index));
   const linePoints = dailyClicks.map((clicks, index) => `${xForDay(index)},${yForClicks(clicks)}`).join(" ");
   const areaPoints = `0,${chartBottom} ${linePoints} 100,${chartBottom}`;
-  const visibleDateIndexes = days.map((_, index) => index).filter((index) => index % 2 === 0 || index === days.length - 1);
+  const lastDateIndex = days.length - 1;
+  const visibleDateIndexes = days
+    .map((_, index) => index)
+    .filter(
+      (index) =>
+        index === lastDateIndex ||
+        (index % 2 === 0 && index !== lastDateIndex - 1)
+    );
 
   return (
     <section className={`${reportStyles.dataSection} ${styles.clickPerformanceSection}`} aria-label="Desempenho dos cliques">

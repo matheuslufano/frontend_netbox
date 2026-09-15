@@ -237,12 +237,13 @@
 }
 .clickTableTools {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
-  gap: 10px;
+  gap: 8px;
   margin: 0 0 12px;
 }
 .clickTableTools > input {
-  flex: 1;
+  flex: 1 1 220px;
 }
 .clicksTable tbody tr {
   cursor: pointer;
@@ -1487,11 +1488,26 @@
   padding: 14px;
 }
 .clickTableTools > input {
-  max-width: 365px;
+  max-width: 300px;
   height: 31px;
 }
 .clickTableTools label {
-  display: none;
+  display: grid;
+  width: 138px;
+  min-width: 0;
+  flex: 0 1 138px;
+  gap: 4px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+}
+.clickTableTools select {
+  width: 100%;
+  min-width: 0;
+  height: 31px;
+  padding: 0 8px;
+  color: #475569;
+  font-size: 12px;
 }
 .clicksTable {
   min-width: 980px;

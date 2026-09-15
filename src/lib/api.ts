@@ -256,6 +256,7 @@ export type CreateLinkResponse = {
 export type LinkItem = {
   id: number;
   name: string | null;
+  campaignId?: number | null;
   originalUrl: string;
   shortCode: string;
   promoLink: string;
@@ -749,7 +750,7 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
 }
 
 export type ClickFilters = { page?: number; limit?: number; startDate?: string; endDate?: string; affiliateId?: string; campaignId?: string; trackingLinkId?: string; status?: string; source?: string; utmMedium?: string; deviceType?: string; geoCity?: string; search?: string; sort?: string; order?: string };
-export type ClickRecord = { id: number; clickCode: string; clickedAt: string; source: string | null; utmSource: string | null; utmMedium: string | null; utmCampaign: string | null; deviceType: string | null; geoCity: string | null; geoRegion: string | null; isValid: boolean; isSuspectedBot: boolean; isUnique: boolean; destinationUrl: string | null; referrer: string | null; status: string; link: { id: number; name: string | null; shortCode: string; originalUrl: string; promoLink: string; linkType: LinkType; affiliate: { id: number; name: string; photoUrl: string | null } | null; campaign: { id: number; name: string } | null }; conversions: { id: number; visitorName: string | null; visitorPhone: string | null; convertedAt: string; type: string }[] };
+export type ClickRecord = { id: number; clickCode: string; clickedAt: string; source: string | null; utmSource: string | null; utmMedium: string | null; utmCampaign: string | null; deviceType: string | null; geoCity: string | null; geoRegion: string | null; isValid: boolean; isSuspectedBot: boolean; isUnique: boolean; destinationUrl: string | null; referrer: string | null; status: string; link: { id: number; name: string | null; shortCode: string; promoLink: string; originalUrl: string; clickPosition?: number | null; linkType: LinkType; affiliate: { id: number; name: string; photoUrl: string | null } | null; campaign: { id: number; name: string } | null }; conversions: { id: number; visitorName: string | null; visitorPhone: string | null; convertedAt: string; type: string }[] };
 export type ClickMetrics = { totalClicks: number; uniqueClicks: number; activeLinks: number; totalLinks: number; affiliatesWithClicks: number; validClicks: number; conversionRate: number; conversions: number; whatsappClicks: number; whatsappPercentage: number; previousPeriodComparison: number | null };
 export type ClickTimelineItem = { date: string; clicks: number; uniqueClicks: number; conversions: number };
 export type ClickRankingItem = { affiliateId: number; affiliateName: string; avatar: string | null; clicks: number; uniqueClicks: number; leads: number; conversions: number; conversionRate: number; percentage: number };
@@ -789,8 +790,10 @@ export async function editarAfiliado(
   };
 }
 
-export async function apagarAfiliado(id: number) {
-  const { data } = await api.delete<{ message: string; archived?: boolean }>(`/affiliate/${id}`);
+export async function apagarAfiliado(id: number, options?: { notify?: boolean }) {
+  const { data } = await api.delete<{ message: string; archived?: boolean }>(`/affiliate/${id}`, {
+    skipSystemNotification: options?.notify === false,
+  } as Parameters<typeof api.delete>[1] & { skipSystemNotification: boolean });
   return data;
 }
 

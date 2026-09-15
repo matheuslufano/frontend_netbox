@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiBarChart2, FiCheckCircle, FiFilter, FiLink, FiMousePointer, FiTarget, FiUsers } from "react-icons/fi";
@@ -8,6 +8,7 @@ import { Campaign, CampaignConversionEvent, CampaignLink, getApiErrorMessage, li
 import { EmptyState, ReportHeader, ReportKpiCard, ReportSection, reportStyles as styles } from "./ReportsUi";
 import AffiliateLinkReport from "./AffiliateLinkReport";
 import { Timeline } from "./ClicksReport";
+import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 
 type ReportKind = "whatsapp" | "link" | "campanha";
 const titles = {
@@ -28,13 +29,35 @@ export default function ReportDashboard({ kind }: { kind: ReportKind }) {
   const [status, setStatus] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [realtimeRefreshToken, setRealtimeRefreshToken] = useState(0);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
+
+  const refreshFromEvent = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    if (realtimeRefreshTimerRef.current !== null) {
+      window.clearTimeout(realtimeRefreshTimerRef.current);
+    }
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      setRealtimeRefreshToken((current) => current + 1);
+    }, 250);
+  }, []);
+  useRealtimeEvents(refreshFromEvent);
+  useEffect(
+    () => () => {
+      if (realtimeRefreshTimerRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     Promise.all([listarCampanhas(), kind === "whatsapp" ? listarLinksWhatsApp() : Promise.resolve([])])
       .then(([campaignData, whatsappLinkData]) => { setCampaigns(campaignData); setWhatsappLinks(whatsappLinkData); setError(""); })
       .catch((reason) => setError(getApiErrorMessage(reason, "Não foi possível carregar os dados dos relatórios.")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [kind, realtimeRefreshToken]);
 
   const selectedCampaign = campaigns.find((item) => String(item.id) === campaignId);
   const allCampaignLinks = selectedCampaign ? selectedCampaign.links : campaigns.flatMap((item) => item.links);

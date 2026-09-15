@@ -908,6 +908,20 @@ function createDealFromBackend(record: BackendCrmDeal): Deal {
   };
 }
 
+function hasIdentifiedContactNumber(value: string) {
+  const phone = value.replace(/\D/g, "");
+  return /^\d{10,15}$/.test(phone);
+}
+
+function isInvalidAutomaticDeal(deal: Deal) {
+  const automaticChatmixDeal = Boolean(deal.chatmixId) ||
+    /chatmix|atendimento.*chatmix/i.test(`${deal.source} ${deal.notes}`);
+  const conversionWithoutContact = Boolean(deal.conversionId) &&
+    !hasIdentifiedContactNumber(deal.phone);
+  return (automaticChatmixDeal || conversionWithoutContact) &&
+    !hasIdentifiedContactNumber(deal.phone);
+}
+
 function createBackendDealPayload(deal: Deal) {
   return {
     customerName: deal.customerName,
@@ -1372,7 +1386,9 @@ export default function Crm() {
         );
         const wasCrmLoaded = initialCrmLoadedRef.current;
         const mappedDeals = mergeLocalDealEdits(
-          crmData.deals.map(createDealFromBackend),
+          crmData.deals
+            .map(createDealFromBackend)
+            .filter((deal) => !isInvalidAutomaticDeal(deal)),
         );
         const newlyDiscoveredDeals = mappedDeals.filter(
           (deal) => !knownCrmDealIdsRef.current.has(deal.id),
