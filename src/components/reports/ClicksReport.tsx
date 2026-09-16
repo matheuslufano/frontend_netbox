@@ -785,6 +785,7 @@ function Select({
   );
 }
 export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
+  const [activePoint, setActivePoint] = useState<ClickTimelineItem & { x: number; y: number } | null>(null);
   if (!rows.length) return <EmptyState />;
   const width = 760;
   const height = 180;
@@ -797,6 +798,16 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
   }));
   const line = points.map((point) => `${point.x},${point.y}`).join(" ");
   const area = `${padding},${height - padding} ${line} ${width - padding},${height - padding}`;
+  const tooltipWidth = 148;
+  const tooltipHeight = 57;
+  const tooltipX = activePoint
+    ? Math.min(Math.max(activePoint.x - tooltipWidth / 2, 4), width - tooltipWidth - 4)
+    : 0;
+  const tooltipY = activePoint
+    ? activePoint.y > tooltipHeight + 12
+      ? activePoint.y - tooltipHeight - 10
+      : activePoint.y + 10
+    : 0;
   return (
     <div className={styles.clickTimelineLine}>
       <div className={styles.chartYAxis} aria-hidden="true">
@@ -823,16 +834,42 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
         <polygon points={area} className={styles.chartArea} />
         <polyline points={line} className={styles.chartLine} />
         {points.map((point) => (
-          <circle
+          <g
             key={point.date}
-            cx={point.x}
-            cy={point.y}
-            r="3"
-            className={styles.chartPoint}
+            className={styles.chartPointGroup}
+            tabIndex={0}
+            role="img"
+            aria-label={`${formatTimelineDate(point.date)}: ${point.clicks} cliques, ${point.uniqueClicks} únicos e ${point.conversions} conversões`}
+            onMouseEnter={() => setActivePoint(point)}
+            onMouseLeave={() => setActivePoint(null)}
+            onFocus={() => setActivePoint(point)}
+            onBlur={() => setActivePoint(null)}
           >
-            <title>{`${point.date}: ${point.clicks} cliques`}</title>
-          </circle>
+            <circle cx={point.x} cy={point.y} r="9" className={styles.chartPointHitArea} />
+            <circle cx={point.x} cy={point.y} r="3" className={styles.chartPoint} />
+          </g>
         ))}
+        {activePoint && (
+          <g className={styles.chartTooltip} pointerEvents="none">
+            <rect
+              x={tooltipX}
+              y={tooltipY}
+              width={tooltipWidth}
+              height={tooltipHeight}
+              rx="6"
+              className={styles.chartTooltipBox}
+            />
+            <text x={tooltipX + 10} y={tooltipY + 16} className={styles.chartTooltipTitle}>
+              {formatTimelineDate(activePoint.date)}
+            </text>
+            <text x={tooltipX + 10} y={tooltipY + 32} className={styles.chartTooltipText}>
+              {`${activePoint.clicks} cliques · ${activePoint.uniqueClicks} únicos`}
+            </text>
+            <text x={tooltipX + 10} y={tooltipY + 47} className={styles.chartTooltipText}>
+              {`${activePoint.conversions} conversões`}
+            </text>
+          </g>
+        )}
       </svg>
       <div className={styles.chartLabels}>
         {points
@@ -848,6 +885,16 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
       </div>
     </div>
   );
+}
+
+function formatTimelineDate(value: string) {
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 function ClickDrawer({
   click,

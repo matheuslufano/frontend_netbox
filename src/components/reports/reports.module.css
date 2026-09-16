@@ -1701,6 +1701,31 @@
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
+.chartPointGroup {
+  cursor: pointer;
+  outline: none;
+}
+.chartPointGroup:focus .chartPoint {
+  fill: #f36516;
+}
+.chartPointHitArea {
+  fill: transparent;
+}
+.chartTooltipBox {
+  fill: #10223d;
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.chartTooltipTitle {
+  fill: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+.chartTooltipText {
+  fill: #dce8f7;
+  font-size: 9px;
+}
 .chartLabels {
   position: absolute;
   right: 4px;
