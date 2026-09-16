@@ -198,7 +198,11 @@ export default function WhatsAppLinkPage() {
     }
   }
 
-  function tablePayload(item: WhatsAppLinkItem, draft: WhatsAppLinkDraft) {
+  function tablePayload(
+    item: WhatsAppLinkItem,
+    draft: WhatsAppLinkDraft,
+    forceNewCode = false,
+  ) {
     if (!draft.name.trim()) throw new Error("Informe um nome para o link.");
     if (!draft.affiliateId) throw new Error("Selecione o afiliado responsável.");
     if (!isValidWhatsAppNumber(draft.whatsappNumber))
@@ -209,7 +213,7 @@ export default function WhatsAppLinkPage() {
       name: draft.name.trim(),
       campaignId: item.campaignId,
       affiliateId: draft.affiliateId,
-      ...(draft.affiliateId === item.affiliateId
+      ...(!forceNewCode && draft.affiliateId === item.affiliateId
         ? { affiliateCodeId: item.affiliateCodeId }
         : { generateNewCode: true }),
       whatsappNumber: normalizeBrazilianPhone(draft.whatsappNumber),
@@ -232,7 +236,7 @@ export default function WhatsAppLinkPage() {
 
   async function saveTableDuplicate(item: WhatsAppLinkItem, draft: WhatsAppLinkDraft) {
     try {
-      await criarLinkWhatsApp(tablePayload(item, draft));
+      await criarLinkWhatsApp(tablePayload(item, draft, true));
       await loadItems();
       setError("");
       setNotice("Cópia do link criada com sucesso.");
