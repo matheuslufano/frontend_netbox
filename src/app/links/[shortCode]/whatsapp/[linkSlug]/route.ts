@@ -7,9 +7,9 @@ const fallbackBackendUrl =
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ shortCode: string }> },
+  context: { params: Promise<{ shortCode: string; linkSlug: string }> },
 ) {
-  const { shortCode } = await context.params;
+  const { shortCode, linkSlug } = await context.params;
   const backendUrl = String(
     process.env.BACKEND_URL ||
       process.env.BACKEND_API_URL ||
@@ -17,7 +17,7 @@ export async function GET(
       fallbackBackendUrl,
   ).replace(/\/+$/, "");
   const destination = new URL(
-    `${backendUrl}/links/${encodeURIComponent(shortCode)}/whatsapp`,
+    `${backendUrl}/links/${encodeURIComponent(shortCode)}/whatsapp/${encodeURIComponent(linkSlug)}`,
   );
   request.nextUrl.searchParams.forEach((value, key) =>
     destination.searchParams.append(key, value),
@@ -26,7 +26,7 @@ export async function GET(
   const response = await fetch(destination, {
     headers: {
       "user-agent": request.headers.get("user-agent") || "",
-      "referer": request.headers.get("referer") || "",
+      referer: request.headers.get("referer") || "",
       "x-forwarded-for": request.headers.get("x-forwarded-for") || "",
       "x-forwarded-proto": "https",
     },
