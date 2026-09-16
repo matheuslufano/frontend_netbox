@@ -1008,12 +1008,8 @@ function AffiliateShowcaseLink({
   onSelectPerformance: () => void;
 }) {
   const isWhatsAppLink = link.linkType === "whatsapp";
-  const hasClientData = (link.conversionEvents ?? []).some((conversion) =>
-    Boolean(
-      conversion.visitorPhone &&
-      conversion.visitorName &&
-      !normalizeText(conversion.visitorName).includes("cliente nao identificado"),
-    ),
+  const hasClientData = (link.conversionEvents ?? []).some(
+    hasIdentifiedClientConversion,
   );
   const hasConversions = isWhatsAppLink
     ? hasClientData
@@ -3174,11 +3170,13 @@ function useConversionEvents(details: AffiliateDetail[]) {
     () =>
       details
         .flatMap((affiliate) =>
-          (affiliate.conversionEvents ?? []).map((conversion) => ({
-            ...conversion,
-            affiliate: affiliate.affiliate,
-            affiliateId: affiliate.affiliateId,
-          })),
+          (affiliate.conversionEvents ?? [])
+            .filter(hasIdentifiedClientConversion)
+            .map((conversion) => ({
+              ...conversion,
+              affiliate: affiliate.affiliate,
+              affiliateId: affiliate.affiliateId,
+            })),
         )
         .sort(
           (a, b) =>
@@ -3186,6 +3184,23 @@ function useConversionEvents(details: AffiliateDetail[]) {
             new Date(a.convertedAt).getTime(),
         ),
     [details],
+  );
+}
+
+function hasIdentifiedClientConversion(conversion: AffiliateConversion) {
+  const normalizedName = normalizeText(conversion.visitorName);
+  const isPlaceholderName = new Set([
+    "cliente sem nome",
+    "cliente nao identificado",
+    "nao informado",
+    "nao identificado",
+    "unknown",
+  ]).has(normalizedName);
+
+  return Boolean(
+    conversion.visitorName?.trim() &&
+    !isPlaceholderName &&
+    conversion.visitorPhone?.replace(/\D/g, ""),
   );
 }
 
