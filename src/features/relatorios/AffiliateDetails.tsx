@@ -1010,10 +1010,9 @@ function AffiliateShowcaseLink({
   const isWhatsAppLink = link.linkType === "whatsapp";
   const hasClientData = (link.conversionEvents ?? []).some((conversion) =>
     Boolean(
-      conversion.customerPhone ||
-      conversion.customerDocument ||
-      (conversion.customerName &&
-        !normalizeText(conversion.customerName).includes("cliente nao identificado")),
+      conversion.visitorPhone &&
+      conversion.visitorName &&
+      !normalizeText(conversion.visitorName).includes("cliente nao identificado"),
     ),
   );
   const hasConversions = isWhatsAppLink
