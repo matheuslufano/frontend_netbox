@@ -37,7 +37,6 @@ export type DashboardData = {
   totalAffiliates: number;
   totalLinks: number;
   totalClicks: number;
-  totalAttendances: number;
   totalConversions: number;
   topAffiliates: {
     id: number;
@@ -178,6 +177,7 @@ export type AffiliateStats = {
   photoUrl: string | null;
   totalLinks: number;
   totalClicks: number;
+  totalAttendances: number;
   totalConversions: number;
   totalContacts: number;
   contacts: AffiliateContact[];
