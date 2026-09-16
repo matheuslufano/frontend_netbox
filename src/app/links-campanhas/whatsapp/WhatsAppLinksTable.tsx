@@ -19,6 +19,7 @@ export type WhatsAppLinkDraft = {
 
 type EditorMode = "edit" | "duplicate" | "delete";
 type ActiveEditor = { item: WhatsAppLinkItem; mode: EditorMode; anchor: HTMLButtonElement };
+export type WhatsAppLinkPreviewState = { item: WhatsAppLinkItem; rect: DOMRect };
 
 type Props = {
   items: WhatsAppLinkItem[];
@@ -42,6 +43,25 @@ function createDraft(item: WhatsAppLinkItem, duplicate: boolean): WhatsAppLinkDr
 
 export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSaveDuplicate, onDelete, onCopy }: Props) {
   const [activeEditor, setActiveEditor] = useState<ActiveEditor | null>(null);
+  const [preview, setPreview] = useState<WhatsAppLinkPreviewState | null>(null);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function cancelPreviewClose() {
+    if (previewTimer.current) {
+      clearTimeout(previewTimer.current);
+      previewTimer.current = null;
+    }
+  }
+
+  function closePreviewSoon() {
+    cancelPreviewClose();
+    previewTimer.current = setTimeout(() => setPreview(null), 140);
+  }
+
+  function showPreview(item: WhatsAppLinkItem, element: HTMLElement) {
+    cancelPreviewClose();
+    setPreview({ item, rect: element.getBoundingClientRect() });
+  }
 
   function openEditor(item: WhatsAppLinkItem, mode: EditorMode, anchor: HTMLButtonElement) {
     setActiveEditor((current) => current?.item.id === item.id && current.mode === mode ? null : { item, mode, anchor });
@@ -65,7 +85,17 @@ export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSa
             <tbody>
               {items.map((item) => (
                 <tr key={item.id}>
-                  <td><strong>{item.name}</strong></td>
+                  <td
+                    className={styles.linkNameCell}
+                    onMouseEnter={(event) => showPreview(item, event.currentTarget)}
+                    onMouseLeave={closePreviewSoon}
+                    onFocus={(event) => showPreview(item, event.currentTarget)}
+                    onBlur={closePreviewSoon}
+                  >
+                    <button type="button" className={styles.linkNameTrigger} aria-label={`Ver detalhes de ${item.name}`}>
+                      <strong>{item.name}</strong>
+                    </button>
+                  </td>
                   <td><strong>{item.affiliate.name}</strong><small>{item.affiliateCode}</small></td>
                   <td className={styles.messageCell}>{item.finalMessage}</td>
                   <td>{item.whatsappNumber}</td>
@@ -89,7 +119,54 @@ export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSa
       {activeEditor && (
         <ActionPopover key={`${activeEditor.item.id}-${activeEditor.mode}`} active={activeEditor} affiliates={affiliates} onClose={() => setActiveEditor(null)} onSaveEdit={onSaveEdit} onSaveDuplicate={onSaveDuplicate} onDelete={onDelete} />
       )}
+      {preview && (
+        <WhatsAppLinkPreview
+          preview={preview}
+          onMouseEnter={cancelPreviewClose}
+          onMouseLeave={closePreviewSoon}
+        />
+      )}
     </section>
+  );
+}
+
+export function WhatsAppLinkPreview({ preview, onMouseEnter, onMouseLeave }: {
+  preview: WhatsAppLinkPreviewState;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}) {
+  const width = 330;
+  const gap = 10;
+  const left = Math.min(
+    Math.max(12, preview.rect.left),
+    window.innerWidth - width - 12,
+  );
+  const estimatedHeight = 240;
+  const top = preview.rect.bottom + gap + estimatedHeight <= window.innerHeight
+    ? preview.rect.bottom + gap
+    : Math.max(12, preview.rect.top - estimatedHeight - gap);
+  const createdAt = new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(preview.item.createdAt));
+
+  return createPortal(
+    <aside
+      className={styles.linkPreview}
+      style={{ top, left, width }}
+      role="tooltip"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <span className={styles.linkPreviewEyebrow}>Detalhes do link WhatsApp</span>
+      <strong className={styles.linkPreviewTitle}>{preview.item.name}</strong>
+      <p className={styles.linkPreviewMessage}>{preview.item.finalMessage || "Sem mensagem configurada."}</p>
+      <dl className={styles.linkPreviewMeta}>
+        <div><dt>Criado em</dt><dd>{createdAt}</dd></div>
+        <div><dt>Responsável</dt><dd>{preview.item.createdBy?.name || "Não informado"}</dd></div>
+      </dl>
+    </aside>,
+    document.body,
   );
 }
 

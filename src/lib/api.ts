@@ -37,6 +37,7 @@ export type DashboardData = {
   totalAffiliates: number;
   totalLinks: number;
   totalClicks: number;
+  totalAttendances: number;
   totalConversions: number;
   topAffiliates: {
     id: number;
@@ -187,6 +188,7 @@ export type AffiliateStats = {
     shortCode: string;
     originalUrl: string;
     clicks: number;
+    attendances?: number;
     conversions: number;
     promoLink: string;
     whatsappLink: string;

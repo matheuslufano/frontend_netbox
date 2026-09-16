@@ -848,7 +848,7 @@ function AffiliateDetailedCard({
           </div>
           <div>
             <strong>Atendimentos</strong>
-            <span>{block.totalConversions ?? 0}</span>
+            <span>{block.totalAttendances ?? block.totalConversions ?? 0}</span>
           </div>
           <div>
             <strong>Clientes</strong>
@@ -1007,7 +1007,21 @@ function AffiliateShowcaseLink({
   selectedForPerformance: boolean;
   onSelectPerformance: () => void;
 }) {
-  const hasConversions = (link.conversions ?? 0) > 0;
+  const isWhatsAppLink = link.linkType === "whatsapp";
+  const hasClientData = (link.conversionEvents ?? []).some((conversion) =>
+    Boolean(
+      conversion.customerPhone ||
+      conversion.customerDocument ||
+      (conversion.customerName &&
+        !normalizeText(conversion.customerName).includes("cliente nao identificado")),
+    ),
+  );
+  const hasConversions = isWhatsAppLink
+    ? hasClientData
+    : (link.conversions ?? 0) > 0;
+  const hasEvents = isWhatsAppLink
+    ? (link.attendances ?? link.conversions ?? 0) > 0
+    : (link.conversions ?? 0) > 0;
   const typeMeta = link.linkType === "whatsapp"
     ? { label: "Link do WhatsApp", Icon: FiMessageCircle, className: styles.showcaseLinkTypeWhatsapp }
     : link.linkType === "campaign"
@@ -1054,7 +1068,7 @@ function AffiliateShowcaseLink({
         <span>
           Cliques: <strong>{link.clicks}</strong>
         </span>
-        {hasConversions ? (
+        {hasEvents ? (
           <button
             type="button"
             className={cx(
@@ -1067,11 +1081,11 @@ function AffiliateShowcaseLink({
             }`}
             title="Ver fluxograma e dados coletados"
           >
-            Conversões: <strong>{link.conversions ?? 0}</strong>
+            {isWhatsAppLink ? "Atendimentos" : "Conversões"}: <strong>{isWhatsAppLink ? (link.attendances ?? link.conversions ?? 0) : (link.conversions ?? 0)}</strong>
           </button>
         ) : (
           <span>
-            Conversões: <strong>0</strong>
+            {isWhatsAppLink ? "Atendimentos" : "Conversões"}: <strong>0</strong>
           </span>
         )}
       </div>

@@ -782,6 +782,14 @@
 .linkTypeBadgeOfficial { background: #dbeafe; color: #1d4ed8; }
 .linkTypeBadgeWhatsapp { background: #dcfce7; color: #15803d; }
 .linkActions { min-width: 190px; white-space: nowrap; }
+
+.whatsappPreviewCell {
+  cursor: help;
+}
+
+.whatsappPreviewCell:hover {
+  color: #087f5b;
+}
 .linkActions button {
   display: inline-grid;
   width: 30px;

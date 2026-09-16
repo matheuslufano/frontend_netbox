@@ -41,6 +41,10 @@ import {
 } from "@/lib/api";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
 import {
+  WhatsAppLinkPreview,
+  WhatsAppLinkPreviewState,
+} from "@/app/links-campanhas/whatsapp/WhatsAppLinksTable";
+import {
   EmptyState,
   ReportHeader,
   ReportKpiCard,
@@ -136,7 +140,29 @@ export default function ClicksReport() {
   >(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<number | null>(null);
+  const [whatsappPreview, setWhatsappPreview] = useState<WhatsAppLinkPreviewState | null>(null);
+  const whatsappPreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const realtimeRefreshTimerRef = useRef<number | null>(null);
+
+  const whatsappLinksByLinkId = useMemo(
+    () => new Map(whatsappLinks.map((item) => [item.link.id, item])),
+    [whatsappLinks],
+  );
+
+  const cancelWhatsappPreviewClose = () => {
+    if (whatsappPreviewTimerRef.current) {
+      clearTimeout(whatsappPreviewTimerRef.current);
+      whatsappPreviewTimerRef.current = null;
+    }
+  };
+  const closeWhatsappPreviewSoon = () => {
+    cancelWhatsappPreviewClose();
+    whatsappPreviewTimerRef.current = setTimeout(() => setWhatsappPreview(null), 140);
+  };
+  const showWhatsappPreview = (item: WhatsAppLinkItem, element: HTMLElement) => {
+    cancelWhatsappPreviewClose();
+    setWhatsappPreview({ item, rect: element.getBoundingClientRect() });
+  };
 
   const request = useMemo(
     () =>
@@ -593,7 +619,21 @@ export default function ClicksReport() {
                     >
                       <td><LinkTypeBadge type={click.link.linkType} /></td>
                       <td>{formatDate.format(new Date(click.clickedAt))}</td>
-                      <td>{click.link.name?.trim() || "—"}</td>
+                      <td
+                        className={whatsappLinksByLinkId.has(click.link.id) ? styles.whatsappPreviewCell : undefined}
+                        onMouseEnter={(event) => {
+                          const whatsappLink = whatsappLinksByLinkId.get(click.link.id);
+                          if (whatsappLink) showWhatsappPreview(whatsappLink, event.currentTarget);
+                        }}
+                        onMouseLeave={whatsappLinksByLinkId.has(click.link.id) ? closeWhatsappPreviewSoon : undefined}
+                        onFocus={(event) => {
+                          const whatsappLink = whatsappLinksByLinkId.get(click.link.id);
+                          if (whatsappLink) showWhatsappPreview(whatsappLink, event.currentTarget);
+                        }}
+                        onBlur={whatsappLinksByLinkId.has(click.link.id) ? closeWhatsappPreviewSoon : undefined}
+                      >
+                        {displayClickLinkName(click, whatsappLinksByLinkId.get(click.link.id))}
+                      </td>
                       <td>{click.link.clickPosition ? `${click.link.clickPosition}º` : "—"}</td>
                       <td>{click.link.affiliate?.name || "—"}</td>
                       <td>
@@ -640,6 +680,13 @@ export default function ClicksReport() {
             </button>
           </div>
         </ReportSection>
+        {whatsappPreview && (
+          <WhatsAppLinkPreview
+            preview={whatsappPreview}
+            onMouseEnter={cancelWhatsappPreviewClose}
+            onMouseLeave={closeWhatsappPreviewSoon}
+          />
+        )}
         {selected && (
           <ClickDrawer
             click={selected}
@@ -698,6 +745,18 @@ function getWhatsAppPhone(destination: string) {
   const subscriber = national.slice(2);
   const split = national.length === 11 ? 5 : 4;
   return `(${area}) ${subscriber.slice(0, split)}-${subscriber.slice(split)}`;
+}
+
+function displayClickLinkName(click: ClickRecord, whatsappLink?: WhatsAppLinkItem) {
+  let name = whatsappLink?.name?.trim() || click.link.name?.trim() || click.link.campaign?.name?.trim() || "—";
+  const affiliateName = click.link.affiliate?.name?.trim();
+
+  if (affiliateName) {
+    const generatedSuffix = new RegExp(`\\s-\\s${affiliateName.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}\\s-\\swhatsapp$`, "i");
+    name = name.replace(generatedSuffix, "").trim();
+  }
+
+  return name.replace(/\s-\swhatsapp$/i, "").trim() || "—";
 }
 
 function Select({
