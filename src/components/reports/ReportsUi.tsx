@@ -73,10 +73,12 @@ export function ReportKpiCard({
 export function ReportSection({
   title,
   description,
+  actions,
   children,
 }: {
   title: string;
   description?: string;
+  actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -86,6 +88,7 @@ export function ReportSection({
           <h2>{title}</h2>
           {description && <p>{description}</p>}
         </div>
+        {actions}
       </div>
       {children}
     </section>

@@ -7,6 +7,7 @@ import { BsMegaphoneFill } from "react-icons/bs";
 import {
   FiCheck,
   FiChevronRight,
+  FiCopy,
   FiFilter,
   FiGlobe,
   FiLink,
@@ -412,6 +413,18 @@ function AffiliateDetail({
   bounds: ReturnType<typeof periodBounds>;
 }) {
   const affiliate = row.link.affiliate;
+  const [copied, setCopied] = useState(false);
+
+  async function copyWhatsAppLink() {
+    try {
+      await navigator.clipboard.writeText(row.link.whatsappLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <>
       <section className={styles.affiliateReportHero}>
@@ -466,7 +479,21 @@ function AffiliateDetail({
           icon={FiTarget}
         />
       </div>
-      <ReportSection title="Tendência de cliques por dia" description={`Filtros aplicados: ${boundsLabel}`}>
+      <ReportSection
+        title="Tendência de cliques por dia"
+        description={`Filtros aplicados: ${boundsLabel}`}
+        actions={
+          <button
+            type="button"
+            className={styles.copyReportLinkButton}
+            onClick={copyWhatsAppLink}
+            title="Copiar link do WhatsApp"
+          >
+            <FiCopy aria-hidden="true" />
+            {copied ? "Link copiado" : "Copiar link"}
+          </button>
+        }
+      >
         <Timeline rows={buildLinkTimeline(row.link.clickEvents, bounds)} />
       </ReportSection>
       <ConversionFunnel row={row} />

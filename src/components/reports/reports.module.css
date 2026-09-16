@@ -544,6 +544,28 @@
   color: #64748b;
   font-size: 12px;
 }
+.copyReportLinkButton {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid #b7cce4;
+  border-radius: 9px;
+  background: #f8fbff;
+  color: #125b9e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.copyReportLinkButton:hover,
+.copyReportLinkButton:focus-visible {
+  border-color: #1584f5;
+  background: #eaf4ff;
+  outline: none;
+}
 .tableWrap {
   width: 100%;
   overflow-x: auto;
