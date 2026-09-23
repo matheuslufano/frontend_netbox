@@ -103,6 +103,35 @@ export type AffiliateContact = {
   conversionIds: number[];
 };
 
+export type DeletionResult = {
+  message: string;
+  reason?: string;
+  archived?: boolean;
+  deleted?: Record<string, number>;
+};
+
+export function getDeletionResultMessage(result: DeletionResult, fallback: string) {
+  const labels: Record<string, string> = {
+    affiliate: "perfil de afiliado",
+    user: "usuário",
+    links: "links",
+    whatsappLinks: "links de WhatsApp",
+    clicks: "cliques",
+    conversions: "conversões",
+    commissions: "comissões",
+    detachedCrmDeals: "negociações preservadas sem vínculo",
+    detachedLinks: "links preservados sem vínculo",
+    detachedWebhookLogs: "logs preservados sem vínculo",
+  };
+  const details = Object.entries(result.deleted || {})
+    .filter(([, count]) => count > 0)
+    .map(([key, count]) => `${count} ${labels[key] || key}`);
+
+  return [result.message || fallback, result.reason, details.length ? `Detalhes: ${details.join(", ")}.` : ""]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export type ContactRecord = {
   id: string;
   identified: boolean;
@@ -409,6 +438,14 @@ export type WhatsAppLinkItem = {
   affiliate: { id: number; name: string; active: boolean };
   link: { id: number; shortCode: string; createdAt: string };
   createdBy: { id: number; name: string };
+};
+
+export type WhatsAppMessageTemplate = {
+  id: number;
+  name: string;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type SaveWhatsAppLinkPayload = {
@@ -793,7 +830,7 @@ export async function editarAfiliado(
 }
 
 export async function apagarAfiliado(id: number, options?: { notify?: boolean }) {
-  const { data } = await api.delete<{ message: string; archived?: boolean }>(`/affiliate/${id}`, {
+  const { data } = await api.delete<DeletionResult>(`/affiliate/${id}`, {
     skipSystemNotification: options?.notify === false,
   } as Parameters<typeof api.delete>[1] & { skipSystemNotification: boolean });
   return data;
@@ -814,8 +851,11 @@ export async function editarUsuario(id: number, payload: UpdateUserPayload) {
   return data;
 }
 
-export async function apagarUsuario(id: number) {
-  await api.delete(`/users/${id}`);
+export async function apagarUsuario(id: number, options?: { notify?: boolean }) {
+  const { data } = await api.delete<DeletionResult>(`/users/${id}`, {
+    skipSystemNotification: options?.notify === false,
+  } as Parameters<typeof api.delete>[1] & { skipSystemNotification: boolean });
+  return data;
 }
 
 export async function listarCidadesTocantins() {
@@ -909,6 +949,20 @@ export async function listarLinksWhatsApp() {
   return Array.isArray(data) ? data : [];
 }
 
+export async function listarTextosWhatsApp() {
+  const { data } = await api.get<WhatsAppMessageTemplate[]>("/whatsapp-message-templates");
+  return Array.isArray(data) ? data : [];
+}
+
+export async function salvarTextoWhatsApp(payload: { name: string; message: string }) {
+  const { data } = await api.post<WhatsAppMessageTemplate>("/whatsapp-message-templates", payload);
+  return data;
+}
+
+export async function apagarTextoWhatsApp(id: number) {
+  await api.delete(`/whatsapp-message-templates/${id}`);
+}
+
 export async function criarLinkWhatsApp(payload: SaveWhatsAppLinkPayload) {
   const { data } = await api.post<WhatsAppLinkItem>("/whatsapp-links", payload);
   return data;
@@ -935,6 +989,7 @@ export async function editarCampanha(
   payload: {
     name: string;
     destinationUrl: string;
+    updateExistingDestinations?: boolean;
     links: { id?: number; affiliateId: number; shortCode: string }[];
   },
 ) {

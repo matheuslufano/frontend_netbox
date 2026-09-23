@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { notify } from "@/lib/notifications/notify";
+import Avatar from "@/components/profile/Avatar";
 import { FaWhatsapp } from "react-icons/fa";
 import {
   FiArrowLeft,
@@ -33,10 +34,11 @@ import {
   maskBrazilianPhone,
   normalizeBrazilianPhone,
   isValidWhatsAppNumber,
+  repairWhatsAppEmoji,
 } from "./whatsappLink";
 import styles from "./whatsapp.module.css";
 
-const initialMessage = "Olá, gostaria de conhecer os planos da Netbox.";
+const initialMessage = "Olá! \u{1F44B}\n\nGostaria de conhecer os planos da Netbox.\n\nPode me enviar mais informações?";
 
 export default function WhatsAppLinkPage() {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
@@ -48,7 +50,15 @@ export default function WhatsAppLinkPage() {
   const [codeMode, setCodeMode] = useState<"existing" | "new">("existing");
   const [affiliateCodeId, setAffiliateCodeId] = useState("");
   const [phone, setPhone] = useState("");
-  const [savedPhones, setSavedPhones] = useState<string[]>([]);
+  const [savedPhones, setSavedPhones] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = JSON.parse(window.localStorage.getItem("netbox:whatsapp-phones") || "[]");
+      return Array.isArray(stored) ? stored.filter((item): item is string => typeof item === "string") : [];
+    } catch {
+      return [];
+    }
+  });
   const [message, setMessage] = useState(initialMessage);
   const [appendCode, setAppendCode] = useState(true);
   const [template, setTemplate] = useState(DEFAULT_IDENTIFICATION_TEMPLATE);
@@ -73,11 +83,25 @@ export default function WhatsAppLinkPage() {
   const selectedCode = codes.find(
     (item) => item.id === Number(affiliateCodeId),
   );
+  const savedCodeForCurrentSelection =
+    codeMode === "existing" &&
+    savedResult?.affiliateId === Number(affiliateId) &&
+    savedResult.affiliateCodeId === Number(affiliateCodeId)
+      ? savedResult
+      : null;
+  const previewAffiliateName =
+    selectedAffiliate?.name ||
+    savedCodeForCurrentSelection?.affiliate.name ||
+    "Selecione um afiliado";
   const previewCode =
-    codeMode === "new" ? "NOVO CÓDIGO" : selectedCode?.code || "{{codigo}}";
+    codeMode === "new"
+      ? "Será gerado ao salvar"
+      : selectedCode?.code ||
+        savedCodeForCurrentSelection?.affiliateCode ||
+        "Selecione um código";
   const finalMessage = buildPreviewMessage(message, template, appendCode, {
     codigo: previewCode,
-    afiliado: selectedAffiliate?.name,
+    afiliado: previewAffiliateName,
   });
 
   const loadItems = useCallback(
@@ -86,7 +110,6 @@ export default function WhatsAppLinkPage() {
   );
 
   useEffect(() => {
-    try { setSavedPhones(JSON.parse(localStorage.getItem("netbox:whatsapp-phones") || "[]")); } catch { setSavedPhones([]); }
     Promise.all([
       listarAfiliados(),
       listarLinksWhatsApp(),
@@ -133,6 +156,8 @@ export default function WhatsAppLinkPage() {
       return "Informe um WhatsApp brasileiro válido, com DDD.";
     if (message.length > 1000)
       return "A mensagem deve ter no máximo 1000 caracteres.";
+    if (/\uFFFD/.test(message) || /\uFFFD/.test(template))
+      return "A mensagem contém um caractere inválido (�). Apague-o e insira o emoji novamente.";
     if (appendCode && !template.includes("{{codigo}}"))
       return "O texto de identificação deve conter {{codigo}}.";
     return "";
@@ -165,6 +190,17 @@ export default function WhatsAppLinkPage() {
       setSavedResult(saved);
       setGeneratedUrl(saved.whatsappUrl);
       setEditingId(saved.id);
+      setCodes((current) => {
+        const savedCode: AffiliateCode = {
+          id: saved.affiliateCodeId,
+          code: saved.affiliateCode,
+          active: saved.active,
+          createdAt: saved.link.createdAt,
+          affiliate: saved.affiliate,
+          campaign: saved.campaign,
+        };
+        return [savedCode, ...current.filter((item) => item.id !== savedCode.id)];
+      });
       setCodeMode("existing");
       setAffiliateCodeId(String(saved.affiliateCodeId));
       setNotice(
@@ -320,13 +356,13 @@ export default function WhatsAppLinkPage() {
             <span>Afiliado</span>
             <div className={styles.affiliateSelect}>
               <button type="button" className={styles.affiliateSelectTrigger} onClick={() => setAffiliateMenuOpen((open) => !open)} aria-expanded={affiliateMenuOpen}>
-                {selectedAffiliate?.photoUrl ? <img src={selectedAffiliate.photoUrl} alt="" /> : <span>{selectedAffiliate?.name?.slice(0, 1).toUpperCase() || "A"}</span>}
+                <Avatar name={selectedAffiliate?.name || "Afiliado"} photoUrl={selectedAffiliate?.photoUrl} alt="Avatar do afiliado" />
                 <strong>{selectedAffiliate?.name || "Selecione"}</strong>
               </button>
               {affiliateMenuOpen && <div className={styles.affiliateOptions} role="listbox">
                 <button type="button" onClick={() => { setAffiliateId(""); setAffiliateCodeId(""); setCodes([]); setAffiliateMenuOpen(false); }}>Selecione</button>
                 {activeAffiliates.map((item) => <button type="button" key={item.id} onClick={() => { setAffiliateId(String(item.id)); setAffiliateCodeId(""); setCodes([]); setAffiliateMenuOpen(false); }}>
-                  {item.photoUrl ? <img src={item.photoUrl} alt="" /> : <span>{item.name.slice(0, 1).toUpperCase()}</span>}
+                  <Avatar name={item.name} photoUrl={item.photoUrl} alt={`Avatar de ${item.name}`} />
                   {item.name}
                 </button>)}
               </div>}
@@ -399,7 +435,7 @@ export default function WhatsAppLinkPage() {
           <label className={styles.field} htmlFor="whatsapp-message">
             <span>Mensagem que será enviada pelo cliente</span>
           </label>
-          <WhatsAppMessageEditor value={message} onChange={setMessage} />
+          <WhatsAppMessageEditor value={message} onChange={(value) => setMessage(repairWhatsAppEmoji(value))} />
           <label className={styles.switchRow}>
             <input
               type="checkbox"
@@ -414,10 +450,11 @@ export default function WhatsAppLinkPage() {
           {appendCode && (
             <label className={styles.field}>
               <span>Texto de identificação</span>
-              <input
+              <textarea
                 value={template}
-                onChange={(e) => setTemplate(e.target.value)}
+                onChange={(e) => setTemplate(repairWhatsAppEmoji(e.target.value))}
                 maxLength={500}
+                rows={3}
               />
               <small>
                 Variáveis: {"{{codigo}}"}, {"{{afiliado}}"}

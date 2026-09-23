@@ -9,6 +9,7 @@ import { EmptyState, ReportHeader, ReportKpiCard, ReportSection, reportStyles as
 import AffiliateLinkReport from "./AffiliateLinkReport";
 import { Timeline } from "./ClicksReport";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import Avatar from "@/components/profile/Avatar";
 
 type ReportKind = "whatsapp" | "link" | "campanha";
 const titles = {
@@ -150,7 +151,7 @@ function ClickInsights({ links, from = "", to = "", onAffiliateClick }: { links:
     });
     return () => rows.forEach((element) => (element as HTMLElement & { cleanup?: () => void }).cleanup?.());
   }, [ranking, onAffiliateClick]);
-  return <div className={styles.clickInsights}><ReportSection title="Tendência de cliques por dia"><Timeline rows={timeline} /></ReportSection><ReportSection title="Ranking de afiliados (por cliques)"><div className={styles.clickRanking}>{ranking.map((row, index) => <div key={row.id}><b>{index + 1}º</b>{row.photoUrl ? <img className={styles.clickRankingAvatar} src={row.photoUrl} alt="" /> : <span className={styles.clickRankingAvatar}>{row.name.slice(0, 1).toUpperCase()}</span>}<span>{row.name}</span><strong>{row.clicks}</strong><i style={{ width: `${(row.clicks / total) * 100}%` }} /></div>)}{!ranking.length && <EmptyState />}</div></ReportSection></div>;
+  return <div className={styles.clickInsights}><ReportSection title="Tendência de cliques por dia"><Timeline rows={timeline} /></ReportSection><ReportSection title="Ranking de afiliados (por cliques)"><div className={styles.clickRanking}>{ranking.map((row, index) => <div key={row.id}><b>{index + 1}º</b><Avatar name={row.name} photoUrl={row.photoUrl} className={styles.clickRankingAvatar} alt={`Avatar de ${row.name}`} /><span>{row.name}</span><strong>{row.clicks}</strong><i style={{ width: `${(row.clicks / total) * 100}%` }} /></div>)}{!ranking.length && <EmptyState />}</div></ReportSection></div>;
 }
 
 function AffiliatePerformance({ links }: { links: CampaignLink[] }) {
@@ -159,8 +160,7 @@ function AffiliatePerformance({ links }: { links: CampaignLink[] }) {
 }
 
 function AffiliateIdentity({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
-  const initials = name.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join("").toUpperCase();
-  return <span className={styles.affiliateIdentity}>{photoUrl ? <span className={styles.affiliatePhoto} role="img" aria-label={`Foto de ${name}`} style={{ backgroundImage: `url(${photoUrl})` }} /> : <span className={styles.affiliateInitials} aria-hidden="true">{initials}</span>}<strong>{name}</strong></span>;
+  return <span className={styles.affiliateIdentity}><Avatar name={name} photoUrl={photoUrl} className={photoUrl ? styles.affiliatePhoto : styles.affiliateInitials} alt={`Foto de ${name}`} /><strong>{name}</strong></span>;
 }
 function LinksPerformance({ links, linkNames }: { links: CampaignLink[]; linkNames: Map<number, string> }) { return <ReportSection title="Desempenho dos Links"><Table headers={["Link","Afiliado","Cliques","Atendimentos","Conversões","Taxa"]} firstColumnLeft>{links.map((l) => { const converted=l.conversionEvents.filter(e=>e.convertedInSgp||e.status==="CONVERTED").length; return <tr key={l.id}><td>{linkNames.get(l.id)||l.name||l.shortCode}</td><td>{l.affiliate?.name||"Sem afiliado"}</td><td className={styles.number}>{l.clicks}</td><td className={styles.number}>{l.conversionEvents.filter(e=>e.attendanceStartedAt||e.whatsappStartedAt).length}</td><td className={styles.number}>{converted}</td><td className={styles.number}>{conversionRate(converted,l.clicks)}</td></tr>; })}</Table>{!links.length&&<EmptyState />}</ReportSection>; }
 function Customers({ links, linkNames, status, from, to }: { links: CampaignLink[]; linkNames: Map<number, string>; status: string; from: string; to: string }) { const rows=links.flatMap(l=>l.conversionEvents.filter(e=>matchesConversion(e,status,from,to)).map(e=>({l,e}))); return <ReportSection title="Clientes alcançados" description="Dados atribuídos pelo WhatsApp/Chatmix e pelas conversões disponíveis no backend."><Table headers={["Cliente","Telefone","Afiliado","Link","Registrado em","Atendimento","Conversão"]}>{rows.map(({l,e})=><tr key={`${l.id}-${e.id}`}><td>{e.customerName||"Não identificado"}</td><td>{e.customerPhone||"—"}</td><td>{l.affiliate?.name||"—"}</td><td>{linkNames.get(l.id)||l.name||l.shortCode}</td><td>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(e.convertedAt))}</td><td><span className={styles.statusPill}>{e.attendanceStartedAt||e.whatsappStartedAt?"Iniciado":"Não identificado"}</span></td><td><span className={styles.statusPill}>{e.statusName||e.status}</span></td></tr>)}</Table>{!rows.length&&<EmptyState text="Ainda não há clientes atribuídos aos filtros selecionados." />}</ReportSection>; }

@@ -40,6 +40,7 @@ import {
   obterTimelineCliques,
 } from "@/lib/api";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import Avatar from "@/components/profile/Avatar";
 import {
   WhatsAppLinkPreview,
   WhatsAppLinkPreviewState,
@@ -537,7 +538,7 @@ export default function ClicksReport() {
               {ranking.slice(0, 5).map((row, index) => (
                 <button type="button" className={styles.clickRankingRow} key={row.affiliateId} onClick={() => selectAffiliate(row.affiliateId)} aria-label={`Filtrar cliques de ${row.affiliateName}`}>
                   <b>{index + 1}º</b>
-                  {row.avatar ? <img className={styles.clickRankingAvatar} src={row.avatar} alt="" /> : <span className={styles.clickRankingAvatar}>{row.affiliateName.slice(0, 1).toUpperCase()}</span>}
+                  <Avatar name={row.affiliateName} photoUrl={row.avatar} className={styles.clickRankingAvatar} alt={`Avatar de ${row.affiliateName}`} />
                   <span>{row.affiliateName}</span>
                   <strong>{formatNumber.format(row.clicks)}</strong>
                   <i style={{ width: `${Math.min(100, row.percentage)}%` }} />
@@ -642,9 +643,9 @@ export default function ClicksReport() {
                           : "—"}
                       </td>
                       <td
-                        title={click.destinationUrl || click.link.originalUrl}
+                        title={click.link.originalUrl || click.destinationUrl}
                       >
-                        {formatDestination(click.destinationUrl || click.link.originalUrl)}
+                        {formatDestination(click.link.originalUrl || click.destinationUrl)}
                       </td>
                       <td>{click.source || "Direto"}</td>
                       <td>{click.utmMedium || "—"}</td>
@@ -791,6 +792,8 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
   const height = 180;
   const padding = 22;
   const max = Math.max(1, ...rows.map((row) => row.clicks));
+  const axisTicks = buildAxisTicks(max);
+  const plotHeight = height - padding * 2;
   const points = rows.map((row, index) => ({
     ...row,
     x: padding + (index * (width - padding * 2)) / Math.max(1, rows.length - 1),
@@ -811,8 +814,13 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
   return (
     <div className={styles.clickTimelineLine}>
       <div className={styles.chartYAxis} aria-hidden="true">
-        {[max, Math.round(max * 0.66), Math.round(max * 0.33), 0].map((value) => (
-          <span key={value}>{formatNumber.format(value)}</span>
+        {axisTicks.map((value, index) => (
+          <span
+            key={`${value}-${index}`}
+            style={{ top: `${((padding + (index * plotHeight) / (axisTicks.length - 1)) / height) * 100}%` }}
+          >
+            {formatNumber.format(value)}
+          </span>
         ))}
       </div>
       <svg
@@ -821,16 +829,19 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
         aria-label="Tendência de cliques por dia"
         preserveAspectRatio="none"
       >
-        {[0, 1, 2, 3].map((lineIndex) => (
+        {axisTicks.map((_, lineIndex) => {
+          const y = padding + (lineIndex * plotHeight) / (axisTicks.length - 1);
+          return (
           <line
-            key={lineIndex}
+            key={`grid-${lineIndex}`}
             x1={padding}
             x2={width - padding}
-            y1={padding + lineIndex * 42}
-            y2={padding + lineIndex * 42}
+            y1={y}
+            y2={y}
             className={styles.chartGridLine}
           />
-        ))}
+          );
+        })}
         <polygon points={area} className={styles.chartArea} />
         <polyline points={line} className={styles.chartLine} />
         {points.map((point) => (
@@ -885,6 +896,12 @@ export function Timeline({ rows }: { rows: ClickTimelineItem[] }) {
       </div>
     </div>
   );
+}
+
+function buildAxisTicks(max: number) {
+  if (max <= 2) return [max, Math.ceil(max / 2), 0];
+
+  return [max, Math.ceil((max * 2) / 3), Math.ceil(max / 3), 0];
 }
 
 function formatTimelineDate(value: string) {
@@ -957,7 +974,7 @@ function ClickDrawer({
                 </button>
               </dd>
               <dt>Destino</dt>
-              <dd>{click.destinationUrl || click.link.originalUrl}</dd>
+              <dd>{click.link.originalUrl || click.destinationUrl}</dd>
               <dt>Referrer</dt>
               <dd>{click.referrer || "Direto"}</dd>
               <dt>Afiliado</dt>

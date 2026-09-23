@@ -17,6 +17,7 @@ import { RiLogoutBoxFill } from "react-icons/ri";
 
 import logo1 from "../../../public/logo.jpg";
 import styles from "./sidebar.module.css";
+import Avatar from "../profile/Avatar";
 
 type UserPhoto = string | StaticImageData;
 
@@ -129,15 +130,11 @@ export default function Sidebar() {
 
       <div className={styles.profileBox} title={userName}>
         <div className={styles.avatarFrame}>
-          <Image
-            src={userPhoto}
+          <Avatar
+            name={userName}
+            photoUrl={typeof userPhoto === "string" && userPhoto !== logo1.src ? userPhoto : undefined}
             alt="Foto do usuário"
             className={styles.userPhoto}
-            width={88}
-            height={88}
-            unoptimized={typeof userPhoto === "string"}
-            onError={() => setUserPhoto(logo1)}
-            priority
           />
 
           <span className={styles.brandBubble} aria-label="Netbox">

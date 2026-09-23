@@ -2807,8 +2807,9 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 .clickChartLegend span { display: grid; grid-template-columns: 7px minmax(0, 1fr) auto; align-items: center; gap: 5px; color: #475569; font-size: 9px; }
 .clickChartLegend i { width: 7px; height: 7px; border-radius: 50%; background: #2454d6; }
 .clickChartLegend span b { color: #1e293b; }
-.clickChartArea { display: grid; grid-template-columns: 25px minmax(0, 1fr); gap: 7px; height: 126px; }
-.clickChartYAxis { display: flex; height: 96px; flex-direction: column; justify-content: space-between; padding-top: 4px; color: #64748b; font-size: 9px; line-height: 1; text-align: right; }
+.clickChartArea { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 7px; height: 126px; }
+.clickChartYAxis { position: relative; height: 96px; color: #64748b; font-size: 9px; line-height: 1; text-align: right; }
+.clickChartYAxis span { position: absolute; right: 0; transform: translateY(-50%); white-space: nowrap; }
 .clickChartLineWrap { position: relative; height: 126px; padding-bottom: 23px; border-bottom: 1px solid #dbe3ef; }
 .clickChartLine { display: block; width: 100%; height: 96px; overflow: visible; }
 .clickChartLine line { stroke: #dbe3ef; stroke-width: .8; vector-effect: non-scaling-stroke; }

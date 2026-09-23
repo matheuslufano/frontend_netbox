@@ -8,10 +8,10 @@ function load(name) {
   if (modules.has(name)) return modules.get(name);
   const source = fs.readFileSync(path.join(__dirname, '../src/lib/notifications', `${name}.ts`), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const module = { exports: {} };
-  new Function('require', 'module', 'exports', compiled)((id) => id.startsWith('./') ? load(id.replace('./', '')) : require(id), module, module.exports);
-  modules.set(name, module.exports);
-  return module.exports;
+  const loadedModule = { exports: {} };
+  new Function('require', 'module', 'exports', compiled)((id) => id.startsWith('./') ? load(id.replace('./', '')) : require(id), loadedModule, loadedModule.exports);
+  modules.set(name, loadedModule.exports);
+  return loadedModule.exports;
 }
 const storage = new Map();
 global.localStorage = { getItem: k => storage.get(k) ?? null, setItem: (k,v) => storage.set(k,v) };

@@ -52,12 +52,24 @@ export default function WhatsAppPreview({ message }: { message: string }) {
     <section className={styles.previewCard}>
       <div className={styles.sectionTitle}><FiMessageCircle /><div><h2>Prévia da mensagem</h2><p>Como o cliente enviará a mensagem.</p></div></div>
       <div className={styles.phonePreview}>
-        <div className={styles.previewTop}>Netbox WhatsApp</div>
-        <div className={styles.chatArea}>
-          <div className={styles.bubble}>
-            <div className={styles.formattedMessage}>{renderWhatsAppFormatting(message || "Sua mensagem aparecerá aqui.")}</div>
-            <span>agora ✓✓</span>
+        <div className={styles.phoneScreen}>
+          <div className={styles.phoneStatusBar} aria-hidden="true">
+            <span>9:41</span>
+            <i className={styles.dynamicIsland}><b /></i>
+            <span className={styles.phoneSignals}><i /><i /><i /><b /></span>
           </div>
+          <div className={styles.previewTop}>
+            <span className={styles.previewBack} aria-hidden="true">‹</span>
+            <span className={styles.previewAvatar} aria-hidden="true">N</span>
+            <span className={styles.previewContact}><strong>Netbox WhatsApp</strong><small>online</small></span>
+          </div>
+          <div className={styles.chatArea}>
+            <div className={styles.bubble}>
+              <div className={styles.formattedMessage}>{renderWhatsAppFormatting(message || "Sua mensagem aparecerá aqui.")}</div>
+              <span>agora ✓✓</span>
+            </div>
+          </div>
+          <span className={styles.homeIndicator} aria-hidden="true" />
         </div>
       </div>
     </section>

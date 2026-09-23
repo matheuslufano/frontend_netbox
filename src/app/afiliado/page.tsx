@@ -14,11 +14,13 @@ import {
   criarAfiliado,
   editarAfiliado,
   getApiErrorMessage,
+  getDeletionResultMessage,
   listarAfiliados,
   listarCidadesTocantins,
   obterRankingCliques,
 } from "@/lib/api";
 import { notify } from "@/lib/notifications/notify";
+import Avatar from "@/components/profile/Avatar";
 
 type PhotoCrop = { target: "new" | "edit"; source: string; imageWidth: number; imageHeight: number; zoom: number; offsetX: number; offsetY: number };
 
@@ -311,7 +313,9 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
     setError(null);
     setMessage(null);
 
-    const confirmed = window.confirm(`Apagar o afiliado ${affiliate.name}?`);
+    const confirmed = window.confirm(
+      `Apagar definitivamente o afiliado ${affiliate.name}? Links de WhatsApp e comissões vinculadas serão removidos. Links e negociações históricas serão preservados sem vínculo com o perfil.`,
+    );
 
     if (!confirmed) {
       return;
@@ -326,15 +330,17 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
         handleCancelEdit();
       }
 
-      const deleteMessage = result.archived
-        ? "O afiliado foi arquivado e o histórico vinculado foi preservado."
-        : "O afiliado foi removido do banco de dados.";
+      const deleteMessage = getDeletionResultMessage(
+        result,
+        "O afiliado foi removido definitivamente.",
+      );
       setMessage(deleteMessage);
       notify.success({
-        title: result.archived ? "Afiliado arquivado" : "Afiliado removido",
+        title: "Afiliado removido",
         message: deleteMessage,
         context: "affiliate-deleted",
         source: "ui",
+        duration: 8_000,
       });
     } catch (err) {
       const deleteError = getApiErrorMessage(err, "Não foi possível apagar o afiliado.");
@@ -344,6 +350,7 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
         message: deleteError,
         context: "generic",
         source: "ui",
+        persist: true,
       });
       await refreshAffiliates();
     } finally {
@@ -375,7 +382,7 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
             <div className={styles.podium}>
               {[monthlyPodium[1], monthlyPodium[0], monthlyPodium[2]].filter(Boolean).map((affiliate, index) => {
                 const position = index === 0 ? 2 : index === 1 ? 1 : 3;
-                return <Link key={affiliate.id} href={`/links-campanhas/relatorios/link?period=30&affiliateId=${affiliate.id}`} className={`${styles.podiumItem} ${position === 1 ? styles.podiumWinner : ""}`} aria-label={`Ver relatório de ${affiliate.name}`}><span className={styles.podiumPosition}>{position}º</span><span className={styles.podiumAvatar}>{affiliate.photoUrl ? <img src={affiliate.photoUrl} alt="" /> : affiliate.name.slice(0, 1).toUpperCase()}</span><strong>{affiliate.name}</strong>{affiliate.clicks > 0 && <small>{affiliate.clicks} cliques</small>}</Link>;
+                return <Link key={affiliate.id} href={`/links-campanhas/relatorios/link?period=30&affiliateId=${affiliate.id}`} className={`${styles.podiumItem} ${position === 1 ? styles.podiumWinner : ""}`} aria-label={`Ver relatório de ${affiliate.name}`}><span className={styles.podiumPosition}>{position}º</span><span className={styles.podiumAvatar}><Avatar name={affiliate.name} photoUrl={affiliate.photoUrl} alt={`Avatar de ${affiliate.name}`} /></span><strong>{affiliate.name}</strong>{affiliate.clicks > 0 && <small>{affiliate.clicks} cliques</small>}</Link>;
               })}
             </div>
           </section>}
@@ -391,7 +398,7 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
         {view === "new" ? <header className={styles.newAffiliateHeader}><span>Afiliados</span><h2>Cadastrar novo afiliado</h2><p>Crie um perfil completo para organizar links, campanhas e resultados.</p></header> : <h2>Editar afiliado</h2>}
 
         {view === "new" && <form id="affiliate-create-form" className={styles.newAffiliateForm} onSubmit={handleSubmit}>
-          <label className={styles.photoField}><span>{photoUrl ? <img src={photoUrl} alt="Prévia da foto" /> : "A"}</span><b>Foto do afiliado</b><input type="file" accept="image/*" onChange={(event) => selectPhoto(event.target.files?.[0], "new")} />{photoUrl && <button type="button" onClick={() => setPhotoUrl("")}>Remover foto</button>}</label>
+          <label className={styles.photoField}><span><Avatar name={name || "Novo afiliado"} photoUrl={photoUrl} alt="Prévia da foto" /></span><b>Foto do afiliado</b><input type="file" accept="image/*" onChange={(event) => selectPhoto(event.target.files?.[0], "new")} />{photoUrl && <button type="button" onClick={() => setPhotoUrl("")}>Remover foto</button>}</label>
           <label className={styles.field}><span>Nome completo</span><input
             id="affiliate-name"
             type="text"
@@ -593,7 +600,7 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
               <div><span>Editar afiliado</span><h2>{editName || "Perfil do afiliado"}</h2></div>
             </div>
             <div className={`${workspaceStyles.editGrid} ${styles.affiliateEditForm}`}>
-              <label className={styles.photoField}><span>{editPhotoUrl ? <img src={editPhotoUrl} alt="Prévia da foto" /> : editName.slice(0, 1).toUpperCase()}</span><b>Foto do afiliado</b><input type="file" accept="image/*" onChange={(event) => selectPhoto(event.target.files?.[0], "edit")} />{editPhotoUrl && <button type="button" onClick={() => setEditPhotoUrl("")}>Remover foto</button>}</label>
+              <label className={styles.photoField}><span><Avatar name={editName || "Afiliado"} photoUrl={editPhotoUrl} alt="Prévia da foto" /></span><b>Foto do afiliado</b><input type="file" accept="image/*" onChange={(event) => selectPhoto(event.target.files?.[0], "edit")} />{editPhotoUrl && <button type="button" onClick={() => setEditPhotoUrl("")}>Remover foto</button>}</label>
               <label className={workspaceStyles.field}><span>Nome</span><input value={editName} onChange={(event) => setEditName(event.target.value)} /></label>
               <label className={workspaceStyles.field}><span>E-mail</span><input type="email" value={editEmail} onChange={(event) => setEditEmail(event.target.value)} /></label>
               <label className={workspaceStyles.field}><span>Telefone</span><input value={editPhone} onChange={(event) => setEditPhone(event.target.value)} /></label>
@@ -627,7 +634,7 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
             <div className={styles.affiliateShortcutGrid}>
               {affiliates.filter((affiliate) => `${affiliate.name} ${affiliate.email || ""} ${affiliate.phone || ""} ${affiliate.city || ""}`.toLocaleLowerCase("pt-BR").includes(profileSearch.trim().toLocaleLowerCase("pt-BR"))).map((affiliate) => (
                 <button key={affiliate.id} type="button" className={styles.affiliateShortcut} onClick={() => handleStartEdit(affiliate)} aria-label={`Editar ${affiliate.name}`}>
-                  <span>{affiliate.photoUrl ? <img src={affiliate.photoUrl} alt="" /> : affiliate.name.slice(0, 1).toUpperCase()}</span>
+                  <span><Avatar name={affiliate.name} photoUrl={affiliate.photoUrl} alt={`Avatar de ${affiliate.name}`} /></span>
                   <strong>{affiliate.name}</strong>
                 </button>
               ))}
@@ -637,7 +644,7 @@ export default function Afiliado({ view = "home" }: { view?: "home" | "new" | "e
               <div className={workspaceStyles.profileResultList}>
                 {affiliates.filter((affiliate) => `${affiliate.name} ${affiliate.email || ""} ${affiliate.phone || ""} ${affiliate.city || ""}`.toLocaleLowerCase("pt-BR").includes(profileSearch.trim().toLocaleLowerCase("pt-BR"))).map((affiliate) => (
                   <button key={affiliate.id} type="button" className={workspaceStyles.profileResultButton} onClick={() => handleStartEdit(affiliate)}>
-                    <span className={styles.searchAffiliateAvatar}>{affiliate.photoUrl ? <img src={affiliate.photoUrl} alt="" /> : affiliate.name.slice(0, 1).toUpperCase()}</span>
+                    <span className={styles.searchAffiliateAvatar}><Avatar name={affiliate.name} photoUrl={affiliate.photoUrl} alt={`Avatar de ${affiliate.name}`} /></span>
                     <div className={workspaceStyles.profileResultText}><span className={workspaceStyles.profileBadge}>Afiliado</span><strong>{affiliate.name}</strong><small>{affiliate.email || "Sem e-mail"}</small><small>{affiliate.city || "Sem cidade"}</small></div>
                   </button>
                 ))}

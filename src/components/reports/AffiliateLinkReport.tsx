@@ -17,6 +17,7 @@ import {
   FiUser,
   FiUsers,
 } from "react-icons/fi";
+import Avatar from "@/components/profile/Avatar";
 import type {
   Campaign,
   CampaignConversionEvent,
@@ -689,21 +690,13 @@ function AffiliateAvatar({
   photoUrl?: string | null;
   large?: boolean;
 }) {
-  const initials = name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
   return (
-    <span
+    <Avatar
+      name={name}
+      photoUrl={photoUrl}
+      alt={`Foto de ${name}`}
       className={`${styles.reportAvatar} ${large ? styles.reportAvatarLarge : ""}`}
-      style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}
-      role={photoUrl ? "img" : undefined}
-      aria-label={photoUrl ? `Foto de ${name}` : undefined}
-    >
-      {!photoUrl && initials}
-    </span>
+    />
   );
 }
 function buildRankedLink(

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { FiCopy, FiEdit2, FiExternalLink, FiLayers, FiTrash2, FiX } from "react-icons/fi";
 import { Affiliate, WhatsAppLinkItem } from "@/lib/api";
-import { maskBrazilianPhone } from "./whatsappLink";
+import { maskBrazilianPhone, repairWhatsAppEmoji } from "./whatsappLink";
 import styles from "./whatsapp.module.css";
 
 export type WhatsAppLinkDraft = {
@@ -35,7 +35,7 @@ function createDraft(item: WhatsAppLinkItem, duplicate: boolean): WhatsAppLinkDr
     name: duplicate ? `${item.name} - cópia` : item.name,
     affiliateId: item.affiliateId,
     whatsappNumber: maskBrazilianPhone(item.whatsappNumber),
-    message: item.originalMessage,
+    message: repairWhatsAppEmoji(item.originalMessage),
     appendAffiliateCode: item.appendAffiliateCode,
     identificationTemplate: item.identificationTemplate,
   };
@@ -97,7 +97,7 @@ export default function WhatsAppLinksTable({ items, affiliates, onSaveEdit, onSa
                     </button>
                   </td>
                   <td><strong>{item.affiliate.name}</strong><small>{item.affiliateCode}</small></td>
-                  <td className={styles.messageCell}>{item.finalMessage}</td>
+                  <td className={styles.messageCell}>{repairWhatsAppEmoji(item.finalMessage)}</td>
                   <td>{item.whatsappNumber}</td>
                   <td>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}</td>
                   <td><span className={item.active ? styles.active : styles.inactive}>{item.active ? "Ativo" : "Inativo"}</span></td>
@@ -160,7 +160,7 @@ export function WhatsAppLinkPreview({ preview, onMouseEnter, onMouseLeave }: {
     >
       <span className={styles.linkPreviewEyebrow}>Detalhes do link WhatsApp</span>
       <strong className={styles.linkPreviewTitle}>{preview.item.name}</strong>
-      <p className={styles.linkPreviewMessage}>{preview.item.finalMessage || "Sem mensagem configurada."}</p>
+      <p className={styles.linkPreviewMessage}>{repairWhatsAppEmoji(preview.item.finalMessage) || "Sem mensagem configurada."}</p>
       <dl className={styles.linkPreviewMeta}>
         <div><dt>Criado em</dt><dd>{createdAt}</dd></div>
         <div><dt>Responsável</dt><dd>{preview.item.createdBy?.name || "Não informado"}</dd></div>
@@ -270,9 +270,9 @@ function ActionPopover({ active, affiliates, onClose, onSaveEdit, onSaveDuplicat
               )}
             </label>
             <label><span>Número do WhatsApp</span><input value={draft.whatsappNumber} inputMode="tel" required onChange={(event) => setDraft({ ...draft, whatsappNumber: maskBrazilianPhone(event.target.value) })} /></label>
-            <label><span>Mensagem</span><textarea value={draft.message} maxLength={1000} rows={4} onChange={(event) => setDraft({ ...draft, message: event.target.value })} /></label>
+            <label><span>Mensagem</span><textarea value={draft.message} maxLength={1000} rows={4} onChange={(event) => setDraft({ ...draft, message: repairWhatsAppEmoji(event.target.value) })} /></label>
             <label className={styles.popoverCheckbox}><input type="checkbox" checked={draft.appendAffiliateCode} onChange={(event) => setDraft({ ...draft, appendAffiliateCode: event.target.checked })} /><span>Adicionar identificação do afiliado</span></label>
-            {draft.appendAffiliateCode && <label><span>Texto de identificação</span><input value={draft.identificationTemplate} maxLength={500} required onChange={(event) => setDraft({ ...draft, identificationTemplate: event.target.value })} /></label>}
+            {draft.appendAffiliateCode && <label><span>Texto de identificação</span><textarea value={draft.identificationTemplate} maxLength={500} rows={3} required onChange={(event) => setDraft({ ...draft, identificationTemplate: repairWhatsAppEmoji(event.target.value) })} /></label>}
           </>
         )}
         {error && <p className={styles.popoverError} role="alert">{error}</p>}

@@ -26,6 +26,7 @@ import {
   editarAfiliado,
   editarUsuario,
   getApiErrorMessage,
+  getDeletionResultMessage,
   listarAfiliados,
   listarChatmixWebhookLogs,
   listarCidadesTocantins,
@@ -34,7 +35,9 @@ import {
   limparBancoMantendoUsuarios,
 } from "@/lib/api";
 import { useRealtimeEvents } from "@/lib/useRealtimeEvents";
+import { notify } from "@/lib/notifications/notify";
 import styles from "./configuracoes.module.css";
+import Avatar from "@/components/profile/Avatar";
 import { FaAnglesLeft } from "react-icons/fa6";
 import { FiTrash2 } from "react-icons/fi";
 
@@ -727,7 +730,7 @@ function ConfiguracoesContent() {
         email: normalizedEmail,
         password,
         city: newUser.city || undefined,
-        photoUrl: photoUrl || undefined,
+        photoUrl,
       });
 
       setUsers((current) => [
@@ -783,7 +786,7 @@ function ConfiguracoesContent() {
         email: normalizedEmail,
         city: userForm.city || undefined,
         password: password || undefined,
-        photoUrl: photoUrl || undefined,
+        photoUrl,
         role: userForm.role,
       });
 
@@ -815,7 +818,7 @@ function ConfiguracoesContent() {
     resetStatus();
 
     const confirmed = window.confirm(
-      `Apagar o usuário ${user.name}? Links criados por ele também serao removidos.`,
+      `Apagar definitivamente o usuário ${user.name}? Links, cliques, conversões e links de WhatsApp pertencentes a ele serão removidos. O histórico comercial será preservado sem esses vínculos.`,
     );
 
     if (!confirmed) {
@@ -824,11 +827,27 @@ function ConfiguracoesContent() {
 
     setSaving(true);
     try {
-      await apagarUsuario(user.id);
+      const result = await apagarUsuario(user.id, { notify: false });
       setUsers((current) => current.filter((item) => item.id !== user.id));
-      setMessage("Usuário apagado com sucesso.");
+      const successMessage = getDeletionResultMessage(result, "Usuário apagado com sucesso.");
+      setMessage(successMessage);
+      notify.success({
+        title: "Usuário removido",
+        message: successMessage,
+        context: "user-deleted",
+        source: "ui",
+        duration: 8_000,
+      });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Não foi possível apagar o usuário."));
+      const deleteError = getApiErrorMessage(err, "Não foi possível apagar o usuário.");
+      setError(deleteError);
+      notify.error({
+        title: "Falha ao apagar usuário",
+        message: deleteError,
+        context: "generic",
+        source: "ui",
+        persist: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -905,7 +924,7 @@ function ConfiguracoesContent() {
         phone: affiliateForm.phone.trim() || undefined,
         city: affiliateForm.city || undefined,
         active: affiliateForm.active,
-        photoUrl: photoUrl || undefined,
+        photoUrl,
       });
 
       setAffiliates((current) =>
@@ -930,7 +949,9 @@ function ConfiguracoesContent() {
   async function handleDeleteAffiliate(affiliate: Affiliate) {
     resetStatus();
 
-    const confirmed = window.confirm(`Apagar o afiliado ${affiliate.name}?`);
+    const confirmed = window.confirm(
+      `Apagar definitivamente o afiliado ${affiliate.name}? Links de WhatsApp e comissões vinculadas serão removidos. Links e negociações históricas serão preservados sem vínculo com o perfil.`,
+    );
 
     if (!confirmed) {
       return;
@@ -938,13 +959,29 @@ function ConfiguracoesContent() {
 
     setSaving(true);
     try {
-      await apagarAfiliado(affiliate.id);
+      const result = await apagarAfiliado(affiliate.id, { notify: false });
       setAffiliates((current) =>
         current.filter((item) => item.id !== affiliate.id),
       );
-      setMessage("Afiliado apagado com sucesso.");
+      const successMessage = getDeletionResultMessage(result, "Afiliado apagado com sucesso.");
+      setMessage(successMessage);
+      notify.success({
+        title: "Afiliado removido",
+        message: successMessage,
+        context: "affiliate-deleted",
+        source: "ui",
+        duration: 8_000,
+      });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Não foi possível apagar o afiliado."));
+      const deleteError = getApiErrorMessage(err, "Não foi possível apagar o afiliado.");
+      setError(deleteError);
+      notify.error({
+        title: "Falha ao apagar afiliado",
+        message: deleteError,
+        context: "generic",
+        source: "ui",
+        persist: true,
+      });
     } finally {
       setSaving(false);
     }
@@ -2203,11 +2240,7 @@ function ProfilePhotoPicker({
   return (
     <div className={styles.photoUploadBlock}>
       <div className={styles.photoPreviewCircle}>
-        {photoUrl ? (
-          <img src={photoUrl} alt={`Foto de ${name || "perfil"}`} />
-        ) : (
-          <span>{getInitials(name)}</span>
-        )}
+        <Avatar name={name || "Perfil"} photoUrl={photoUrl} alt={`Foto de ${name || "perfil"}`} />
       </div>
 
       <div className={styles.photoUploadInfo}>
@@ -2254,27 +2287,9 @@ function ProfileMiniAvatar({
 
   return (
     <span className={styles.profileMiniAvatar}>
-      {photoUrl ? (
-        <img src={photoUrl} alt={`Foto de ${name}`} />
-      ) : (
-        getInitials(name)
-      )}
+      <Avatar name={name} photoUrl={photoUrl} alt={`Foto de ${name}`} />
     </span>
   );
-}
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) {
-    return "?";
-  }
-
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
 function getProfilePhotoUrl(profile: unknown) {

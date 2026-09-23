@@ -1683,19 +1683,21 @@
 }
 .chartYAxis {
   position: absolute;
-  top: 8px;
-  bottom: 24px;
+  top: 0;
+  height: 166px;
   left: 0;
   z-index: 1;
-  display: flex;
   width: 48px;
-  flex-direction: column;
-  justify-content: space-between;
   color: #74829a;
   font-size: 9px;
   line-height: 1;
   text-align: right;
   white-space: nowrap;
+}
+.chartYAxis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
 }
 .clickTimelineLine svg {
   width: calc(100% - 50px);

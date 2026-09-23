@@ -43,6 +43,7 @@ import { AffiliateDetail } from "./useRelatorios";
 import styles from "./relatorios.module.css";
 import reportStyles from "@/components/reports/reports.module.css";
 import integrationStyles from "@/app/integracoes/integracoes.module.css";
+import Avatar from "@/components/profile/Avatar";
 
 const siteAlert = (message: string) =>
   notifySystem({ type: "info", title: "Aviso", message });
@@ -517,7 +518,7 @@ function RankingAffiliateAvatar({ affiliate }: { affiliate: AffiliateDetail }) {
 
   return (
     <span className={styles.rankingAvatar} style={avatarStyle}>
-      {photoUrl ? <img src={photoUrl} alt={`Foto de ${affiliate.affiliate}`} /> : <span>{getAffiliateInitials(affiliate.affiliate)}</span>}
+      <Avatar name={affiliate.affiliate} photoUrl={photoUrl} alt={`Foto de ${affiliate.affiliate}`} />
     </span>
   );
 }
@@ -723,7 +724,11 @@ function ClickPerformanceChart({
       </div>
       <div className={styles.clickChartArea}>
         <div className={styles.clickChartYAxis} aria-label="Quantidade de cliques">
-          {yTicks.map((tick) => <span key={tick}>{tick}</span>)}
+          {yTicks.map((tick) => (
+            <span key={tick} style={{ top: `${yForClicks(tick)}%` }}>
+              {tick}
+            </span>
+          ))}
         </div>
         <div className={styles.clickChartLineWrap}>
           <svg className={styles.clickChartLine} viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Quantidade de cliques por dia">
@@ -746,7 +751,6 @@ function ClickPerformanceChart({
 
 function AffiliateShowcaseAvatar({ block }: { block: AffiliateDetail }) {
   const photoUrl = getAffiliatePhotoUrl(block);
-  const initials = getAffiliateInitials(block.affiliate);
   const avatarPalette = getAffiliateAvatarPalette(
     block.affiliate,
     block.affiliateId,
@@ -760,20 +764,12 @@ function AffiliateShowcaseAvatar({ block }: { block: AffiliateDetail }) {
   return (
     <div className={styles.showcaseAvatar}>
       <div className={styles.showcaseAvatarCircle} style={avatarStyle}>
-        {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt={`Foto de ${block.affiliate}`}
-            className={styles.showcaseAvatarImage}
-          />
-        ) : (
-          <span className={styles.showcaseAvatarInitials}>{initials}</span>
-        )}
+        <Avatar name={block.affiliate} photoUrl={photoUrl} alt={`Foto de ${block.affiliate}`} className={styles.showcaseAvatarImage} />
       </div>
 
       <strong title={block.affiliate}>{block.affiliate}</strong>
       <span className={styles.showcaseAvatarHint}>
-        {photoUrl ? "Foto do afiliado" : "Iniciais do afiliado"}
+        {photoUrl ? "Foto do afiliado" : "Avatar animado do afiliado"}
       </span>
     </div>
   );
@@ -2168,7 +2164,6 @@ function AffiliateFilterPicker({
 
           {details.map((affiliate) => {
             const photoUrl = getAffiliatePhotoUrl(affiliate);
-            const initials = getAffiliateInitials(affiliate.affiliate);
             const palette = getAffiliateAvatarPalette(
               affiliate.affiliate,
               affiliate.affiliateId,
@@ -2177,7 +2172,6 @@ function AffiliateFilterPicker({
             const avatarStyle = {
               "--avatar-bg": palette.background,
               "--avatar-color": palette.color,
-              backgroundImage: photoUrl ? `url(${photoUrl})` : undefined,
             } as CSSProperties;
 
             const isActive =
@@ -2196,15 +2190,16 @@ function AffiliateFilterPicker({
                 role="option"
                 aria-selected={isActive}
               >
-                <span
+                <Avatar
+                  name={affiliate.affiliate}
+                  photoUrl={photoUrl}
+                  alt={`Foto de ${affiliate.affiliate}`}
                   className={cx(
                     styles.affiliateFilterAvatar,
                     photoUrl && styles.affiliateFilterAvatarPhoto,
                   )}
                   style={avatarStyle}
-                >
-                  {!photoUrl && initials}
-                </span>
+                />
 
                 <span className={styles.affiliateFilterButtonText}>
                   <strong>{affiliate.affiliate}</strong>
@@ -2244,27 +2239,26 @@ function AffiliateReportProfile({
   const profileDetail =
     selectedAffiliate || (details.length === 1 ? details[0] : null);
   const photoUrl = profileDetail ? getAffiliatePhotoUrl(profileDetail) : "";
-  const initials = getAffiliateInitials(profileName);
   const avatarPalette = getAffiliateAvatarPalette(profileName, profileId || 0);
   const avatarStyle = {
     "--avatar-bg": avatarPalette.background,
     "--avatar-color": avatarPalette.color,
-    backgroundImage: photoUrl ? `url(${photoUrl})` : undefined,
   } as CSSProperties;
 
   return (
     <div className={styles.reportProfileCard}>
       <div className={styles.reportProfileAvatarRow}>
-        <div
+        <Avatar
+          name={profileName}
+          photoUrl={photoUrl}
+          alt={`Foto de ${profileName}`}
           className={cx(
             styles.reportProfileAvatar,
             photoUrl && styles.reportProfileAvatarPhoto,
           )}
           style={avatarStyle}
           title={profileName}
-        >
-          {!photoUrl && initials}
-        </div>
+        />
       </div>
 
       <div className={styles.reportProfileInfo}>
