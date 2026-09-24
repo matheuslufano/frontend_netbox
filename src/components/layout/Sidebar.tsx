@@ -14,6 +14,7 @@ import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { MdContactPhone, MdSpaceDashboard } from "react-icons/md";
 import { PiLinkFill } from "react-icons/pi";
 import { RiLogoutBoxFill } from "react-icons/ri";
+import { obterPerfilAtual } from "@/lib/api";
 
 import logo1 from "../../../public/logo.jpg";
 import styles from "./sidebar.module.css";
@@ -82,6 +83,23 @@ export default function Sidebar() {
 
     loadStoredUser();
 
+    let cancelled = false;
+    obterPerfilAtual()
+      .then((profile) => {
+        if (cancelled) return;
+        const storedUser = window.localStorage.getItem("afiliados_netbox_user");
+        const previous = storedUser
+          ? JSON.parse(storedUser) as StoredUser & Record<string, unknown>
+          : {};
+        const current = { ...previous, ...profile };
+        window.localStorage.setItem("afiliados_netbox_user", JSON.stringify(current));
+        setUserName(profile.name || "usuÃ¡rio");
+        setUserPhoto(profile.photoUrl || logo1);
+      })
+      .catch(() => {
+        // Mantém os dados locais caso a consulta falhe temporariamente.
+      });
+
     function handleStorageChange(event: StorageEvent) {
       if (event.key === "afiliados_netbox_user") {
         loadStoredUser();
@@ -92,6 +110,7 @@ export default function Sidebar() {
 
     return () => {
       window.clearTimeout(mountTimer);
+      cancelled = true;
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
@@ -130,12 +149,14 @@ export default function Sidebar() {
 
       <div className={styles.profileBox} title={userName}>
         <div className={styles.avatarFrame}>
+          <span className={styles.userPhotoFrame}>
           <Avatar
             name={userName}
             photoUrl={typeof userPhoto === "string" && userPhoto !== logo1.src ? userPhoto : undefined}
             alt="Foto do usuário"
             className={styles.userPhoto}
           />
+          </span>
 
           <span className={styles.brandBubble} aria-label="Netbox">
             <Image

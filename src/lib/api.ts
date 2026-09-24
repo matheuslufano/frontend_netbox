@@ -851,6 +851,11 @@ export async function editarUsuario(id: number, payload: UpdateUserPayload) {
   return data;
 }
 
+export async function obterPerfilAtual() {
+  const { data } = await api.get<Omit<User, "createdAt">>("/auth/me");
+  return data;
+}
+
 export async function apagarUsuario(id: number, options?: { notify?: boolean }) {
   const { data } = await api.delete<DeletionResult>(`/users/${id}`, {
     skipSystemNotification: options?.notify === false,

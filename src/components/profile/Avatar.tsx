@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Avatar.module.css";
 
 type AvatarProps = {
@@ -23,10 +24,15 @@ function profileInitials(value?: string | null) {
 
 /** Foto do perfil ou avatar Glass animado com iniciais quando não há foto. */
 export default function Avatar({ name, photoUrl, alt = "Avatar", className, style, title, seed: requestedSeed }: AvatarProps) {
+  const [failedPhoto, setFailedPhoto] = useState("");
   const fallbackSeed = (requestedSeed || name || "usuario").trim() || "usuario";
   const currentPhoto = photoUrl?.trim() || "";
   let generatedSeed = fallbackSeed;
-  let isGeneratedAvatar = !currentPhoto;
+  let isGeneratedAvatar = !currentPhoto || failedPhoto === currentPhoto;
+
+  useEffect(() => {
+    setFailedPhoto("");
+  }, [currentPhoto]);
 
   if (currentPhoto) {
     try {
@@ -44,7 +50,7 @@ export default function Avatar({ name, photoUrl, alt = "Avatar", className, styl
     : currentPhoto;
 
   if (!isGeneratedAvatar) {
-    return <img src={src} alt={alt} className={className} style={style} title={title} loading="lazy" decoding="async" />;
+    return <img src={src} alt={alt} className={className} style={style} title={title} loading="lazy" decoding="async" onError={() => setFailedPhoto(currentPhoto)} />;
   }
 
   return (
