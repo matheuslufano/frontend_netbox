@@ -1,0 +1,61 @@
+/* Dark-only visual contract. Legacy glass tokens are intentionally opaque for data panels. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --nb-background: #15141d;
+  --nb-background-secondary: #191823;
+  --nb-surface: #211f2d;
+  --nb-surface-secondary: #282534;
+  --nb-surface-elevated: #302c3e;
+  --nb-surface-hover: #353044;
+  --nb-text-primary: #f5f3fa;
+  --nb-text-secondary: #c0bacf;
+  --nb-text-muted: #a39bb5;
+  --nb-text-inverse: #15141d;
+  --nb-border: rgb(213 201 243 / 14%);
+  --nb-border-secondary: rgb(213 201 243 / 8%);
+  --nb-input: #191722;
+  --nb-input-border: rgb(213 201 243 / 24%);
+  --nb-input-placeholder: #a39bb5;
+  --nb-input-disabled: #24212f;
+  --nb-hover: rgb(214 200 255 / 7%);
+  --nb-selected: rgb(255 114 82 / 14%);
+  --nb-overlay: rgb(7 6 13 / 76%);
+  --nb-shadow: rgb(4 3 10 / 28%);
+  --nb-focus-ring: rgb(255 143 113 / 48%);
+  --nb-orange: #ff967c;
+  --nb-orange-strong: #cf4627;
+  --nb-success: #77d6a0;
+  --nb-error: #ff929d;
+  --nb-warning: #edcc85;
+  --nb-info: #a5b7f9;
+  --nb-glass-background: var(--nb-surface);
+  --nb-glass-filter: none;
+  --nb-glass-border: var(--nb-border);
+  --nb-glass-shadow: inset 0 1px 0 rgb(255 255 255 / 3%), 0 12px 32px rgb(4 3 10 / 16%);
+  --nb-glass-reflection: linear-gradient(135deg, rgb(223 207 255 / 3%), transparent 60%);
+  --nb-chrome-background: #1b1926;
+  --nb-chrome-filter: none;
+  --nb-ambient-background: radial-gradient(ellipse at 32% 0%, rgb(101 71 151 / 16%), transparent 55%), var(--nb-background);
+  --nb-ease: cubic-bezier(.22, 1, .36, 1);
+  --nb-duration: 220ms;
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-theme="dark"] {
+    --nb-chrome-background: rgb(26 24 37 / 82%);
+    --nb-chrome-filter: blur(18px) saturate(115%);
+  }
+}
+@media (max-width: 768px) {
+  :root[data-theme="dark"] { --nb-chrome-filter: blur(10px); }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root[data-theme="dark"] {
+    --nb-chrome-background: #1b1926;
+    --nb-chrome-filter: none;
+    --nb-glass-reflection: none;
+    --nb-border: #81778e;
+    --nb-border-secondary: #81778e;
+    --nb-input-border: #aaa0bb;
+    --nb-ambient-background: var(--nb-background);
+  }
+}

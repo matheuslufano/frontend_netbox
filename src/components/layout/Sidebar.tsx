@@ -175,7 +175,7 @@ export default function Sidebar() {
       <nav className={styles.nav}>
         <ul className={styles.menuList}>
           <li className={styles.button}>
-            <Link
+            <Link aria-current={pathname === "/links-campanhas" ? "page" : undefined}
               href="/links-campanhas"
               className={styles.menuItem}
               aria-label="Links e Campanhas"
@@ -186,7 +186,7 @@ export default function Sidebar() {
           </li>
 
           <li className={styles.button}>
-            <Link
+            <Link aria-current={pathname === "/dashboard" ? "page" : undefined}
               href="/dashboard"
               className={styles.menuItem}
               aria-label="Dashboard"
@@ -197,7 +197,7 @@ export default function Sidebar() {
           </li>
 
           <li className={styles.button}>
-            <Link href="/crm" className={styles.menuItem} aria-label="CRM">
+            <Link aria-current={pathname === "/crm" ? "page" : undefined} href="/crm" className={styles.menuItem} aria-label="CRM">
               <MdContactPhone className={styles.icon} />
               <span className={styles.itemLabel}>CRM</span>
             </Link>
@@ -228,7 +228,7 @@ export default function Sidebar() {
           </li>
 
           <li className={styles.button}>
-            <Link
+            <Link aria-current={pathname === "/fluxograma-conversoes" ? "page" : undefined}
               href="/fluxograma-conversoes"
               className={styles.menuItem}
               aria-label="Fluxograma de conversões"
@@ -239,7 +239,7 @@ export default function Sidebar() {
           </li>
 
           <li className={styles.button}>
-            <Link
+            <Link aria-current={pathname === "/relatorios" ? "page" : undefined}
               href="/relatorios"
               className={styles.menuItem}
               aria-label="Relatórios"
@@ -278,7 +278,7 @@ export default function Sidebar() {
           </li>
 
           <li className={styles.button}>
-            <Link
+            <Link aria-current={pathname === "/configuracoes" ? "page" : undefined}
               href="/configuracoes"
               className={styles.menuItem}
               aria-label="Configurações"

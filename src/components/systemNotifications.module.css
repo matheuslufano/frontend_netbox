@@ -160,7 +160,7 @@
   border-color: rgba(255, 255, 255, 0.12);
   border-left-color: var(--notification-accent);
   background: #242627;
-  color: #f1f0ee;
+  color: var(--nb-text-primary);
   box-shadow:
     0 24px 58px rgba(0, 0, 0, 0.48),
     0 5px 16px rgba(0, 0, 0, 0.26),
@@ -173,8 +173,8 @@
     radial-gradient(circle at 8% 26%, var(--notification-soft), transparent 44%);
 }
 
-:global(html[data-theme="dark"]) .content > span { color: #d2cfca; }
-:global(html[data-theme="dark"]) .closeButton { color: #b9b7b2; }
+:global(html[data-theme="dark"]) .content > span { color: var(--nb-text-secondary); }
+:global(html[data-theme="dark"]) .closeButton { color: var(--nb-text-muted); }
 :global(html[data-theme="dark"]) .closeButton:hover { color: #fff; background: rgba(255, 255, 255, 0.09); }
 :global(html[data-theme="dark"]) .success { --notification-accent: #4ade80; }
 :global(html[data-theme="dark"]) .error { --notification-accent: #fb7185; }

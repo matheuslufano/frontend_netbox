@@ -427,16 +427,16 @@
 
 :global(html[data-theme="dark"]) .bar .control,
 :global(html[data-theme="dark"]) .bar .filterButton {
-  border-color: #52636c;
-  background: #35434a;
-  color: #c9dce5;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .bar .filterButton.active,
 :global(html[data-theme="dark"]) .bar .filterButton:hover,
 :global(html[data-theme="dark"]) .bar .control:hover {
-  border-color: #7098aa;
-  background: #465b65;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-hover);
   color: #d6e8f0;
 }
 
@@ -594,39 +594,39 @@
 .reminderDeleteButton:hover { background: #ffe2e2; }
 .reminderDeleteButton:disabled { opacity: .6; cursor: not-allowed; }
 
-:global(html[data-theme="dark"]) .reminderModal { border-color: #555852; background: #30312e; }
-:global(html[data-theme="dark"]) .reminderModalHeader { border-color: #555852; }
+:global(html[data-theme="dark"]) .reminderModal { border-color: var(--nb-border); background: var(--nb-surface); }
+:global(html[data-theme="dark"]) .reminderModalHeader { border-color: var(--nb-border); }
 :global(html[data-theme="dark"]) .reminderModalHeader h3,
-:global(html[data-theme="dark"]) .reminderDetails strong { color: #f1efea; }
+:global(html[data-theme="dark"]) .reminderDetails strong { color: var(--nb-text-primary); }
 :global(html[data-theme="dark"]) .reminderForm input,
 :global(html[data-theme="dark"]) .reminderForm select,
-:global(html[data-theme="dark"]) .reminderForm textarea { border-color: #555852; background: #292a27; color: #f1efea; }
-:global(html[data-theme="dark"]) .reminderColorField { border-color: #555852; }
+:global(html[data-theme="dark"]) .reminderForm textarea { border-color: var(--nb-border); background: var(--nb-input); color: var(--nb-text-primary); }
+:global(html[data-theme="dark"]) .reminderColorField { border-color: var(--nb-border); }
 
 :global(html[data-theme="dark"]) .calendarButton {
-  border-color: #52636c;
-  background: #35434a;
-  color: #c9dce5;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .calendarButton:hover,
 :global(html[data-theme="dark"]) .calendarButton:focus-visible {
-  border-color: #7098aa;
-  background: #465b65;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-hover);
 }
 
 :global(html[data-theme="dark"]) .calendarModal {
-  border-color: #555852;
-  background: #292a27;
+  border-color: var(--nb-border);
+  background: var(--nb-input);
 }
 
 :global(html[data-theme="dark"]) .calendarModalHeader {
-  background: #30312e;
+  background: var(--nb-surface);
 }
 
 :global(html[data-theme="dark"]) .calendarModalHeader h2,
 :global(html[data-theme="dark"]) .calendarModalHeader button {
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 .themeToggle:hover,
@@ -637,40 +637,46 @@
 }
 
 :global(html[data-theme="dark"]) .themeToggle {
-  border-color: #52636c;
-  background: #35434a;
-  color: #c9dce5;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .themeToggle:hover,
 :global(html[data-theme="dark"]) .themeToggle:focus-visible {
-  border-color: #7098aa;
-  background: #465b65;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-hover);
 }
 
 :global(html[data-theme="dark"]) .bar,
 :global(html[data-theme="dark"]) .panel,
 :global(html[data-theme="dark"]) .panel footer {
-  border-color: #555852;
+  border-color: var(--nb-border);
   background: #30312e00;
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .control,
 :global(html[data-theme="dark"]) .filterButton,
 :global(html[data-theme="dark"]) .conditions article select,
 :global(html[data-theme="dark"]) .conditions article input {
-  border-color: #555852;
-  background: #292a27;
-  color: #f1efea;
+  border-color: var(--nb-border);
+  background: var(--nb-input);
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .panel footer button {
-  background: #474039;
-  color: #e2b18d;
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .panel footer .apply {
-  background: #8f6048;
-  color: #fff8f2;
+  background: var(--nb-orange-strong);
+  color: #ffffff;
 }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .panel,
+:global(html[data-theme="dark"]) .panel footer { background: var(--nb-surface-elevated); }
+:global(html[data-theme="dark"]) .calendarButton,
+:global(html[data-theme="dark"]) .themeToggle { background: transparent; border-color: transparent; }

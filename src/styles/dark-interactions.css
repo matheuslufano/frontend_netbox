@@ -1,0 +1,33 @@
+/* Shared motion changes opacity, never transforms containers with fixed menus. */
+/* Clip horizontal overflow without creating a vertical scroll container that traps sticky headers. */
+:root[data-theme="dark"],
+:root[data-theme="dark"] body {
+  overflow-x: clip;
+}
+:root[data-theme="dark"] body { isolation: isolate; font-family: Arial, Helvetica, sans-serif; }
+:root[data-theme="dark"] .content { animation: nb-page-enter 420ms var(--nb-ease) both; }
+:root[data-theme="dark"] :where(button, a, [role="button"], input, select, textarea) {
+  transition: background-color var(--nb-duration) ease, color var(--nb-duration) ease,
+    border-color var(--nb-duration) ease, box-shadow var(--nb-duration) ease, opacity var(--nb-duration) ease;
+}
+:root[data-theme="dark"] :where(button, [role="button"]):not(:disabled):hover {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 4px 14px rgb(4 3 10 / 12%);
+}
+:root[data-theme="dark"] :where(button, [role="button"]):not(:disabled):active { opacity: .82; }
+:root[data-theme="dark"] :where(button, [role="button"]):disabled { cursor: not-allowed; box-shadow: none; }
+:root[data-theme="dark"] :where(a, button, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--nb-orange); outline-offset: 3px;
+}
+:root[data-theme="dark"] :where([role="dialog"], [role="menu"], [role="listbox"]) {
+  animation: nb-page-enter 180ms var(--nb-ease) both;
+}
+:root[data-theme="dark"] :where(th) { letter-spacing: .025em; }
+:root[data-theme="dark"] :where(td) { transition: background-color var(--nb-duration) ease; }
+:root[data-theme="dark"] ::selection { background: #694b80; color: #fff; }
+:root[data-theme="dark"] { scrollbar-color: #51485f #191722; }
+@keyframes nb-page-enter { from { opacity: .45; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="dark"] *, :root[data-theme="dark"] *::before, :root[data-theme="dark"] *::after {
+    animation: none !important; transition: none !important; scroll-behavior: auto !important;
+  }
+}

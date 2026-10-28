@@ -84,6 +84,8 @@ export function GET(request: NextRequest) {
 
     if (button.tagName && button.tagName.toLowerCase() === "a") {
       button.setAttribute("href", href);
+      button.setAttribute("target", "_blank");
+      button.setAttribute("rel", "noopener noreferrer");
     }
   }
 
@@ -131,11 +133,9 @@ export function GET(request: NextRequest) {
     var href = buildButtonHref();
     updateButton(button, href);
 
-    if (!(button.tagName && button.tagName.toLowerCase() === "a")) {
-      event.preventDefault();
-      window.location.href = href;
-    }
-  });
+    event.preventDefault();
+    window.open(href, "_blank", "noopener,noreferrer");
+  }, true);
 })();`;
 
   return new Response(script, {

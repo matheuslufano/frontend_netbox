@@ -2325,3 +2325,16 @@
     width: 100%;
   }
 }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .simpleCampaignPicker,
+:global(html[data-theme="dark"]) .simpleSection,
+:global(html[data-theme="dark"]) .simpleEmpty {
+  background: var(--nb-surface); border-color: var(--nb-border); color: var(--nb-text-primary);
+  box-shadow: var(--nb-glass-shadow);
+}
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .page { background: transparent; }
+:global(html[data-theme="dark"]) .viewTabs button { color: var(--nb-text-secondary); }
+:global(html[data-theme="dark"]) .viewTabs .activeViewTab { background: var(--nb-selected); color: var(--nb-orange); }

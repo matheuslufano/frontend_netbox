@@ -2001,3 +2001,12 @@
 .systemBubble .whatsappFooter { justify-content:center; }
 .systemBubble .whatsappText { font-size:11px; font-weight:700; }
 @media (max-width:560px) { .whatsappBubble { max-width:90%; } .systemBubble { max-width:94%; } }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .page,
+:global(html[data-theme="dark"]) .integrationCard,
+:global(html[data-theme="dark"]) .panel,
+:global(html[data-theme="dark"]) .webhookCard {
+  background: var(--nb-surface); border-color: var(--nb-border); color: var(--nb-text-primary);
+  box-shadow: var(--nb-glass-shadow);
+}

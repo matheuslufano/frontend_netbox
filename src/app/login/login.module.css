@@ -196,3 +196,48 @@
     flex-direction: column;
   }
 }
+
+:global(html[data-theme="dark"]) .page {
+  background: transparent;
+}
+
+:global(html[data-theme="dark"]) .panel {
+  background: linear-gradient(145deg, rgb(223 207 255 / 4%), transparent 65%), var(--nb-surface);
+  border-color: var(--nb-glass-border);
+  box-shadow: var(--nb-glass-shadow);
+  border-radius: 24px;
+
+}
+
+:global(html[data-theme="dark"]) .inputGroup {
+  background: var(--nb-input);
+  border-color: var(--nb-input-border);
+}
+
+:global(html[data-theme="dark"]) .inputGroup:focus-within {
+  border-color: var(--nb-orange);
+  box-shadow: 0 0 0 3px var(--nb-focus-ring);
+}
+
+:global(html[data-theme="dark"]) .brand h1,
+:global(html[data-theme="dark"]) .field {
+  color: var(--nb-text-primary);
+}
+
+:global(html[data-theme="dark"]) .remember {
+  color: var(--nb-text-secondary);
+}
+
+:global(html[data-theme="dark"]) .eyebrow,
+:global(html[data-theme="dark"]) .options a {
+  color: var(--nb-orange);
+}
+
+:global(html[data-theme="dark"]) .panel { padding: 36px; border-radius: 24px; }
+:global(html[data-theme="dark"]) .brand h1 { letter-spacing: -.035em; line-height: 1.12; }
+:global(html[data-theme="dark"]) .eyebrow { font-size: 11px; letter-spacing: .1em; }
+:global(html[data-theme="dark"]) .submitButton { background: linear-gradient(180deg, #cf4627, #bc3c21); color: #fff; box-shadow: 0 5px 16px rgb(226 67 38 / 16%); }
+:global(html[data-theme="dark"]) .submitButton:hover { background: #c24325; }
+:global(html[data-theme="dark"]) .inputGroup input { background: transparent !important; border: 0; box-shadow: none !important; }
+:global(html[data-theme="dark"]) .inputGroup input:focus-visible { outline: none; }
+@media (max-width: 520px) { :global(html[data-theme="dark"]) .panel { padding: 26px; } }

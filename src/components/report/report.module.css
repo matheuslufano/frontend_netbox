@@ -648,7 +648,7 @@
 :global(html[data-theme="dark"]) .chartCard,
 :global(html[data-theme="dark"]) .chartCardLarge,
 :global(html[data-theme="dark"]) .chartCardCompact {
-  border-color: #565952;
+  border-color: var(--nb-border);
   color: var(--nb-text-primary);
 }
 
@@ -664,14 +664,14 @@
 :global(html[data-theme="dark"]) .healthItem,
 :global(html[data-theme="dark"]) .healthItemBox,
 :global(html[data-theme="dark"]) .quickInsights div {
-  border-color: #51544e;
-  background: #41423e;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-elevated);
 }
 
 :global(html[data-theme="dark"]) .summaryItem:hover,
 :global(html[data-theme="dark"]) .affiliateRankingCard:hover {
-  border-color: #686b64;
-  background: #474843;
+  border-color: var(--nb-input-border);
+  background: var(--nb-border-secondary);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
 }
 
@@ -698,26 +698,26 @@
 
 :global(html[data-theme="dark"]) .funnelTrack,
 :global(html[data-theme="dark"]) .barTrack {
-  background: #50524c;
+  background: var(--nb-border);
 }
 
 :global(html[data-theme="dark"]) .efficiencyBox,
 :global(html[data-theme="dark"]) .efficiencyBoxEnhanced {
   border-color: #5b584f;
-  background: linear-gradient(135deg, #484238, #41413d);
+  background: linear-gradient(135deg, #484238, var(--nb-surface-elevated));
 }
 
 :global(html[data-theme="dark"]) .tableWrapper {
-  border-color: #565952;
-  background: #393a36;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
 }
 
 :global(html[data-theme="dark"]) .tableHead {
-  background: #30312e;
+  background: var(--nb-surface);
 }
 
 :global(html[data-theme="dark"]) .tableRow:hover {
-  background: #464842;
+  background: var(--nb-surface-elevated);
 }
 
 :global(html[data-theme="dark"]) .activeBadge {
@@ -808,4 +808,31 @@
   .kpiCard strong {
     font-size: 28px;
   }
+}
+
+/* Reflexos e transparência sem alterar o posicionamento dos descendentes. */
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .kpiCard,
+:global(html[data-theme="dark"]) .chartCard,
+:global(html[data-theme="dark"]) .chartCardLarge,
+:global(html[data-theme="dark"]) .chartCardCompact {
+  background: var(--nb-glass-reflection), var(--nb-glass-background);
+  border-color: var(--nb-glass-border);
+  box-shadow: var(--nb-glass-shadow);
+}
+
+/* A restrained hero shares the dashboard surface hierarchy. */
+:global(html[data-theme="dark"]) .dashboardHero {
+  background: radial-gradient(ellipse at 0% 0%, rgb(255 117 85 / 10%), transparent 65%), var(--nb-surface);
+  border: 1px solid var(--nb-border);
+  box-shadow: var(--nb-glass-shadow);
+}
+:global(html[data-theme="dark"]) .dashboardHero h2 {
+  color: var(--nb-text-primary);
+  font-weight: 600;
+  letter-spacing: -.03em;
+}
+:global(html[data-theme="dark"]) .dashboardHeroMetric {
+  background: var(--nb-background-secondary);
+  border-color: var(--nb-border-secondary);
 }

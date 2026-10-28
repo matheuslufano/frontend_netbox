@@ -1,0 +1,36 @@
+.atmosphere { display: none; }
+:global(html[data-theme="dark"]) .atmosphere {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--nb-ambient-background);
+  contain: strict;
+}
+.halo, .wave { position: absolute; pointer-events: none; }
+.halo {
+  inset: -12% -15%;
+  background: radial-gradient(ellipse at 32% 28%, rgb(111 67 150 / 19%), transparent 44%),
+    radial-gradient(ellipse at 80% 68%, rgb(66 74 143 / 13%), transparent 40%);
+  animation: atmosphere-drift 28s ease-in-out infinite alternate;
+}
+.wave {
+  width: 110%; height: 62%; left: -8%; bottom: -28%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 12%, rgb(195 86 89 / 12%), transparent 62%);
+  box-shadow: 0 -1px 0 rgb(200 155 231 / 4%);
+  transform: rotate(-14deg);
+  animation: atmosphere-wave 34s ease-in-out infinite alternate;
+}
+@keyframes atmosphere-drift { to { transform: translate3d(3%, -2%, 0); opacity: .65; } }
+@keyframes atmosphere-wave { to { transform: translate3d(2%, -4%, 0) rotate(-9deg); opacity: .55; } }
+/* Mobile renders a static atmosphere; no persistent animation or blur surfaces. */
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .halo, .wave { animation: none; }
+  .wave { display: none; }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  .halo, .wave { display: none; }
+}

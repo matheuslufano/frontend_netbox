@@ -1147,3 +1147,33 @@
     white-space: nowrap;
   }
 }
+
+/* Quiet navigation rail: only the selected destination carries the brand accent. */
+:global(html[data-theme="dark"]) .sidebar {
+  background: var(--nb-chrome-background); border-color: var(--nb-border);
+  box-shadow: 8px 0 32px rgb(4 3 10 / 10%);
+}
+:global(html[data-theme="dark"]) .sidebar::before { background: none; backdrop-filter: none; }
+:global(html[data-theme="dark"]) .menuItem {
+  background: transparent; border-color: transparent; color: var(--nb-text-secondary);
+  box-shadow: none; backdrop-filter: none; border-radius: 12px; font-weight: 600;
+}
+:global(html[data-theme="dark"]) .menuItem::before { display: none; }
+:global(html[data-theme="dark"]) .button:hover { transform: none; }
+:global(html[data-theme="dark"]) .menuItem:hover { background: var(--nb-hover); border-color: var(--nb-border-secondary); color: var(--nb-text-primary); box-shadow: none; }
+:global(html[data-theme="dark"]) .menuItemActive,
+:global(html[data-theme="dark"]) .menuItemActive:hover { background: var(--nb-selected); border-color: rgb(255 150 124 / 16%); color: var(--nb-orange); }
+:global(html[data-theme="dark"]) .icon { background: transparent; box-shadow: none; color: inherit; }
+:global(html[data-theme="dark"]) .itemLabel { font-weight: 600; }
+:global(html[data-theme="dark"]) .submenu { border-color: var(--nb-border); }
+:global(html[data-theme="dark"]) .submenuLink { color: var(--nb-text-secondary); }
+:global(html[data-theme="dark"]) .submenuLink:hover,
+:global(html[data-theme="dark"]) .submenuLinkActive { color: var(--nb-orange); background: var(--nb-selected); }
+:global(html[data-theme="dark"]) .collapseButton,
+:global(html[data-theme="dark"]) .collapseButton::before { background: var(--nb-surface-secondary); border-color: var(--nb-border); box-shadow: none; }
+:global(html[data-theme="dark"]) .collapseButton:hover svg { animation: none; }
+@media (width < 768px) {
+  :global(html[data-theme="dark"]) .sidebar { -webkit-backdrop-filter: var(--nb-chrome-filter); backdrop-filter: var(--nb-chrome-filter); }
+}
+
+:global(html[data-theme="dark"]) .menuItem[aria-current="page"] { background: var(--nb-selected); border-color: rgb(255 150 124 / 16%); color: var(--nb-orange); }

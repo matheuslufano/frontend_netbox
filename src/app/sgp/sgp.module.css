@@ -2017,3 +2017,13 @@
     border-width: 3px;
   }
 }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .header,
+:global(html[data-theme="dark"]) .searchCard,
+:global(html[data-theme="dark"]) .listCard,
+:global(html[data-theme="dark"]) .preCadastroCard,
+:global(html[data-theme="dark"]) .searchSuggestions {
+  background: var(--nb-surface); border-color: var(--nb-border); color: var(--nb-text-primary);
+  box-shadow: var(--nb-glass-shadow);
+}

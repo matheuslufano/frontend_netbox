@@ -192,7 +192,7 @@
 :global(html[data-theme="dark"]) .reportProfileCard,
 :global(html[data-theme="dark"]) .conversionObjectiveCard {
   border-color: var(--nb-border);
-  background: linear-gradient(145deg, #393a36, #30312e);
+  background: linear-gradient(145deg, var(--nb-surface-secondary), var(--nb-surface));
   color: var(--nb-text-primary);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
 }
@@ -203,7 +203,7 @@
 :global(html[data-theme="dark"]) .conversionEditGrid input,
 :global(html[data-theme="dark"]) .conversionEditGrid textarea {
   border-color: var(--nb-input-border);
-  background: #292a27;
+  background: var(--nb-input);
   color: var(--nb-text-primary);
 }
 
@@ -214,7 +214,7 @@
 :global(html[data-theme="dark"]) .affiliateFilterDropdown,
 :global(html[data-theme="dark"]) .contactConversationModal {
   border-color: var(--nb-border);
-  background: #30312e;
+  background: var(--nb-surface);
   color: var(--nb-text-primary);
 }
 
@@ -267,7 +267,7 @@
 :global(html[data-theme="dark"]) .copyButton,
 :global(html[data-theme="dark"]) .conversionFilterNotice button {
   background: #60758d;
-  color: #f4f2ee;
+  color: var(--nb-text-primary);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
@@ -308,7 +308,7 @@
 :global(html[data-theme="dark"]) .showcaseMetricButtonActive {
   border-color: #708f78;
   background: linear-gradient(135deg, #617e69, #708f78);
-  color: #f4f2ee;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .iconDangerButton {
@@ -323,7 +323,7 @@
 :global(html[data-theme="dark"]) .openConversionDataButton:hover {
   border-color: #72859b;
   background: linear-gradient(135deg, #586c83, #657a92);
-  color: #f4f2ee;
+  color: var(--nb-text-primary);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
@@ -5769,8 +5769,8 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .conversionAffiliatePanel,
 :global(html[data-theme="dark"]) .conversionReportFilters,
 :global(html[data-theme="dark"]) .conversionDataModalCard {
-  border-color: #555852;
-  background: linear-gradient(145deg, #393a36, #30312e);
+  border-color: var(--nb-border);
+  background: linear-gradient(145deg, var(--nb-surface-secondary), var(--nb-surface));
   color: var(--nb-text-primary);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
 }
@@ -5782,8 +5782,8 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .affiliateFilterDropdown,
 :global(html[data-theme="dark"]) .conversionViewSwitcher,
 :global(html[data-theme="dark"]) .conversionReportMetrics {
-  border-color: #555852;
-  background: #2f302d;
+  border-color: var(--nb-border);
+  background: var(--nb-background-secondary);
   color: var(--nb-text-primary);
 }
 
@@ -5794,8 +5794,8 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .conversionEditGrid textarea,
 :global(html[data-theme="dark"]) .clientDataList,
 :global(html[data-theme="dark"]) .tableWrapper {
-  border-color: #555852;
-  background: #292a27;
+  border-color: var(--nb-border);
+  background: var(--nb-input);
   color: var(--nb-text-primary);
 }
 
@@ -5828,7 +5828,7 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .summaryValue,
 :global(html[data-theme="dark"]) .conversionReportTitleRow h3,
 :global(html[data-theme="dark"]) .linkNameHighlight {
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .summaryLabel,
@@ -5837,7 +5837,7 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .affiliateId,
 :global(html[data-theme="dark"]) .linkLabel,
 :global(html[data-theme="dark"]) .conversionReportFilters label {
-  color: #c5c1b9;
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .link,
@@ -5857,7 +5857,7 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 }
 
 :global(html[data-theme="dark"]) .conversionDataModalHero {
-  background: linear-gradient(135deg, #343735, #45443d) !important;
+  background: linear-gradient(135deg, var(--nb-surface-secondary), #45443d) !important;
 }
 
 /* Neutralize the remaining blue panels used by the affiliate summary. */
@@ -5866,9 +5866,9 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .affiliateDetailsSurface,
 :global(html[data-theme="dark"]) .affiliateCard,
 :global(html[data-theme="dark"]) .flowMetric {
-  border-color: #555852;
-  background: linear-gradient(145deg, #3b3c38, #30312e) !important;
-  color: #f1efea;
+  border-color: var(--nb-border);
+  background: linear-gradient(145deg, var(--nb-surface-secondary), var(--nb-surface)) !important;
+  color: var(--nb-text-primary);
   box-shadow:
     0 14px 30px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -5879,28 +5879,28 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .rankingHeader span,
 :global(html[data-theme="dark"]) .rankingItem span,
 :global(html[data-theme="dark"]) .flowMetric span {
-  color: #c5c1b9;
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .conversionHero strong,
 :global(html[data-theme="dark"]) .rankingHeader strong,
 :global(html[data-theme="dark"]) .rankingItem strong,
 :global(html[data-theme="dark"]) .flowMetric strong {
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .conversionObjectiveList {
-  background: #272825;
-  border-color: #4d504a;
+  background: var(--nb-background-secondary);
+  border-color: var(--nb-border);
 }
 
 :global(html[data-theme="dark"]) .showcaseAffiliatePanel,
 :global(html[data-theme="dark"]) .showcaseLinksPanel,
 :global(html[data-theme="dark"]) .showcaseContactsPanel,
 :global(html[data-theme="dark"]) .tableWrapper {
-  border-color: #555852;
-  background: #30312e;
-  color: #f1efea;
+  border-color: var(--nb-border);
+  background: var(--nb-surface);
+  color: var(--nb-text-primary);
 }
 
 /* Central de conversões: hierarquia visual e jornadas mais fáceis de ler. */
@@ -6153,7 +6153,7 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 }
 
 :global(html[data-theme="dark"]) .minimalFlowPage {
-  background: linear-gradient(145deg, #252623, #30312e 58%, #38332e);
+  background: linear-gradient(145deg, var(--nb-background), var(--nb-surface) 58%, var(--nb-selected));
 }
 
 :global(html[data-theme="dark"]) .minimalFlowTitle,
@@ -6161,30 +6161,30 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .minimalFlow .flowMetricActive span,
 :global(html[data-theme="dark"]) .minimalFlow .flowMetricActive strong,
 :global(html[data-theme="dark"]) .minimalFlow .conversionIdentity h3 {
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .minimalFlowHeading p,
 :global(html[data-theme="dark"]) .minimalFlow .conversionReportFilters label span {
-  color: #c5c1b9;
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .minimalFlow .conversionReportMain,
 :global(html[data-theme="dark"]) .minimalFlow .conversionReportFilters,
 :global(html[data-theme="dark"]) .minimalFlow .conversionFlowCard,
 :global(html[data-theme="dark"]) .minimalFlow .flowMetric {
-  border-color: #555852;
-  background: linear-gradient(145deg, #393a36, #30312e);
+  border-color: var(--nb-border);
+  background: linear-gradient(145deg, var(--nb-surface-secondary), var(--nb-surface));
 }
 
 :global(html[data-theme="dark"]) .minimalFlow .flowMetricActive {
   border-color: #c97948;
-  background: linear-gradient(145deg, #453830, #37312c);
+  background: linear-gradient(145deg, var(--nb-selected), var(--nb-selected));
 }
 
 :global(html[data-theme="dark"]) .minimalFlow .conversionStageCard {
-  border-color: #555852;
-  background: #343532;
+  border-color: var(--nb-border);
+  background: var(--nb-surface);
 }
 
 :global(html[data-theme="dark"]) .minimalFlow .conversionStageDone {
@@ -6305,21 +6305,34 @@ aqui dos ajustes ainda se laboratórios então a peça de pesquisas pesquisas pa
 :global(html[data-theme="dark"]) .conversionReportMain,
 :global(html[data-theme="dark"]) .conversionObjectiveList,
 :global(html[data-theme="dark"]) .reportProfileStats {
-  border-color: #555852;
-  background: #30312e;
+  border-color: var(--nb-border);
+  background: var(--nb-surface);
 }
 
 :global(html[data-theme="dark"]) .conversionObjectiveCard,
 :global(html[data-theme="dark"]) .objectiveInfographic,
 :global(html[data-theme="dark"]) .objectiveStatusText {
-  border-color: #555852;
-  background: #393a36;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
 }
 
 :global(html[data-theme="dark"]) .objectiveStatusText span {
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .objectiveStatusText small {
-  color: #c5c1b9;
+  color: var(--nb-text-secondary);
+}
+
+/* Reflexos e transparência sem alterar o posicionamento dos descendentes. */
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .affiliateDetailsSurface,
+:global(html[data-theme="dark"]) .affiliateCard,
+:global(html[data-theme="dark"]) .conversionFlowPanel,
+:global(html[data-theme="dark"]) .conversionFlowCard,
+:global(html[data-theme="dark"]) .conversionReportMain,
+:global(html[data-theme="dark"]) .reportProfileCard {
+  background: var(--nb-glass-reflection), var(--nb-glass-background);
+  border-color: var(--nb-glass-border);
+  box-shadow: var(--nb-glass-shadow);
 }

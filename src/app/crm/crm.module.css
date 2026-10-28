@@ -103,14 +103,14 @@
 
 :global(html[data-theme="dark"]) .crmTopbar > header .viewButton,
 :global(html[data-theme="dark"]) .crmTopbar > header .iconButton {
-  border-color: #52636c;
-  background: #35434a;
-  color: #c9dce5;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .crmTopbar > header .viewButtonActive,
 :global(html[data-theme="dark"]) .crmTopbar > header .createButton {
-  border-color: #7098aa;
+  border-color: var(--nb-border);
   background: #668d9f;
   color: #f1f7fa;
 }
@@ -3000,7 +3000,7 @@
 :global(html[data-theme="dark"]) .archiveModal,
 :global(html[data-theme="dark"]) .optionModal,
 :global(html[data-theme="dark"]) .syncModal {
-  border-color: #555852;
+  border-color: var(--nb-border);
   background: linear-gradient(145deg, #393a3602, #30312e00);
   color: var(--nb-text-primary);
 }
@@ -3010,16 +3010,16 @@
 :global(html[data-theme="dark"]) .cardValueRow,
 :global(html[data-theme="dark"]) .activity,
 :global(html[data-theme="dark"]) .columnHeader {
-  border-color: #555852;
-  background: #30312e;
+  border-color: var(--nb-border);
+  background: var(--nb-surface);
   color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) input,
 :global(html[data-theme="dark"]) textarea,
 :global(html[data-theme="dark"]) select {
-  border-color: #555852;
-  background: #292a27;
+  border-color: var(--nb-border);
+  background: var(--nb-input);
   color: var(--nb-text-primary);
 }
 
@@ -3027,17 +3027,17 @@
 :global(html[data-theme="dark"]) .filterButton,
 :global(html[data-theme="dark"]) .iconButton,
 :global(html[data-theme="dark"]) .columnTools button {
-  border-color: #65594f;
-  background: #474039;
-  color: #e2b18d;
+  border-color: var(--nb-border);
+  background: var(--nb-surface-secondary);
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .createButton:hover,
 :global(html[data-theme="dark"]) .filterButton:hover,
 :global(html[data-theme="dark"]) .iconButton:hover,
 :global(html[data-theme="dark"]) .columnTools button:hover {
-  background: #574940;
-  color: #f0c2a0;
+  background: var(--nb-surface-hover);
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .dealName,
@@ -3047,7 +3047,7 @@
 :global(html[data-theme="dark"]) .modal h2,
 :global(html[data-theme="dark"]) .stageModal h2,
 :global(html[data-theme="dark"]) .taskModal h2 {
-  color: #f1efea;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .cardMeta span,
@@ -3055,15 +3055,15 @@
 :global(html[data-theme="dark"]) .activity span,
 :global(html[data-theme="dark"]) .activity time,
 :global(html[data-theme="dark"]) .helperText {
-  color: #c5c1b9;
+  color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .statusMiniMenu,
 :global(html[data-theme="dark"]) .generalMenu,
 :global(html[data-theme="dark"]) .periodMenu,
 :global(html[data-theme="dark"]) .cardMenu {
-  border-color: #555852;
-  background: #30312e;
+  border-color: var(--nb-border);
+  background: var(--nb-surface);
   color: var(--nb-text-primary);
 }
 
@@ -3095,3 +3095,32 @@
     justify-self: stretch;
   }
 }
+
+/* Reflexos e transparência sem alterar o posicionamento dos descendentes. */
+:global(html[data-theme="dark"]) .column,
+:global(html[data-theme="dark"]) .dealCard:not(.dealCardSelected),
+:global(html[data-theme="dark"]) .modal,
+:global(html[data-theme="dark"]) .stageModal,
+:global(html[data-theme="dark"]) .taskModal {
+  background: var(--nb-glass-reflection), var(--nb-glass-background);
+  border-color: var(--nb-glass-border);
+  box-shadow: var(--nb-glass-shadow);
+}
+
+/* Opaque work surfaces keep dense data distinct from the ambient background. */
+:global(html[data-theme="dark"]) .page { background: transparent; }
+:global(html[data-theme="dark"]) .column { background: rgb(28 26 39 / 94%); box-shadow: none; border-color: var(--nb-border-secondary); }
+:global(html[data-theme="dark"]) .dealCard:not(.dealCardSelected) { background: var(--nb-surface); box-shadow: 0 3px 8px rgb(4 3 10 / 12%); transition: border-color var(--nb-duration), box-shadow var(--nb-duration); }
+:global(html[data-theme="dark"]) .dealCard:hover { border-color: rgb(192 165 224 / 32%); box-shadow: 0 7px 18px var(--nb-shadow); }
+:global(html[data-theme="dark"]) .detailPanel,
+:global(html[data-theme="dark"]) .sidePanel,
+:global(html[data-theme="dark"]) .cardEditModal,
+:global(html[data-theme="dark"]) .archiveModal,
+:global(html[data-theme="dark"]) .optionModal,
+:global(html[data-theme="dark"]) .syncModal { background: var(--nb-surface-elevated); }
+:global(html[data-theme="dark"]) .createButton { background: var(--nb-orange-strong); border-color: transparent; color: #fff; }
+:global(html[data-theme="dark"]) .createButton:hover { background: #c24325; color: #fff; }
+
+:global(html[data-theme="dark"]) .crmTopbar > header .createButton { background: var(--nb-orange-strong); border-color: transparent; color: #fff; }
+:global(html[data-theme="dark"]) .crmTopbar > header .createButton:hover { background: #c24325; color: #fff; }
+:global(html[data-theme="dark"]) .crmTopbar > header .viewButtonActive { background: var(--nb-selected); border-color: var(--nb-border); color: var(--nb-orange); }

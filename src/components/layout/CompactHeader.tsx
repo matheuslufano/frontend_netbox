@@ -8,6 +8,7 @@ import { FiArrowLeft, FiCalendar, FiChevronRight, FiTrash2, FiX } from "react-ic
 import { apagarAgendamentoContato, atualizarAgendamentoContato, consultarSaudeSistema, criarAgendamentoContato, listarAgendaContatos, type AgendaContact } from "@/lib/api";
 import { CalendarView } from "@/app/contatos/page";
 import styles from "./header.module.css";
+import { useHeaderScrollVisibility } from "./useHeaderScrollVisibility";
 import NotificationHeaderButton from "@/components/notifications/NotificationHeaderButton";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
@@ -53,6 +54,7 @@ export default function CompactHeader() {
   const [backendState, setBackendState] =
     useState<ConnectionState>("checking");
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const headerRef = useHeaderScrollVisibility(calendarOpen);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarContacts, setCalendarContacts] = useState<AgendaContact[]>([]);
   const [selectedReminder, setSelectedReminder] = useState<{ contact: AgendaContact; appointment: HeaderReminder } | null>(null);
@@ -169,7 +171,7 @@ export default function CompactHeader() {
   }, [pathname]);
 
   return (
-    <header className={styles.compactHeader}>
+    <header ref={headerRef} className={styles.compactHeader}>
       <div className={styles.compactLeft}>
         <button
           type="button"

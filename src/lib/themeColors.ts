@@ -41,17 +41,31 @@ export function getDarkThemeColor(originalColor: string, role: ThemeColorRole): 
   if (!rgb) return originalColor;
   const normalizedHex = `#${rgb.map((part) => Math.round(part).toString(16).padStart(2, "0")).join("")}`;
   const { h, s, l } = rgbToHsl(rgb);
-  let nextLightness = l;
-  let nextSaturation = s;
-  if (role === "background") nextLightness = l > 65 ? 16 + (100 - l) * 0.12 : clamp(l * 0.62, 14, 35);
-  if (role === "surface") nextLightness = l > 65 ? 24 + (100 - l) * 0.1 : clamp(l * 0.72, 18, 42);
-  if (role === "border") nextLightness = l > 55 ? 34 + (100 - l) * 0.08 : clamp(l, 30, 48);
-  if (role === "text") nextLightness = l < 58 ? 91 - l * 0.12 : clamp(l, 68, 94);
-  if (role === "semantic" || protectedBrandColors.has(normalizedHex)) {
-    nextLightness = clamp(l, 48, 68);
-    nextSaturation = clamp(s, 52, 100);
-  } else if (role !== "text") nextSaturation = clamp(s * 0.82, 0, 72);
-  const result = `hsl(${h} ${Math.round(nextSaturation)}% ${Math.round(nextLightness)}%)`;
+  // Brand fills keep white labels readable; pale legacy surfaces use a shared graphite hue.
+  if (protectedBrandColors.has(normalizedHex) && role !== "text" && role !== "border") {
+    return originalColor;
+  }
+  const isNeutral = s < 22 || (l > 86 && s < 45) || (role === "text" && s < 50);
+  let nextHue = isNeutral ? 252 : h;
+  let nextSaturation = isNeutral ? 16 : clamp(s * 0.5, 24, 48);
+  let nextLightness = 13;
+
+  if (role === "background") nextLightness = 7;
+  if (role === "surface") nextLightness = 13;
+  if (role === "border") {
+    nextLightness = 25;
+    nextSaturation = isNeutral ? 12 : 30;
+  }
+  if (role === "text") {
+    nextLightness = isNeutral ? (l < 25 ? 94 : 75) : 74;
+    nextSaturation = isNeutral ? 18 : clamp(s * 0.8, 50, 85);
+  }
+  if (role === "semantic") {
+    nextHue = h;
+    nextLightness = clamp(l, 58, 72);
+    nextSaturation = clamp(s, 52, 90);
+  }
+  const result = `hsl(${nextHue} ${Math.round(nextSaturation)}% ${Math.round(nextLightness)}%)`;
   colorCache.set(key, result);
   return result;
 }

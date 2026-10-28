@@ -2059,3 +2059,30 @@
   width: 22px;
   height: 22px;
 }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .settingsPanel,
+:global(html[data-theme="dark"]) .settingsContent,
+:global(html[data-theme="dark"]) .settingsOptions,
+:global(html[data-theme="dark"]) .userSubmenu,
+:global(html[data-theme="dark"]) .summaryCard,
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .profileEditCard,
+:global(html[data-theme="dark"]) .aboutPanel {
+  background: var(--nb-surface); border-color: var(--nb-border); color: var(--nb-text-primary);
+  box-shadow: var(--nb-glass-shadow);
+}
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .settingsContent { background: var(--nb-background-secondary); scrollbar-color: var(--nb-surface-hover) transparent; }
+:global(html[data-theme="dark"]) .settingsOption,
+:global(html[data-theme="dark"]) .userSubmenuButton { background: var(--nb-hover); color: var(--nb-text-primary); font-size: clamp(16px, 1.5vw, 22px); border-radius: 14px; }
+:global(html[data-theme="dark"]) .settingsOption:hover,
+:global(html[data-theme="dark"]) .settingsOptionActive,
+:global(html[data-theme="dark"]) .userSubmenuButtonActive { background: var(--nb-selected); color: var(--nb-orange); }
+:global(html[data-theme="dark"]) .searchField { background: var(--nb-input); color: var(--nb-text-secondary); border: 1px solid var(--nb-input-border); }
+:global(html[data-theme="dark"]) .searchField input { background: transparent !important; font-size: 18px; }
+:global(html[data-theme="dark"]) .searchField:focus-within { outline: 2px solid var(--nb-orange); outline-offset: 2px; }
+:global(html[data-theme="dark"]) .searchIcon { border-color: var(--nb-text-secondary); }
+:global(html[data-theme="dark"]) .searchIcon::after { background: var(--nb-text-secondary); }
+:global(html[data-theme="dark"]) .settingsContent::-webkit-scrollbar-thumb { background: var(--nb-surface-hover); }

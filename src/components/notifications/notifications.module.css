@@ -307,3 +307,10 @@
     animation: none;
   }
 }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .bell { background: transparent; border-color: transparent; color: var(--nb-text-secondary); }
+:global(html[data-theme="dark"]) .bell:hover,
+:global(html[data-theme="dark"]) .bell[aria-expanded="true"] { background: var(--nb-hover); border-color: var(--nb-border); color: var(--nb-text-primary); transform: none; }
+:global(html[data-theme="dark"]) .panel { background: var(--nb-surface-elevated); color: var(--nb-text-primary); border-color: var(--nb-border); backdrop-filter: none; -webkit-backdrop-filter: none; }
+:global(html[data-theme="dark"]) .panel::backdrop { background: var(--nb-overlay); }

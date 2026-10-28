@@ -259,7 +259,7 @@
 :global(html[data-theme="dark"]) .phoneFieldRow select,
 :global(html[data-theme="dark"]) .savePhoneButton {
   border-color: var(--nb-input-border);
-  background: #292a27;
+  background: var(--nb-input);
   color: var(--nb-text-primary);
 }
 
@@ -1492,7 +1492,7 @@
 :global(html[data-theme="dark"]) .resultCard,
 :global(html[data-theme="dark"]) .listCard {
   border-color: var(--nb-border);
-  background: linear-gradient(145deg, #3a3b37 0%, #30312e 100%);
+  background: linear-gradient(145deg, var(--nb-surface-secondary) 0%, var(--nb-surface) 100%);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
 }
 
@@ -1524,7 +1524,7 @@
 :global(html[data-theme="dark"]) .editor textarea,
 :global(html[data-theme="dark"]) .resultCard input {
   border-color: var(--nb-input-border);
-  background: #292a27;
+  background: var(--nb-input);
   color: var(--nb-text-primary);
 }
 
@@ -1532,7 +1532,7 @@
 :global(html[data-theme="dark"]) .toolbar,
 :global(html[data-theme="dark"]) .segmented label {
   border-color: var(--nb-border);
-  background: #2d2e2b;
+  background: var(--nb-background-secondary);
   color: var(--nb-text-primary);
 }
 
@@ -1542,7 +1542,7 @@
 
 :global(html[data-theme="dark"]) .messageTemplatePopover {
   border-color: var(--nb-border);
-  background: #30312e;
+  background: var(--nb-surface);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
 }
 
@@ -1554,22 +1554,22 @@
 :global(html[data-theme="dark"]) .messageTemplatePopover input,
 :global(html[data-theme="dark"]) .messageTemplatePopover select {
   border-color: var(--nb-input-border);
-  background: #292a27;
+  background: var(--nb-input);
   color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .messageTemplatePreview {
-  background: #252724;
+  background: var(--nb-background);
   color: var(--nb-text-secondary);
 }
 
 :global(html[data-theme="dark"]) .heroIcon {
-  background: linear-gradient(135deg, #1d5a4d, #2b806b);
+  background: linear-gradient(135deg, #0bbd14, #039406);
   box-shadow: 0 12px 24px rgba(22, 86, 72, 0.28);
 }
 
 :global(html[data-theme="dark"]) .chatArea {
-  background-color: #2e302d;
+  background-color: var(--nb-background-secondary);
   background-image:
     linear-gradient(rgba(21, 25, 23, 0.42), rgba(21, 25, 23, 0.42)),
     url("/whatsapp-chat-background.jpg");
@@ -1586,10 +1586,21 @@
 
 :global(html[data-theme="dark"]) .attendantBubble {
   background: #3b403c;
-  color: #f0f1ed;
+  color: var(--nb-text-primary);
 }
 
 :global(html[data-theme="dark"]) .monospace {
   background: rgba(255, 255, 255, 0.09);
   color: var(--nb-text-primary);
+}
+
+/* Reflexos e transparência sem alterar o posicionamento dos descendentes. */
+:global(html[data-theme="dark"]) .header,
+:global(html[data-theme="dark"]) .formCard,
+:global(html[data-theme="dark"]) .previewCard,
+:global(html[data-theme="dark"]) .resultCard,
+:global(html[data-theme="dark"]) .listCard {
+  background: var(--nb-glass-reflection), var(--nb-glass-background);
+  border-color: var(--nb-glass-border);
+  box-shadow: var(--nb-glass-shadow);
 }

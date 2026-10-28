@@ -1,5 +1,8 @@
 // app/layout.js
 import "@/styles/globals.css";
+import "@/styles/dark-tokens.css";
+import "@/styles/dark-interactions.css";
+import ThemeAtmosphere from "@/components/theme/ThemeAtmosphere";
 
 import AppShell from "@/components/layout/AppShell";
 import ThemeProvider from "@/components/theme/ThemeProvider";
@@ -14,6 +17,7 @@ export default function RootLayout({ children }) {
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body suppressHydrationWarning>
         <ThemeProvider>
+          <ThemeAtmosphere />
           <SystemNotificationProvider>
             <DynamicDarkMode />
             <AppShell>{children}</AppShell>

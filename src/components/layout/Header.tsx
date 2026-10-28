@@ -9,6 +9,7 @@ import {
   systemVersionUpdatedAt,
 } from "@/lib/version";
 import styles from "./header.module.css";
+import { useHeaderScrollVisibility } from "./useHeaderScrollVisibility";
 import NotificationHeaderButton from "@/components/notifications/NotificationHeaderButton";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
@@ -18,6 +19,7 @@ const HEALTH_REFRESH_MS = 30000;
 
 export default function Header() {
   const router = useRouter();
+  const headerRef = useHeaderScrollVisibility();
   const [backendState, setBackendState] =
     useState<ConnectionState>("checking");
   const [databaseState, setDatabaseState] =
@@ -72,7 +74,7 @@ export default function Header() {
   }, [lastCheckedAt]);
 
   return (
-    <header className={styles.header}>
+    <header ref={headerRef} className={styles.header}>
       <button
         type="button"
         className={styles.headerBackButton}

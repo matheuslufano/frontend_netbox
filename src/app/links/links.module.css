@@ -672,3 +672,11 @@
     font-size: 20px;
   }
 }
+
+/* Dark theme: local surfaces share the global visual contract. */
+:global(html[data-theme="dark"]) .card,
+:global(html[data-theme="dark"]) .linksModal,
+:global(html[data-theme="dark"]) .result {
+  background: var(--nb-surface); border-color: var(--nb-border); color: var(--nb-text-primary);
+  box-shadow: var(--nb-glass-shadow);
+}
