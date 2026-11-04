@@ -9,6 +9,7 @@ import {
   FiCode,
   FiDatabase,
   FiInbox,
+  FiFileText,
   FiMessageCircle,
   FiRefreshCw,
   FiSearch,
@@ -225,6 +226,14 @@ export default function IntegracoesPage() {
           className={styles.integrationGrid}
           aria-label="Integrações disponíveis"
         >
+          <IntegrationCard
+            icon={<FiFileText aria-hidden="true" />}
+            name="Blog Institucional"
+            description="Gerencie, edite e publique artigos no site institucional da Netbox."
+            status="Gerenciamento"
+            available
+            onOpen={() => router.push("/integracoes/blog")}
+          />
           <IntegrationCard
             icon={<FiMessageCircle aria-hidden="true" />}
             name="Chatmix"

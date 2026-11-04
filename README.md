@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+O gerenciamento do Blog em `/integracoes/blog` organiza a edição nas abas Informações do artigo, Conteúdo e Prévia, com folha de escrita, ferramentas por ícones e upload de imagens. A primeira aba separa a capa original da obra da imagem horizontal de slides/cards, cada uma com sua prévia e controles. Consulte [a documentação do módulo](src/app/integracoes/blog/README.md) para o contrato, configuração e limitações. Testes da conversão do conteúdo: `node --test tests/blogRichDocument.test.mjs`.
+
 First, run the development server:
 
 ```bash
@@ -63,3 +65,9 @@ respeita `prefers-reduced-motion`, `prefers-reduced-transparency` e
 `prefers-contrast`, com fallback opaco para navegadores sem backdrop-filter.
 
 Detalhes, arquivos alterados e validação: [documentação do modo dark](docs/dark-mode.md).
+
+## Blog Institucional
+
+Gestão real de artigos, categorias e publicação em `/integracoes/blog`. Consulte [a documentação do módulo](src/app/integracoes/blog/README.md) para arquitetura, estados, variáveis e validação.
+
+O editor permite redimensionar, alinhar e reordenar imagens/vídeos. A prévia completa reutiliza o Blog institucional em tempo real, com modo ao lado da edição. Configuração e relatório: [mídias e prévia](docs/blog-media-preview.md).

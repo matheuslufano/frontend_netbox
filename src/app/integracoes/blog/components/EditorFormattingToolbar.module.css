@@ -1,0 +1,17 @@
+.toolbar { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; padding: 10px 12px; border-bottom: 1px solid var(--border); border-radius: 13px 13px 0 0; background: var(--surface); }
+.group { display: flex; align-items: center; gap: 3px; padding: 0 9px; border-right: 1px solid var(--border); }
+.group:first-child { padding-left: 0; }
+.group:last-child { border: 0; }
+.toolbar .toolButton { position: relative; flex: 0 0 36px; width: 36px; height: 36px; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; }
+.toolbar .toolButton:hover, .toolbar .toolButton[aria-expanded=true] { background: #fce8dc; color: #a43a0b; border-color: transparent; }
+.toolButton svg { width: 18px; height: 18px; flex-shrink: 0; }
+.tooltip { position: absolute; z-index: 5; left: 50%; top: calc(100% + 9px); transform: translateX(-50%); padding: 6px 9px; border-radius: 5px; background: #292524; color: #fff; font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; }
+.toolButton:hover .tooltip, .toolButton:focus-visible .tooltip { opacity: 1; visibility: visible; }
+.toolButton[aria-expanded=true] .tooltip { visibility: hidden; }
+.picker { position: relative; }
+.popover { position: absolute; top: calc(100% + 8px); left: 0; z-index: 6; display: grid; gap: 4px; min-width: 165px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: 0 12px 32px rgb(0 0 0 / 14%); }
+.popover button { justify-content: flex-start; padding: 9px 10px; border: 0; border-radius: 5px; font-size: 14px; }
+.popover button:hover { background: #fce8dc; color: #a43a0b; }
+.pickerLabel { padding: 4px 10px; color: var(--muted); font-size: 11px; font-weight: 600; }
+:global(html[data-theme="dark"]) .toolbar .toolButton:hover, :global(html[data-theme="dark"]) .toolbar .toolButton[aria-expanded=true], :global(html[data-theme="dark"]) .popover button:hover { background: #332318; color: #ffad7a; }
+@media(max-width:650px) { .toolbar { padding: 8px; } .group { padding: 0 5px; } .toolbar .toolButton { width: 34px; height: 36px; flex-basis: 34px; } .tooltip { display: none; } }
