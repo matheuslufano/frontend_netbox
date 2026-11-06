@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import CompactHeader from "./CompactHeader";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import { FooterCredits } from "./FooterCredits";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -35,7 +36,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, [isLoginPage, router]);
 
   if (isLoginPage) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <footer>
+          <FooterCredits product="Netbox Afiliados" adaptive />
+        </footer>
+      </>
+    );
   }
 
   if (checkingAuth) {
@@ -43,9 +51,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div
-      className={`app-container${isCrmPage ? " app-container--crm" : ""}`}
-    >
+    <div className={`app-container${isCrmPage ? " app-container--crm" : ""}`}>
       <Sidebar />
 
       <div className={`main${isCrmPage ? " main--crm" : ""}`}>
@@ -53,6 +59,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <div className={`content${isCrmPage ? " content--crm" : ""}`}>
           {children}
         </div>
+        <footer>
+          <FooterCredits product="Netbox Afiliados" adaptive />
+        </footer>
       </div>
     </div>
   );

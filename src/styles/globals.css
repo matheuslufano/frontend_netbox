@@ -29,7 +29,6 @@
   --nb-info: #2563eb;
 }
 
-
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -51,9 +50,9 @@ button,
     color 0.2s ease;
 }
 
-  :root[data-theme="dark"] .app-container {
-    background: transparent;
-  }
+:root[data-theme="dark"] .app-container {
+  background: transparent;
+}
 
 :root[data-theme="dark"]
   :where(
@@ -322,8 +321,7 @@ button,
     [class*="conversionSummary"] [class*="conversionHero"],
     [class*="affiliateCard"]
   ) {
-  background:
-    var(--nb-glass-reflection), var(--nb-glass-background) !important;
+  background: var(--nb-glass-reflection), var(--nb-glass-background) !important;
 }
 
 :root[data-theme="dark"]
@@ -333,7 +331,11 @@ button,
     [class*="coverageRanking"]
   ) {
   background:
-    radial-gradient(circle at 8% 0%, rgba(255, 112, 67, 0.035), transparent 34%),
+    radial-gradient(
+      circle at 8% 0%,
+      rgba(255, 112, 67, 0.035),
+      transparent 34%
+    ),
     radial-gradient(
       circle at 98% 8%,
       rgba(96, 165, 250, 0.09),
@@ -352,8 +354,7 @@ button,
     [class*="efficiencyBoxEnhanced"],
     [class*="preCadastroCard"]
   ) {
-  background:
-    var(--nb-glass-reflection), var(--nb-glass-background) !important;
+  background: var(--nb-glass-reflection), var(--nb-glass-background) !important;
 }
 
 :root[data-theme="dark"] :where([class*="reportSelectField"] select) {
@@ -524,6 +525,8 @@ body {
 
 /* Main */
 .main {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 100vh;
   min-width: 0;
@@ -531,21 +534,25 @@ body {
 
 /* Content */
 .content {
+  flex: 1;
   margin: 30px;
   border-radius: 15px;
   min-width: 0;
 }
 
 .main--crm {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
 }
 
 .content--crm {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
+  height: auto;
   margin: 0;
   overflow: hidden;
   border-radius: 0;
@@ -580,9 +587,14 @@ body {
     padding-bottom: 72px;
   }
 
-  .main--crm,
-  .content--crm {
+  .main--crm {
     height: calc(100dvh - 72px);
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .content--crm {
+    height: auto;
     margin: 0;
     border-radius: 0;
   }

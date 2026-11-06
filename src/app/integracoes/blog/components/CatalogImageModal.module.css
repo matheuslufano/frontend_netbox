@@ -1,0 +1,28 @@
+.modal { width: min(760px, calc(100vw - 32px)); max-height: 88dvh; box-sizing: border-box; padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--editor-panel, #f2f4f7); color: var(--text, inherit); overflow-y: auto; box-shadow: 0 24px 80px #0005; }
+.modal::backdrop { background: #0009; backdrop-filter: blur(4px); }
+.modal header, .modal nav, .search > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.modal h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; margin: 0; }
+.modal p, .modal footer, .results small { color: var(--muted); font-size: 13px; }
+.modal button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 7px 10px; min-height: 34px; font-size: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: inherit; cursor: pointer; transition: border-color .18s, background .18s; }
+.modal button:hover:not(:disabled), .tabs button[aria-pressed=true] { border-color: #c84a0d; background: #c84a0d18; }
+.modal button:focus-visible, .modal input:focus-visible { outline: 2px solid #c84a0d; outline-offset: 3px; }
+.modal button:disabled { opacity: .5; cursor: wait; }
+.modal svg { flex-shrink: 0; width: 16px; height: 16px; }
+.search { margin: 14px 0; }
+.search label { display: block; margin-bottom: 8px; }
+.search input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: inherit; }
+.results { display: grid; gap: 8px; }
+.results button { justify-content: space-between; text-align: left; }
+.results span { display: grid; gap: 5px; flex: 1; }
+.tabs { display: flex; gap: 8px; margin: 12px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.grid .image { display: flex; flex-direction: column; padding: 6px; overflow: hidden; font-size: 11px; }
+.image img { display: block; width: 100%; height: 150px; object-fit: contain; background: #0001; }
+.modal nav { margin-top: 16px; }
+.modal footer { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 10px; }
+@media(max-width: 550px) { .modal { padding: 16px; } .modal h2 { font-size: 17px; } .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tabs { flex-wrap: wrap; } }
+@media(prefers-reduced-motion: reduce) { .modal button { transition: none; } }
+
+.results button, .grid .image { background: var(--editor-card); box-shadow: var(--editor-shadow); }
+.modal header { padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.modal footer { font-size: 10px; line-height: 1.5; }

@@ -1,6 +1,21 @@
 .page { --surface: #fff; --border: #e6dcd6; --muted: #675b54; padding: clamp(16px,3vw,36px); background: #faf7f4; color: #241b18; border: 1px solid var(--border); border-radius: 24px; min-width: 0; }
-.editorPage { --editor-panel: #faf7f4; padding: 0; }
-.editorBody { padding: clamp(16px,3vw,36px); }
+.editorPage { --editor-panel: #f2f4f7; --editor-card: #e8edf3; --editor-header: #dfe6ef; --editor-shadow: 0 2px 4px #1e35430a, 0 8px 20px #1e354312; --editor-inset: inset 0 1px 3px #1e354312; --border: #c5cfdb; --muted: #526176; padding: 0; background: var(--editor-panel); border-radius: 16px; color: #273244; }
+.editorBody { padding: clamp(12px,2vw,22px); }
+.page.editorPage h1 { font-size: clamp(21px,2.5vw,28px); margin: 12px 0 6px; }
+.page.editorPage button { min-height: 34px; padding: 7px 11px; border-radius: 8px; font-size: 12px; gap: 6px; transition: background .16s, border-color .16s, box-shadow .16s; }
+.page.editorPage button:hover:not(:disabled) { background: color-mix(in srgb, var(--surface) 92%, #ed6b23); box-shadow: 0 2px 5px #172b4510; }
+.page.editorPage button svg { width: 16px; height: 16px; flex-shrink: 0; }
+.page.editorPage label { font-size: 12px; gap: 5px; }
+.page.editorPage :is(input:not([type=checkbox]),select,textarea) { padding: 8px 10px; font-size: 13px; border-radius: 7px; box-shadow: var(--editor-inset); }
+.editorStatus { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+.editorPage .stack { gap: 12px; }
+.page.editorPage .editorActions { margin: 0; padding: 10px 12px; gap: 7px; border: 1px solid var(--border); border-radius: 11px; background: var(--editor-card); box-shadow: var(--editor-shadow); }
+.page.editorPage .editorActions button[type=submit]:hover { background: #ac3d0b; }
+.editorPage .editorActions button:nth-child(2) { border-color: #c84a0d; color: #ae3d0b; background: #fff5ec; }
+.editorPage .notice, .editorPage .error { padding: 10px 12px; font-size: 13px; }
+.editorPage .documentStage { min-height: 360px; padding-inline: 16px; }
+.editorPage .contentActions { margin-bottom: 8px; }
+@media(prefers-reduced-motion:reduce) { .page.editorPage button { transition: none; } }
 .page h1 { font-size: clamp(28px,4vw,42px); letter-spacing: -.04em; margin: 12px 0; }
 .page h2 { font-size: 22px; margin: 12px 0; }
 .page p { line-height: 1.6; overflow-wrap: anywhere; }
@@ -68,7 +83,8 @@
 .editorToolbar svg, .actions button svg { width: 18px; height: 18px; flex-shrink: 0; }
 @media(max-width:650px) { .documentStage { padding: 0 10px 20px; max-height: 72vh; } .editableCanvas { padding: 24px 18px; min-height: 800px; } }
 :global(html[data-theme="dark"]) .page { --surface: #17191e; --border: #34363e; --muted: #b5b3b1; background: #101217; color: #f3f0ed; }
-:global(html[data-theme="dark"]) .editorPage { --editor-panel: #101217; }
+:global(html[data-theme="dark"]) .editorPage { --editor-panel: #111722; --surface: #172130; --editor-card: #222e3e; --editor-header: #2b394b; --editor-shadow: 0 2px 4px #0003, 0 8px 20px #0004; --editor-inset: inset 0 1px 3px #0004; --border: #42536a; --muted: #b4c1d2; background: var(--editor-panel); }
+:global(html[data-theme="dark"]) .editorActions button:nth-child(2) { background: #38271f; color: #ffad7a; }
 :global(html[data-theme="dark"]) .documentStage, :global(html[data-theme="dark"]) .previewPage { background: #0c0e12; }
 :global(html[data-theme="dark"]) .editableCanvas { border-color: #34363e; }
 :global(html[data-theme="dark"]) .documentRuler { border-color: #34363e; }
@@ -78,3 +94,5 @@
 :global(html[data-theme="dark"]) .error { background: #392125; color: #ffb4b4; }
 @media(max-width:1100px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .filters { grid-template-columns: 1fr 1fr; } }
 @media(max-width:650px) { .grid,.row,.filters { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr 1fr; gap: 10px; } .header { align-items: flex-start; flex-direction: column; } .metrics .panel { margin: 0; padding: 15px; } .actions button { flex-grow: 1; } }
+
+.page.editorPage .editorActions button { flex-grow: 0; }

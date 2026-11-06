@@ -4,7 +4,7 @@ import styles from './EditorTabs.module.css';
 
 export type EditorTab = 'information' | 'content' | 'preview';
 const tabs = [
-  { id: 'information', label: 'Informações do artigo', icon: FiFileText },
+  { id: 'information', label: 'Informações', icon: FiFileText },
   { id: 'content', label: 'Conteúdo', icon: FiEdit3 },
   { id: 'preview', label: 'Prévia', icon: FiEye },
 ] as const;

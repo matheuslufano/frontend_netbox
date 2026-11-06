@@ -1,6 +1,36 @@
 # Blog Institucional
 
-Gestão editorial em `/integracoes/blog`, criação em `/integracoes/blog/novo` e edição em `/integracoes/blog/[id]`. O card de `/integracoes` reutiliza `IntegrationCard`. O AppShell mantém a autenticação existente; todos os endpoints administrativos exigem usuário ativo ADMIN ou MANAGER no backend.
+## Catálogos por categoria
+
+`imageCatalog.ts` escolhe Metron para `hqs`/`hq`/`quadrinhos`/`historias-em-quadrinhos`/`comics`, IGDB para `games`/`game`/`jogos` e TMDB nas demais categorias. ArticleInformation passa o slug para ImagePicker. CatalogImageModal substitui o antigo TmdbImageModal, reutilizando o layout, diálogo nativo, foco, paginação, seleção de formato e importação para o banco.
+
+HQs: pesquisar nome da série, selecionar edição e importar capa. A busca de catálogo do campo horizontal fica desabilitada com explicação; upload e link continuam disponíveis. Jogos: buscar título, selecionar jogo e escolher capas ou artes/capturas horizontais. Trocar a categoria não remove imagens já selecionadas. O modal mostra o provedor e erros de configuração, limite ou indisponibilidade sem inventar resultados. Credenciais ficam apenas no backend; não há variável NEXT_PUBLIC nova. Detalhes: `afiliados-backend/docs/blog-image-catalogs.md`.
+
+Ícones FiBookOpen/FiMonitor/FiFilm distinguem HQs, jogos e filmes/séries; estilos e transições existentes foram preservados. Referência: https://freefrontend.com/css-tabs/. Teste do roteamento: `node --test tests/blogImageCatalog.test.mjs`. Não há dependência nova.
+
+## Excluir categorias
+
+Em “Gerenciar categorias”, cada categoria tem ações Editar e Excluir com ícones FiEdit3/FiTrash2. Excluir pede confirmação com o nome, chama `DELETE /admin/blog/categories/:id` e atualiza listagem/contagem; limpa o formulário e o filtro quando apontavam para a categoria removida. Categorias com artigos têm exclusão desabilitada com orientação para mover os artigos primeiro. O backend também bloqueia vínculos concorrentes com 409 e exige ADMIN/MANAGER. Durante a operação, controles ficam desabilitados e o resultado é anunciado em `role=status`. Layout responsivo em `Categories.module.css`, foco visível e transições com redução de movimento; referência https://freefrontend.com/css-tabs/. Nenhuma migração ou dependência nova.
+
+## Painel de artigos
+
+`page.tsx` usa `catalog.module.css` e componentes separados para indicadores (`CatalogMetrics`), filtros (`CatalogFilters`), cards (`CatalogArticleCard`), menu (`CatalogActionMenu`) e paginação (`CatalogPagination`). A grade tem 4 colunas a partir de 1280 px, 3 entre 1024–1279, 2 entre 640–1023 e 1 abaixo de 640. O cabeçalho é compacto, os quatro indicadores reais compartilham uma barra e a toolbar mantém busca, categoria, status, ordenação e atualizar na mesma linha quando houver espaço. Queries são canceladas/debounced como antes; mudanças de filtro ou quantidade retornam à primeira página. Categorias continuam gerenciadas pelo componente existente.
+
+Cada card abre a edição no clique normal e mostra imagem 16:9, badges, título em até três linhas, resumo em duas, autor e última atualização. O estado de disponibilidade diferencia versão pública atual, alterações pendentes, erros e artigos fora da API. Datas históricas ficam no tooltip da atualização. Agrupar por categoria reorganiza somente os itens da página atual, preservando a paginação do backend.
+
+Clique direito, Shift+F10 ou três pontos abrem o mesmo menu único em portal. O menu é limitado à viewport, permite setas/Home/End, restaura foco no Escape/seleção e fecha em clique fora, perda de foco, rolagem externa ou resize. Abrir publicado só é habilitado para conteúdo público. Editar e ver prévia usam o editor existente (`?preview=1` seleciona a aba de prévia). Copiar link usa o endereço institucional configurado. Duplicar cria rascunho real com novo ID/endereço, autoria do usuário atual e referências às mesmas imagens. Publicar/despublicar e excluir exigem confirmação com o título. Exclusão é definitiva para o registro, preservando arquivos de mídia; revisões desatualizadas retornam conflito. Erros de ações mantêm os cards disponíveis e exibem mensagem.
+
+`GET /admin/blog/articles` aceita `pageSize=12|24|48`, com padrão 12. A paginação mostra intervalo, total, páginas e controles primeiro/anterior/próximo/último. `POST /admin/blog/articles/:id/duplicate` recebe `{id,revision}`; `DELETE /admin/blog/articles/:id` recebe `{revision}`. Os endpoints usam as permissões de gerente existentes, sem migração. `catalogUtils.ts` concentra geometria do menu, paginação e apresentação do estado público. Testes: `node --test tests/blogCatalog.test.mjs tests/blogTrailer.test.mjs tests/blogRichDocument.test.mjs` e testes PostgreSQL do backend.
+
+Ícones Lucide via `react-icons/lu` já instalado; menus, hover e foco respeitam redução de movimento e os temas claro/escuro. Referências: imagem do dashboard fornecida pelo usuário e https://freefrontend.com/css-tabs/. O redesign fica restrito à listagem: os estilos de edição permanecem em `blog.module.css` e seus módulos específicos.
+
+O campo **Link do trailer** substitui o slug editável em Informações do artigo. Lê e grava `spotlight.trailerUrl`, já consumido pelo botão “Assistir trailer” no slide institucional. Aceita links HTTPS `youtube.com/watch?v=ID` (incluindo `www`/`m`) e `youtu.be/ID`, com ID de 11 caracteres; links incompatíveis bloqueiam a validação do formulário com orientação. Vazio remove o trailer. A alteração preserva pôster e demais metadados de `spotlight`. Salvar mantém o rascunho; publicar atualiza o snapshot público. Para novos artigos, o slug é gerado pelo título até o primeiro salvamento; artigos salvos preservam seu endereço. Não há nova API, coluna ou migração. Testes: `node --test tests/blogTrailer.test.mjs tests/blogRichDocument.test.mjs`.
+
+Gestão editorial em `/integracoes/blog`, criação em `/integracoes/blog/novo` e edição em `/integracoes/blog/[id]`. O card de `/integracoes` reutiliza `IntegrationCard`. Consultas, criação, edição e imagens aceitam qualquer usuário ativo autenticado. Publicação, exclusão, duplicação e gestão de categorias exigem ADMIN ou MANAGER.
+
+O campo Autor lista usuários ativos de `GET /admin/blog/authors`, por nome e ID, na criação e edição. Nome e foto vêm do cadastro real; `authorId` é enviado ao salvar. Avatar mostra a identidade selecionada e a prévia recebe a mesma foto. Sem seleção na criação, o servidor usa o usuário atual. Contas inativas já vinculadas são preservadas até escolher outro autor. Publicar atualiza nome e foto no snapshot; salvar mantém a versão pública. O Blog utiliza AuthorIdentity no artigo, com iniciais se a foto não existir ou falhar. Novas publicações exigem republicar para atualizar a foto de perfil.
+
+O seletor usa FiUser, foco visível e transição suave com redução de movimento, seguindo o acabamento existente e a referência https://freefrontend.com/css-tabs/. Nenhuma dependência adicionada.
 
 ## Organização e fluxo
 
@@ -38,6 +68,20 @@ O editor confirma descarte ao cancelar ou seguir links e usa `beforeunload` em r
 ## Integração real
 
 ### Duas imagens por artigo
+
+Os seletores usam grade 40/60 com 12 px entre cards. No desktop, os dois cards têm a mesma altura: o slide 16:9 define a altura natural, e a capa preenche a altura disponível com ações laterais de 38 px de largura. Ambas as imagens ocupam toda a área da prévia com object-fit: contain, preservando a imagem inteira sem recorte. Cabeçalhos, campos e espaçamentos são compactos. As ações usam apenas ícones Lucide com nomes acessíveis e tooltips; tamanho, traço e cor dos SVGs são explícitos para evitar ícones invisíveis ou comprimidos. Link expande o campo de URL com foco automático, mantendo-o sem espaço reservado quando fechado. A descrição e as orientações ficam na base. Em áreas de até 760 px, os cards se empilham e a capa tem prévia limitada a 280 px de altura. No celular, os botões mantêm alvo de 44 px. Upload, catálogo, URLs, persistência e callbacks permanecem iguais.
+
+As caixas de informações, imagens, ações e resultados do catálogo usam `--editor-card` em cinza mais escuro que o fundo, borda definida e sombra discreta compartilhada por `--editor-shadow`. Cabeçalhos de imagem têm tom próprio (`--editor-header`), e os campos mantêm superfície contrastante com sombra interna suave. Os tokens têm variantes claras/escuras e ficam restritos ao editor, sem alterar a listagem ou as funcionalidades.
+
+O editor usa controles compactos (34–36 px), campos e seções com espaçamentos reduzidos e fundo neutro que separa a área de trabalho dos cards. Na seção Imagens do artigo, os dois seletores ficam lado a lado quando a seção tem mais de 760 px de largura e se empilham em áreas menores. Ações principais usam rótulos curtos; remover imagem, despublicar, arquivar e paginação do catálogo priorizam ícones com nome acessível. Abas preservam navegação por teclado, e os temas claro/escuro mantêm superfícies distintas. O modal TMDB segue os mesmos tamanhos, com miniaturas menores e botões de formato compactos. Efeitos limitam-se a hover/foco e transições, respeitando redução de movimento. Referência visual: https://freefrontend.com/css-tabs/.
+
+Falhas de consulta ao TMDB mostram somente o erro; “Nenhuma obra encontrada” e “Nenhuma imagem disponível” aparecem apenas em consultas concluídas sem erro. Após alterar `TMDB_READ_ACCESS_TOKEN`, reinicie o backend para carregar a configuração.
+
+Nos dois seletores, **Buscar em filmes e séries** abre `TmdbImageModal`: busca paginada por nome no TMDB, seleção da obra e escolha entre pôsteres e imagens horizontais. O formato inicial acompanha o campo. A importação baixa o arquivo pelo backend, grava os bytes em `BlogMediaAsset` e preenche a URL local e a descrição com nome da obra/formato. A descrição continua editável. A importação é imediata; vincular ao artigo depende de salvar o rascunho, e publicar continua uma ação separada. Upload local e URL manual permanecem disponíveis.
+
+Configuração: aplicar a migração `20261105120000_blog_media_assets` e gerar o Prisma Client no backend; definir `TMDB_READ_ACCESS_TOKEN` (somente servidor) e `BLOG_MEDIA_PUBLIC_URL` (origem pública do backend). O token do site institucional não é automaticamente compartilhado. Rotas administrativas autenticadas: `GET /admin/blog/tmdb/search?q=...&page=1`, `GET /admin/blog/tmdb/:kind/:id/images` e `POST /admin/blog/tmdb/import` com `{kind,id,path}`. `kind` aceita `movie` ou `tv`. Leitura pública dos arquivos: `GET /blog/media/assets/:id`. Downloads limitados a 8 MB, assinatura validada e caminho restrito ao CDN oficial e às imagens da obra. Remover seleção não exclui o arquivo do banco. Falhas de configuração/API são exibidas no modal. Não há nova dependência.
+
+Componentes: `TmdbImageModal.tsx` e `.module.css` concentram busca, seleção, foco modal nativo, estados e layout responsivo. Ícones Feather via `react-icons/fi`; botões de formato com estado selecionado, hover e foco seguem a referência https://freefrontend.com/css-tabs/. Referência da integração: https://developer.themoviedb.org/reference/search-multi e https://developer.themoviedb.org/reference/movie-images.
 
 A seção Imagens do artigo separa **Capa da obra** (original do filme, série ou jogo; prévia vertical 2:3) de **Imagem de slide/caixa** (prévia horizontal 16:9). As proporções orientam a composição, sem recortar o arquivo enviado. Cada imagem tem upload, remoção, descrição e campo de URL/caminho dentro de uma opção expansível. Falha no carregamento da prévia mostra uma mensagem e mantém a URL disponível para correção.
 

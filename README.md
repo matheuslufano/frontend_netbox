@@ -2,6 +2,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+A aba **Desempenho** do Blog usa analytics reais com períodos, comparação, gráficos e detalhamento por artigo. Veja [arquitetura e uso](docs/blog-analytics.md).
+
+O painel `/integracoes/blog` tem grade de quatro colunas no desktop grande, indicadores compactos, menu por clique direito/três pontos e paginação de 12/24/48 itens. Duplicação, publicação e exclusão usam a API real com confirmação e controle de revisão. Veja [documentação do Blog](src/app/integracoes/blog/README.md#painel-de-artigos).
+
+No editor do Blog, o antigo campo de slug foi substituído pelo **Link do trailer**, integrado ao vídeo do slide institucional. Endereços dos artigos salvos são preservados; veja [documentação do módulo](src/app/integracoes/blog/README.md).
+
+O editor do Blog e seu catálogo de imagens usam uma interface compacta, com botões padronizados, rótulos curtos e ações secundárias por ícones acessíveis. Detalhes em [documentação do módulo](src/app/integracoes/blog/README.md#duas-imagens-por-artigo).
+
+Os dois campos de imagem do Blog também oferecem busca no TMDB em modal, importação para o banco do backend e descrição automática editável. Configuração e migração: [documentação do Blog](src/app/integracoes/blog/README.md#duas-imagens-por-artigo).
+
 O gerenciamento do Blog em `/integracoes/blog` organiza a edição nas abas Informações do artigo, Conteúdo e Prévia, com folha de escrita, ferramentas por ícones e upload de imagens. A primeira aba separa a capa original da obra da imagem horizontal de slides/cards, cada uma com sua prévia e controles. Consulte [a documentação do módulo](src/app/integracoes/blog/README.md) para o contrato, configuração e limitações. Testes da conversão do conteúdo: `node --test tests/blogRichDocument.test.mjs`.
 
 First, run the development server:
@@ -71,3 +81,13 @@ Detalhes, arquivos alterados e validação: [documentação do modo dark](docs/d
 Gestão real de artigos, categorias e publicação em `/integracoes/blog`. Consulte [a documentação do módulo](src/app/integracoes/blog/README.md) para arquitetura, estados, variáveis e validação.
 
 O editor permite redimensionar, alinhar e reordenar imagens/vídeos. A prévia completa reutiliza o Blog institucional em tempo real, com modo ao lado da edição. Configuração e relatório: [mídias e prévia](docs/blog-media-preview.md).
+# Autoria no Blog
+
+O seletor de imagens do Blog escolhe Metron para HQs e IGDB para jogos (capas e horizontais), mantendo TMDB para filmes/séries. [Fluxo do editor](src/app/integracoes/blog/README.md).
+
+O gerenciador de categorias do Blog oferece exclusão com confirmação e proteção de artigos vinculados. Veja [documentação do editor](src/app/integracoes/blog/README.md).
+
+O editor permite selecionar usuários ativos como autores e mostra a foto do responsável. Consulte o fluxo e as permissões em [Blog](src/app/integracoes/blog/README.md).
+# Créditos do rodapé
+
+`src/components/layout/FooterCredits.tsx` adapta os créditos da campanha de 10 anos para Netbox Afiliados, com ano atual, nome da empresa e “Site desenvolvido por @Matheus Mota 🧑‍💻”. AppShell inclui o rodapé no login e nas telas autenticadas. O cartão do portfólio usa a imagem original em `public/images/matheus/portfolio-preview.png`, abre acima do nome por hover/foco e mantém link externo, transição de 180 ms e redução de movimento. O efeito não rastreia continuamente o cursor. CSS Modules acompanha os temas claro/escuro; o layout flexível reserva espaço ao rodapé inclusive no CRM sem alterar suas rotas ou permissões. Referências: CampaignFooter de netbox-10-anos e https://freefrontend.com/css-tabs/. Sem dependências novas.

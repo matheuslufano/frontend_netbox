@@ -1,36 +1,45 @@
-.card { min-width: 0; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); overflow: hidden; }
-.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 22px 22px 18px; }
-.header h3 { margin: 0 0 7px; font-size: 18px; letter-spacing: -.025em; }
-.header p { margin: 0; font-size: 13px; color: var(--muted); }
-.ratio { flex-shrink: 0; padding: 5px 8px; border: 1px solid var(--border); border-radius: 7px; color: var(--muted); font-size: 11px; font-weight: 700; }
-.stage { position: relative; display: grid; place-items: center; height: 300px; padding: 18px; border-block: 1px solid var(--border); background-color: #f4f2ef; background-image: radial-gradient(#d4ccc5 1px, transparent 1px); background-size: 16px 16px; }
-.frame { position: relative; overflow: hidden; border-radius: 7px; box-shadow: 0 9px 24px rgb(35 25 16 / 16%); background: var(--surface); }
-.card[data-variant=poster] .frame { width: 176px; height: 264px; }
-.card[data-variant=landscape] .frame { width: 100%; max-width: 480px; aspect-ratio: 16 / 9; }
-.card[data-variant=poster] .image { object-fit: contain; }
-.card[data-variant=landscape] .image { object-fit: cover; }
-.placeholder { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px; text-align: center; }
-.placeholder > svg { width: 38px; height: 38px; padding: 14px; box-sizing: content-box; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: #c4511c; }
-.placeholder strong { font-size: 14px; }
+.card { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--editor-card); box-shadow: var(--editor-shadow); overflow: hidden; }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 42px; box-sizing: border-box; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--editor-header); }
+.header h3 { margin: 0; font-size: 12px; letter-spacing: -.025em; }
+.header p { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
+.ratio { flex-shrink: 0; padding: 5px 8px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 700; }
+.workspace { display: grid; gap: 6px; margin: 8px 8px 0; min-width: 0; min-height: 0; }
+.card[data-variant=poster] .workspace { grid-template-columns: minmax(0, 1fr) 38px; align-items: stretch; }
+/* The slide defines the row height; the poster fills that height without inflating it. */
+.stage { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; box-sizing: border-box; border: 1px solid var(--border); border-radius: 8px; background: var(--editor-panel, #f2f4f7); overflow: hidden; }
+.card[data-variant=landscape] .stage { aspect-ratio: 16 / 9; }
+.frame { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.image { object-fit: contain; }
+.placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; text-align: center; min-width: 0; }
+.placeholder > svg { width: 24px; height: 24px; padding: 10px; box-sizing: content-box; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: #c4511c; }
+.placeholder strong { font-size: 12px; }
 .placeholder span { font-size: 12px; color: var(--muted); }
-.body { display: grid; gap: 10px; padding: 20px 22px 24px; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.card .actions button { padding: 10px 14px; font-size: 13px; }
-.card .uploadButton { background: #c84a0d; border-color: #c84a0d; color: #fff; }
-.actions svg, .urlField svg, .uploading svg { width: 17px; height: 17px; flex-shrink: 0; }
+.body { display: grid; align-content: start; gap: 5px; min-width: 0; padding: 8px; }
+.actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-width: 0; }
+.card[data-variant=poster] .actions { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(4, minmax(32px, 1fr)); }
+.card[data-variant] .actions button { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 32px; padding: 6px; font-size: 11px; color: inherit; background: var(--surface); transition: background .16s, border-color .16s; }
+.card[data-variant=poster] .actions button { flex-direction: column; gap: 6px; }
+.actionLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.card .actions .uploadButton { background: #c84a0d; border-color: #c84a0d; color: #fff; }
+.card .actions button.uploadButton:hover:not(:disabled) { background: #ac3d0b; border-color: #ac3d0b; color: #fff; }
+.actions svg, .urlField svg, .uploading svg { width: 16px; height: 16px; flex-shrink: 0; }
+.card[data-variant] .actions button > svg { display: block; flex: 0 0 16px; width: 16px; height: 16px; color: inherit; stroke: currentColor; stroke-width: 2; fill: none; visibility: visible; opacity: 1; }
 .fileInput { display: none; }
-.hint { font-size: 11px; line-height: 1.5; }
-.urlField { margin: 6px 0; padding-block: 13px; border-block: 1px solid var(--border); }
-.urlField summary { display: flex; align-items: center; gap: 8px; width: fit-content; cursor: pointer; font-size: 12px; font-weight: 650; color: var(--muted); }
-.urlField label { margin-top: 14px; }
-.altField { margin-top: 5px; }
-.uploading { position: absolute; inset: 0; display: flex; gap: 10px; align-items: center; justify-content: center; background: rgb(255 255 255 / 90%); font-size: 14px; font-weight: 650; }
+.hint { font-size: 10px; line-height: 1.4; }
+.card .body .altField { font-size: 11px; gap: 4px; }
+.card .body .altField input { padding: 6px 8px; font-size: 12px; }
+.urlField { margin: 0; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.urlField[hidden] { display: none; }
+.card .actions button[aria-expanded=true] { border-color: #c84a0d; box-shadow: inset 0 0 0 1px #c84a0d; }
+.altField { margin-top: 0; }
+.uploading { position: absolute; inset: 0; display: flex; gap: 10px; align-items: center; justify-content: center; background: rgb(255 255 255 / 90%); font-size: 12px; font-weight: 650; }
 .spinner { animation: spin 1s linear infinite; }
-.error { margin: 0; padding: 10px; border-radius: 8px; color: #922323; background: #ffe9e9; font-size: 13px; }
-:global(html[data-theme="dark"]) .stage { background-color: #101217; background-image: radial-gradient(#34363e 1px, transparent 1px); }
+.error { margin: 0; padding: 10px; border-radius: 8px; color: #922323; background: #ffe9e9; font-size: 12px; }
+:global(html[data-theme="dark"]) .stage { background: var(--editor-panel, #111722); }
 :global(html[data-theme="dark"]) .placeholder > svg { color: #ff985c; }
 :global(html[data-theme="dark"]) .uploading { background: rgb(16 18 23 / 93%); }
 :global(html[data-theme="dark"]) .error { color: #ffb4b4; background: #392125; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media(prefers-reduced-motion:reduce) { .spinner { animation: none; } }
-@media(max-width:650px) { .header, .body { padding-inline: 16px; } .stage { height: 280px; padding: 12px; } .actions button { flex-grow: 1; } }
+@media(prefers-reduced-motion:reduce) { .spinner { animation: none; } .card .actions button { transition: none; } }
+@media(max-width:767px) { .card[data-variant] .actions button { min-height: 44px; } }
+@container(max-width:760px) { .card[data-variant=poster] .stage { aspect-ratio: 2 / 3; max-height: 280px; } .card[data-variant=poster] .workspace { grid-template-columns: minmax(0,1fr) 44px; } }

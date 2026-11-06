@@ -1,0 +1,9 @@
+.list { display: grid; gap: 8px; margin-block: 16px; }
+.item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.name { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.name small { color: var(--muted); font-weight: 400; }
+.hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.item .remove { color: var(--nb-error, #c62828); }
+.item button { transition: background-color 180ms ease, border-color 180ms ease; }
+.item button:focus-visible { outline: 2px solid var(--nb-orange, #d85015); outline-offset: 3px; }
+@media(prefers-reduced-motion:reduce) { .item button { transition: none; } }
