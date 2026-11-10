@@ -17,10 +17,12 @@ import base from './blog.module.css';
 import styles from './catalog.module.css';
 import ManagementTabs, {type ManagementTab} from './components/ManagementTabs';
 import AnalyticsDashboard from './components/analytics/AnalyticsDashboard';
+import ThemeSettings from './components/themes/ThemeSettings';
 
 export default function BlogPage() {
   const [tab,setTab]=useState<ManagementTab>('articles');
   const [analyticsMounted,setAnalyticsMounted]=useState(false);
+  const [themesMounted,setThemesMounted]=useState(false);
   const router = useRouter();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -67,7 +69,7 @@ export default function BlogPage() {
   const groups = grouped ? categories.map(c => ({ name: c.name, items: catalog?.items.filter(article => article.category === c.slug) || [] })).filter(group => group.items.length) : [{ name: '', items: catalog?.items || [] }];
   return <main className={`${base.page} ${styles.dashboard}`} data-ui="blog-management">
     <Link className={styles.back} href="/integracoes"><LuArrowLeft aria-hidden="true" />Integrações</Link>
-    <ManagementTabs value={tab} onChange={value=>{setTab(value);if(value==='analytics')setAnalyticsMounted(true);}} />
+    <ManagementTabs value={tab} onChange={value=>{setTab(value);if(value==='analytics')setAnalyticsMounted(true);if(value==='themes')setThemesMounted(true);}} />
     <section id="blog-panel-articles" role="tabpanel" aria-labelledby="blog-tab-articles" hidden={tab!=='articles'}>
     <header className={styles.header}><div><small>CONTEÚDO NETBOX</small><h1>Blog Institucional</h1><p>Crie, organize e disponibilize artigos para o site institucional.</p></div><Link className={styles.newArticle} href="/integracoes/blog/novo"><LuPlus aria-hidden="true" />Novo artigo</Link></header>
     <CatalogMetrics metrics={catalog?.metrics} />
@@ -88,6 +90,7 @@ export default function BlogPage() {
     }} />
     </section>
     <section id="blog-panel-analytics" role="tabpanel" aria-labelledby="blog-tab-analytics" hidden={tab!=='analytics'}>{analyticsMounted&&<AnalyticsDashboard/>}</section>
+    <section id="blog-panel-themes" role="tabpanel" aria-labelledby="blog-tab-themes" hidden={tab!=='themes'}>{themesMounted&&<ThemeSettings/>}</section>
     {menu && <CatalogActionMenu article={menu.article} anchor={menu.anchor} onClose={closeMenu} onAction={(kind, article) => { void action(kind, article); }} />}
   </main>;
 }

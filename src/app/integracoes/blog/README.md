@@ -1,5 +1,9 @@
 # Blog Institucional
 
+## Temas comemorativos
+
+A terceira aba, **Temas comemorativos**, configura separadamente o Blog e o site institucional. Há 13 ocasiões, ativação manual e prévia real em desktop (1280 px) ou celular, inclusive do rodapé. A prévia não salva; **Salvar alterações** persiste a seleção para o destino atual. Somente ADMIN/MANAGER podem ativar/desativar. Use `NEXT_PUBLIC_BLOG_SITE_URL` com a origem do institucional (local: `http://localhost:3002`). Os componentes e estilos estão em `components/themes/`. Contratos, migração e validação em [site-seasonal-themes.md](../../../../../afiliados-backend/docs/site-seasonal-themes.md).
+
 ## Catálogos por categoria
 
 `imageCatalog.ts` escolhe Metron para `hqs`/`hq`/`quadrinhos`/`historias-em-quadrinhos`/`comics`, IGDB para `games`/`game`/`jogos` e TMDB nas demais categorias. ArticleInformation passa o slug para ImagePicker. CatalogImageModal substitui o antigo TmdbImageModal, reutilizando o layout, diálogo nativo, foco, paginação, seleção de formato e importação para o banco.

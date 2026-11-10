@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import { LuChartNoAxesCombined, LuFiles } from "react-icons/lu";
+import { LuChartNoAxesCombined, LuFiles, LuPalette } from "react-icons/lu";
 import styles from "./analytics/Analytics.module.css";
-export type ManagementTab = "articles" | "analytics";
+export type ManagementTab = "articles" | "analytics" | "themes";
 export default function ManagementTabs({
   value,
   onChange,
@@ -13,6 +13,7 @@ export default function ManagementTabs({
   const tabs = [
     { id: "articles", label: "Artigos", Icon: LuFiles },
     { id: "analytics", label: "Desempenho", Icon: LuChartNoAxesCombined },
+    { id: "themes", label: "Temas comemorativos", Icon: LuPalette },
   ] as const;
   return (
     <div className={styles.tabs} role="tablist" aria-label="Gestão do Blog">
@@ -35,7 +36,8 @@ export default function ManagementTabs({
             ) {
               event.preventDefault();
               const next =
-                event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
+                event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 :
+                  (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
               onChange(tabs[next].id);
               refs.current[next]?.focus();
             }

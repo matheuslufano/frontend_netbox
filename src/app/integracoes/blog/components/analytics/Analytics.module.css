@@ -14,6 +14,8 @@
 }
 .tabs {
   display: flex;
+  max-width: 100%;
+  overflow-x: auto;
   align-items: center;
   gap: 5px;
   margin: 16px 0;
@@ -26,6 +28,7 @@
 .tabs button,
 .analytics .segment button {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   gap: 6px;
   min-height: 34px;
