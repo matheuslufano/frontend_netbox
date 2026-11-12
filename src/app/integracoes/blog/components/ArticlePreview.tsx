@@ -1,20 +1,31 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { FiMonitor, FiRefreshCw, FiSmartphone } from 'react-icons/fi';
+import { FiGlobe, FiMonitor, FiRefreshCw, FiSmartphone } from 'react-icons/fi';
 import type { Article } from '../types';
 import styles from './ArticlePreview.module.css';
 
-const site = (process.env.NEXT_PUBLIC_BLOG_SITE_URL || 'https://netbox.net.br').replace(/\/$/, '');
+const previewSites = {
+  official: { label: 'Site oficial', origin: new URL(process.env.NEXT_PUBLIC_BLOG_SITE_URL || 'https://netbox.net.br').origin },
+  vercel: { label: 'Vercel', origin: 'https://site-institucional-net-box-chi.vercel.app' },
+};
 
 /** Drafts travel to the institutional iframe in memory, without saving or publishing. */
-export default function ArticlePreview({ article }: { article: Article }) {
+export default function ArticlePreview({ article, previewId }: { article: Article; previewId: string }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [connected, setConnected] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [destination, setDestination] = useState<keyof typeof previewSites>('official');
+  const site = previewSites[destination];
+  const nextDestination = destination === 'official' ? 'vercel' : 'official';
+  function reload() {
+    setConnected(false);
+    setTimedOut(false);
+    setAttempt(value => value + 1);
+  }
   useEffect(() => {
-    const origin = new URL(site).origin;
+    const origin = site.origin;
     const send = () => frame.current?.contentWindow?.postMessage({ type: 'netbox:preview-article', article }, origin);
     function receive(event: MessageEvent) {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow) return;
@@ -24,14 +35,19 @@ export default function ArticlePreview({ article }: { article: Article }) {
     window.addEventListener('message', receive);
     const update = window.setTimeout(send, 150);
     return () => { window.removeEventListener('message', receive); window.clearTimeout(update); };
-  }, [article, attempt]);
+  }, [article, attempt, site.origin]);
   useEffect(() => { const timer = window.setTimeout(() => setTimedOut(true), 12000); return () => window.clearTimeout(timer); }, [attempt]);
-  return <div className={styles.preview}>
-    <div className={styles.toolbar}>
+  return <div id={previewId} className={styles.preview} data-component="article-preview" data-destination={destination}>
+    <div id={`${previewId}-toolbar`} className={styles.toolbar}>
       <span role="status"><i data-connected={connected} />{connected ? 'Prévia em tempo real' : 'Conectando ao blog…'}</span>
-      <div role="group" aria-label="Tamanho da prévia"><button type="button" title="Prévia no computador" aria-label="Prévia no computador" aria-pressed={!mobile} onClick={() => setMobile(false)}><FiMonitor aria-hidden="true" /></button><button type="button" title="Prévia no celular" aria-label="Prévia no celular" aria-pressed={mobile} onClick={() => setMobile(true)}><FiSmartphone aria-hidden="true" /></button><button type="button" title="Recarregar prévia" aria-label="Recarregar prévia" onClick={() => { setConnected(false); setTimedOut(false); setAttempt(value => value + 1); }}><FiRefreshCw aria-hidden="true" /></button></div>
+      <div className={styles.controls} role="group" aria-label="Controles da prévia">
+        <button id={`${previewId}-site-toggle`} type="button" className={styles.siteToggle} title={`Alternar para ${previewSites[nextDestination].label}`} aria-label={`Site da prévia: ${site.label}. Alternar para ${previewSites[nextDestination].label}`} onClick={() => { setDestination(nextDestination); reload(); }}><FiGlobe aria-hidden="true" /><span>{site.label}</span></button>
+        <button id={`${previewId}-desktop`} type="button" title="Prévia no computador" aria-label="Prévia no computador" aria-pressed={!mobile} onClick={() => setMobile(false)}><FiMonitor aria-hidden="true" /></button>
+        <button id={`${previewId}-mobile`} type="button" title="Prévia no celular" aria-label="Prévia no celular" aria-pressed={mobile} onClick={() => setMobile(true)}><FiSmartphone aria-hidden="true" /></button>
+        <button id={`${previewId}-reload`} type="button" title="Recarregar prévia" aria-label="Recarregar prévia" onClick={reload}><FiRefreshCw aria-hidden="true" /></button>
+      </div>
     </div>
-    {!connected && timedOut && <p role="alert" className={styles.error}>Não foi possível conectar a prévia. Confira a conexão e a configuração do site institucional.</p>}
-    <div className={styles.viewport} data-mobile={mobile}><iframe key={attempt} ref={frame} src={`${site}/site/blog/preview/editor?editor=${attempt}`} title="Página completa do artigo — prévia em tempo real" className={styles.frame} referrerPolicy="no-referrer" /></div>
+    {!connected && timedOut && <p role="alert" className={styles.error}>Não foi possível conectar a prévia em {site.label}. Confira se esse site permite prévias deste painel ou alterne o destino pelo botão acima.</p>}
+    <div className={styles.viewport} data-mobile={mobile}><iframe id={`${previewId}-frame`} key={`${destination}-${attempt}`} ref={frame} src={`${site.origin}/site/blog/preview/editor?editor=${attempt}`} title={`Página completa do artigo — prévia em ${site.label}`} className={styles.frame} referrerPolicy="no-referrer" /></div>
   </div>;
 }

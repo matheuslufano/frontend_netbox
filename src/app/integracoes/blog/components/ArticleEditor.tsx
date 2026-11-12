@@ -311,7 +311,7 @@ export default function ArticleEditor({ id }: { id?: string }) {
                     />
                     {sidePreview && activeTab === "content" && (
                       <aside aria-label="Prévia completa ao lado do editor">
-                        <ArticlePreview article={article} />
+                        <ArticlePreview article={article} previewId="article-side-preview" />
                       </aside>
                     )}
                   </div>
@@ -326,7 +326,7 @@ export default function ArticleEditor({ id }: { id?: string }) {
                   data-ui="blog-live-preview"
                 >
                   {activeTab === "preview" && (
-                    <ArticlePreview article={article} />
+                    <ArticlePreview article={article} previewId="article-page-preview" />
                   )}
                 </section>
               </fieldset>

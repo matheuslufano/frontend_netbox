@@ -1,5 +1,26 @@
 # Blog Institucional
 
+## Destino da prévia do artigo
+
+O botão com ícone de globo na barra de `ArticlePreview` alterna entre **Site oficial** (`NEXT_PUBLIC_BLOG_SITE_URL`, padrão `https://netbox.net.br`) e **Vercel** (`https://site-institucional-net-box-chi.vercel.app`). O texto informa o destino atual e o tooltip informa o próximo. A troca reinicia a conexão do iframe e envia o rascunho somente para a origem escolhida; não salva nem publica. A seleção vale enquanto essa prévia está aberta e inicia no site oficial. Computador/celular e recarregamento continuam disponíveis.
+
+Os IDs usam prefixos próprios: `article-page-preview` para a aba e `article-side-preview` para a prévia lateral, com sufixos `-toolbar`, `-site-toggle`, `-desktop`, `-mobile`, `-reload` e `-frame`. O atributo `data-destination` identifica `official`/`vercel`. Estilos concentrados em `components/ArticlePreview.module.css`.
+
+### Vercel consumindo os dados da máquina
+
+No projeto institucional da Vercel, em **Settings → Environment Variables**, configure no ambiente **Production** (e **Preview** se usado):
+
+```dotenv
+BLOG_API_URL=https://afiliadobackend.apphuka.cloud
+BLOG_EDITOR_ORIGINS=https://afiliado.netboxfibra.com.br
+```
+
+Faça um novo deploy após alterar as variáveis. `BLOG_API_URL` deve conter apenas a origem, sem `/blog/articles` ou `/site/blog`. O servidor da Vercel consulta a API HTTPS pública; PostgreSQL e credenciais do banco permanecem na máquina. Não configure a senha SSH ou `DATABASE_URL` na Vercel para essa integração. A publicação de artigos pelo painel atualiza o snapshot público consultado sem cache pelo institucional; salvar rascunho não publica. As duas prévias apontam ao mesmo conteúdo de produção, não a bancos separados.
+
+`BLOG_EDITOR_ORIGINS` é uma lista de origens exatas separadas por vírgula; inclua localhost apenas se precisar de edição local. Ela autoriza o recebimento do rascunho via `postMessage`, independentemente da leitura dos artigos publicados por `BLOG_API_URL`. Na verificação de 12/11/2026, a Vercel retornou HTTP 200 para o Blog e para `/site/blog/preview/editor`, mas a prévia ainda autorizava somente `http://localhost:3000,http://127.0.0.1:3000`. O backend público retornou 34 artigos. Os valores privados configurados no painel da Vercel não foram inspecionados.
+
+Para analytics desse domínio, o backend também precisa aceitar a origem Vercel em `BLOG_ANALYTICS_ORIGINS`, preservando as origens existentes. Isso é separado da leitura de artigos e não foi modificado nesta alteração. O site oficial não é publicado nem reconfigurado pelo botão.
+
 ## Temas comemorativos
 
 A terceira aba, **Temas comemorativos**, configura separadamente o Blog e o site institucional. Há 13 ocasiões, ativação manual e prévia real em desktop (1280 px) ou celular, inclusive do rodapé. A prévia não salva; **Salvar alterações** persiste a seleção para o destino atual. Somente ADMIN/MANAGER podem ativar/desativar. Use `NEXT_PUBLIC_BLOG_SITE_URL` com a origem do institucional (local: `http://localhost:3002`). Os componentes e estilos estão em `components/themes/`. Contratos, migração e validação em [site-seasonal-themes.md](../../../../../afiliados-backend/docs/site-seasonal-themes.md).
