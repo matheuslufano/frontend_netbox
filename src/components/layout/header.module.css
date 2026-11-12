@@ -576,3 +576,31 @@
   opacity: 1;
   pointer-events: auto;
 }
+
+.compactHeader[data-reveal-on-top="true"] {
+  position: fixed;
+  z-index: 1100;
+  top: 0;
+  right: 18px;
+  left: 18px;
+  margin: 0;
+  transform: translateY(calc(-100% - 8px));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.compactHeader[data-reveal-on-top="true"][data-top-visible="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 560px) {
+  .compactHeader[data-reveal-on-top="true"] {
+    right: 10px;
+    left: 10px;
+  }
+}

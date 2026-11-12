@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArchive,
-  FiArrowLeft,
   FiEdit3,
   FiEye,
   FiSave,
@@ -12,7 +11,13 @@ import {
 } from "react-icons/fi";
 import { getApiErrorMessage } from "@/lib/api";
 import { blogApi } from "../api";
-import { Article, Author, Category, statusLabel, type ArticleUpdate } from "../types";
+import {
+  Article,
+  Author,
+  Category,
+  statusLabel,
+  type ArticleUpdate,
+} from "../types";
 import BlockEditor from "./BlockEditor";
 import ArticlePreview from "./ArticlePreview";
 import ArticleInformation from "./ArticleInformation";
@@ -71,7 +76,10 @@ export default function ArticleEditor({ id }: { id?: string }) {
           setSaved(JSON.stringify(item));
           setCategories(list);
           setAuthors(people);
-          if (new URLSearchParams(window.location.search).get('preview') === '1') setActiveTab('preview');
+          if (
+            new URLSearchParams(window.location.search).get("preview") === "1"
+          )
+            setActiveTab("preview");
         }
       })
       .catch((e) => {
@@ -130,6 +138,10 @@ export default function ArticleEditor({ id }: { id?: string }) {
   function selectTab(tab: EditorTab) {
     if (tab !== "preview") previousTab.current = tab;
     setActiveTab(tab);
+  }
+  function backToBlog() {
+    if (!dirty || window.confirm("Descartar alterações não salvas?"))
+      router.push("/integracoes/blog");
   }
   /** Reveal required metadata before browser validation tries to focus an otherwise hidden input. */
   function validateInformation() {
@@ -190,42 +202,14 @@ export default function ArticleEditor({ id }: { id?: string }) {
     }
   }
   return (
-    <main className={`${styles.page} ${styles.editorPage}`}>
-      {article && <EditorTabs active={activeTab} onChange={selectTab} />}
+    <main className={`${styles.page} ${styles.editorPage} ${activeTab === "preview" ? styles.fullPreviewEditor : ""}`}>
+      <EditorTabs
+        active={activeTab}
+        onChange={selectTab}
+        onBack={backToBlog}
+        showTabs={Boolean(article)}
+      />
       <div className={styles.editorBody}>
-        <div className={styles.editorToolbar}>
-          <button
-            type="button"
-            onClick={() => {
-              if (!dirty || window.confirm("Descartar alterações não salvas?"))
-                router.push("/integracoes/blog");
-            }}
-          >
-            <FiArrowLeft aria-hidden="true" />
-            Voltar
-          </button>
-          {article && (
-            <button
-              className={styles.previewToggle}
-              type="button"
-              aria-controls="article-panel-preview"
-              aria-expanded={activeTab === "preview"}
-              onClick={() =>
-                selectTab(
-                  activeTab === "preview" ? previousTab.current : "preview",
-                )
-              }
-            >
-              {activeTab === "preview" ? (
-                <FiX aria-hidden="true" />
-              ) : (
-                <FiEye aria-hidden="true" />
-              )}
-              {activeTab === "preview" ? "Fechar" : "Prévia"}
-            </button>
-          )}
-        </div>
-        <h1>{creating ? "Novo artigo" : "Editar artigo"}</h1>
         {error && (
           <p role="alert" className={styles.error}>
             {error}
@@ -240,18 +224,6 @@ export default function ArticleEditor({ id }: { id?: string }) {
           <p>Carregando editor…</p>
         ) : (
           <>
-            <p className={styles.editorStatus}>
-              {statusLabel[article.status]} •{" "}
-              {dirty ? "Alterações não salvas" : "Sem alterações pendentes"}
-              {article.syncError && ` • Última tentativa: ${article.syncError}`}
-            </p>
-            {article.status === "published" && (
-              <p>
-                Publicado em{" "}
-                {new Date(article.publishedAt).toLocaleString("pt-BR")}. A ação
-                de publicar disponibiliza imediatamente a versão salva.
-              </p>
-            )}
             <form
               ref={form}
               noValidate
@@ -287,18 +259,6 @@ export default function ArticleEditor({ id }: { id?: string }) {
                   hidden={activeTab !== "content"}
                   tabIndex={0}
                 >
-                  <div className={styles.contentActions}>
-                    <button
-                      type="button"
-                      aria-pressed={sidePreview}
-                      onClick={() => setSidePreview((value) => !value)}
-                    >
-                      <FiEye aria-hidden="true" />
-                      {sidePreview
-                        ? "Ocultar prévia"
-                        : "Prévia ao lado"}
-                    </button>
-                  </div>
                   <div
                     className={styles.contentWorkspace}
                     data-split={sidePreview}
@@ -308,10 +268,17 @@ export default function ArticleEditor({ id }: { id?: string }) {
                       onChange={(content) => patch({ content })}
                       onBusyChange={trackUpload}
                       disabled={busy}
+                      sidePreview={sidePreview}
+                      onToggleSidePreview={() =>
+                        setSidePreview((value) => !value)
+                      }
                     />
                     {sidePreview && activeTab === "content" && (
                       <aside aria-label="Prévia completa ao lado do editor">
-                        <ArticlePreview article={article} previewId="article-side-preview" />
+                        <ArticlePreview
+                          article={article}
+                          previewId="article-side-preview"
+                        />
                       </aside>
                     )}
                   </div>
@@ -326,7 +293,11 @@ export default function ArticleEditor({ id }: { id?: string }) {
                   data-ui="blog-live-preview"
                 >
                   {activeTab === "preview" && (
-                    <ArticlePreview article={article} previewId="article-page-preview" />
+                    <ArticlePreview
+                      article={article}
+                      previewId="article-page-preview"
+                      fullSize
+                    />
                   )}
                 </section>
               </fieldset>
@@ -334,9 +305,7 @@ export default function ArticleEditor({ id }: { id?: string }) {
                 <div className={`${styles.actions} ${styles.editorActions}`}>
                   <button disabled={busy} type="submit">
                     <FiSave aria-hidden="true" />
-                    {busy
-                      ? "Salvando…"
-                      : "Salvar"}
+                    {busy ? "Salvando…" : "Salvar"}
                   </button>
                   <button
                     disabled={busy}
@@ -344,9 +313,7 @@ export default function ArticleEditor({ id }: { id?: string }) {
                     onClick={() => void save("publish")}
                   >
                     <FiUploadCloud aria-hidden="true" />
-                    {article.status === "published"
-                      ? "Atualizar"
-                      : "Publicar"}
+                    {article.status === "published" ? "Atualizar" : "Publicar"}
                   </button>
                   {!creating && (
                     <>

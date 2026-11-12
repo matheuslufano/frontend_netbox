@@ -14,6 +14,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const isLoginPage = pathname === "/login";
   const isSettingsPage = pathname === "/configuracoes";
   const isCrmPage = pathname === "/crm";
+  const isBlogEditorPage =
+    pathname.startsWith("/integracoes/blog/") && pathname !== "/integracoes/blog";
   const [checkingAuth, setCheckingAuth] = useState(() => !isLoginPage);
 
   useEffect(() => {
@@ -55,7 +57,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
 
       <div className={`main${isCrmPage ? " main--crm" : ""}`}>
-        {!isCrmPage && (isSettingsPage ? <Header /> : <CompactHeader />)}
+        {!isCrmPage &&
+          (isSettingsPage ? (
+            <Header />
+          ) : (
+            <CompactHeader revealOnTop={isBlogEditorPage} />
+          ))}
         <div className={`content${isCrmPage ? " content--crm" : ""}`}>
           {children}
         </div>

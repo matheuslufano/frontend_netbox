@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { IconType } from 'react-icons';
-import { FiAlignCenter, FiAlignLeft, FiAlignRight, FiBold, FiImage, FiItalic, FiLink, FiList, FiRotateCcw, FiRotateCw, FiType, FiUnderline, FiVideo } from 'react-icons/fi';
+import { FiAlignCenter, FiAlignLeft, FiAlignRight, FiBold, FiEye, FiImage, FiItalic, FiLink, FiList, FiRotateCcw, FiRotateCw, FiType, FiUnderline, FiVideo } from 'react-icons/fi';
 import { LuCaseSensitive, LuHeading, LuUnlink } from 'react-icons/lu';
 import { fonts } from '../richDocument';
 import styles from './EditorFormattingToolbar.module.css';
@@ -9,6 +9,8 @@ type Props = {
   onCommand: (command: string, value?: string) => void;
   onInsert: (type: 'image' | 'video' | 'link') => void;
   onRememberSelection: () => void;
+  sidePreview: boolean;
+  onToggleSidePreview: () => void;
 };
 const formattingGroups: { icon: IconType; label: string; command: string }[][] = [
   [{ icon: FiRotateCcw, label: 'Desfazer', command: 'undo' }, { icon: FiRotateCw, label: 'Refazer', command: 'redo' }],
@@ -22,7 +24,7 @@ const pickers = [
 ];
 
 /** Icon-only controls expose names through accessible labels and hover/focus tooltips. */
-export default function EditorFormattingToolbar({ onCommand, onInsert, onRememberSelection }: Props) {
+export default function EditorFormattingToolbar({ onCommand, onInsert, onRememberSelection, sidePreview, onToggleSidePreview }: Props) {
   const [open, setOpen] = useState<string | null>(null);
   const toolbar = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -50,5 +52,15 @@ export default function EditorFormattingToolbar({ onCommand, onInsert, onRemembe
       {tool(FiImage, 'Adicionar imagem', () => onInsert('image'))}
       {tool(FiVideo, 'Adicionar vídeo', () => onInsert('video'))}
     </div>
+    <button
+      type="button"
+      className={styles.previewToggle}
+      aria-pressed={sidePreview}
+      onMouseDown={event => event.preventDefault()}
+      onClick={onToggleSidePreview}
+    >
+      <FiEye aria-hidden="true" />
+      {sidePreview ? 'Ocultar prévia' : 'Prévia ao lado'}
+    </button>
   </div>;
 }

@@ -2,6 +2,9 @@
 .group { display: flex; align-items: center; gap: 3px; padding: 0 9px; border-right: 1px solid var(--border); }
 .group:first-child { padding-left: 0; }
 .group:last-child { border: 0; }
+.previewToggle { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; min-height: 36px; margin-left: auto; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: inherit; font: inherit; font-size: 12px; font-weight: 650; white-space: nowrap; cursor: pointer; }
+.previewToggle:hover, .previewToggle[aria-pressed=true] { background: #fce8dc; color: #a43a0b; border-color: #f2d8c6; }
+.previewToggle svg { width: 16px; height: 16px; flex-shrink: 0; }
 .toolbar .toolButton { position: relative; flex: 0 0 36px; width: 36px; height: 36px; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; }
 .toolbar .toolButton:hover, .toolbar .toolButton[aria-expanded=true] { background: #fce8dc; color: #a43a0b; border-color: transparent; }
 .toolButton svg { width: 18px; height: 18px; flex-shrink: 0; }
@@ -14,4 +17,5 @@
 .popover button:hover { background: #fce8dc; color: #a43a0b; }
 .pickerLabel { padding: 4px 10px; color: var(--muted); font-size: 11px; font-weight: 600; }
 :global(html[data-theme="dark"]) .toolbar .toolButton:hover, :global(html[data-theme="dark"]) .toolbar .toolButton[aria-expanded=true], :global(html[data-theme="dark"]) .popover button:hover { background: #332318; color: #ffad7a; }
+:global(html[data-theme="dark"]) .previewToggle:hover, :global(html[data-theme="dark"]) .previewToggle[aria-pressed=true] { background: #332318; color: #ffad7a; border-color: #67432e; }
 @media(max-width:650px) { .toolbar { padding: 8px; } .group { padding: 0 5px; } .toolbar .toolButton { width: 34px; height: 36px; flex-basis: 34px; } .tooltip { display: none; } }

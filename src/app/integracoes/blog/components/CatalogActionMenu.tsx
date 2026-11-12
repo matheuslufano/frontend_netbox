@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { LuCircleCheck, LuCopy, LuExternalLink, LuEye, LuLink, LuPencilLine, LuTrash2, LuUpload } from 'react-icons/lu';
+import { LuCircleCheck, LuCopy, LuExternalLink, LuEye, LuLink, LuPencilLine, LuRefreshCw, LuTrash2, LuUpload } from 'react-icons/lu';
 import { isArticlePublic, menuPosition } from '../catalogUtils';
 import type { Article } from '../types';
 import styles from '../catalog.module.css';
 
 export type MenuAnchor = { x: number; y: number; trigger: HTMLElement };
-export type CatalogAction = 'open' | 'edit' | 'preview' | 'duplicate' | 'copy' | 'publication' | 'delete';
+export type CatalogAction = 'open' | 'edit' | 'preview' | 'duplicate' | 'copy' | 'publication' | 'update' | 'delete';
 /** One portal menu serves pointer, touch and keyboard actions for the selected article. */
 export default function CatalogActionMenu({ article, anchor, onClose, onAction }: { article: Article; anchor: MenuAnchor; onClose: (restore?: boolean) => void; onAction: (action: CatalogAction, article: Article) => void }) {
   const root = useRef<HTMLDivElement>(null);
@@ -28,6 +28,7 @@ export default function CatalogActionMenu({ article, anchor, onClose, onAction }
     { id: 'open', label: 'Abrir artigo publicado', Icon: LuExternalLink, disabled: !isArticlePublic(article) },
     { id: 'edit', label: 'Editar', Icon: LuPencilLine },
     { id: 'preview', label: 'Ver prévia', Icon: LuEye },
+    { id: 'update', label: 'Atualizar artigo', Icon: LuRefreshCw, disabled: article.status !== 'published' },
     { id: 'duplicate', label: 'Duplicar', Icon: LuCopy },
     { id: 'copy', label: 'Copiar link', Icon: LuLink },
     { id: 'publication', label: isArticlePublic(article) ? 'Despublicar' : 'Publicar', Icon: isArticlePublic(article) ? LuCircleCheck : LuUpload },
@@ -40,5 +41,5 @@ export default function CatalogActionMenu({ article, anchor, onClose, onAction }
     const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
     const next = e.key === 'ArrowDown' ? (index + 1) % buttons.length : e.key === 'ArrowUp' ? (index + buttons.length - 1) % buttons.length : e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1 : -1;
     if (next >= 0) { e.preventDefault(); buttons[next]?.focus(); }
-  }}>{actions.map(({ id, label, Icon, ...item }) => <button key={id} role="menuitem" tabIndex={-1} type="button" disabled={'disabled' in item && item.disabled} data-danger={id === 'delete'} onClick={() => { onClose(true); onAction(id, article); }}><Icon aria-hidden="true" />{label}</button>)}</div>, document.body);
+  }}>{actions.map(({ id, label, Icon, ...item }) => <button id={`blog-article-action-${id}`} key={id} role="menuitem" tabIndex={-1} type="button" disabled={'disabled' in item && item.disabled} data-danger={id === 'delete'} onClick={() => { onClose(true); onAction(id, article); }}><Icon aria-hidden="true" />{label}</button>)}</div>, document.body);
 }

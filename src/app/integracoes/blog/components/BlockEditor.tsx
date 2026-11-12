@@ -10,7 +10,7 @@ import { getApiErrorMessage } from '@/lib/api';
 import styles from '../blog.module.css';
 
 /** Browser editing retains undo and selection; only whitelisted JSON leaves the canvas. */
-export default function BlockEditor({ value, onChange, onBusyChange, disabled = false }: { value: Section[]; onChange: (sections: Section[]) => void; onBusyChange?: (busy: boolean) => void; disabled?: boolean }) {
+export default function BlockEditor({ value, onChange, onBusyChange, disabled = false, sidePreview, onToggleSidePreview }: { value: Section[]; onChange: (sections: Section[]) => void; onBusyChange?: (busy: boolean) => void; disabled?: boolean; sidePreview: boolean; onToggleSidePreview: () => void }) {
   const canvas = useRef<HTMLDivElement>(null);
   const selection = useRef<Range | null>(null);
   const emitted = useRef<Section[] | null>(null);
@@ -85,7 +85,7 @@ export default function BlockEditor({ value, onChange, onBusyChange, disabled = 
     remember(); sync(); setInsert(null);
   }
   return <section className={styles.richEditor} aria-label="Editor de conteúdo">
-    <EditorFormattingToolbar onCommand={command} onInsert={open} onRememberSelection={remember} />
+    <EditorFormattingToolbar onCommand={command} onInsert={open} onRememberSelection={remember} sidePreview={sidePreview} onToggleSidePreview={onToggleSidePreview} />
     {insert && <div className={styles.insertPanel}>
       <strong>{insert === 'image' ? 'Inserir imagem' : insert === 'video' ? 'Inserir vídeo' : 'Inserir link'}</strong>
       <label>{insert === 'image' ? 'URL ou caminho da imagem' : 'URL'}<input value={url} onChange={e => setUrl(e.target.value)} /></label>

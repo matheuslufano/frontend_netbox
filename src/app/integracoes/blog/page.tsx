@@ -1,10 +1,11 @@
 "use client";
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LuArrowLeft, LuCircleAlert, LuFileText, LuPlus } from 'react-icons/lu';
 import { getApiErrorMessage } from '@/lib/api';
 import { blogApi } from './api';
+import { updatePublishedArticles, type PublicationProgress } from './articlePublication';
 import type { Article, Catalog, CatalogFilters as Filters, Category } from './types';
 import { isArticlePublic, publicArticleUrl } from './catalogUtils';
 import Categories from './components/Categories';
@@ -30,7 +31,10 @@ export default function BlogPage() {
   const [grouped, setGrouped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const mutationInFlight = useRef(false);
+  const [publicationProgress, setPublicationProgress] = useState<PublicationProgress | null>(null);
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [loadFailed, setLoadFailed] = useState(false);
   const [message, setMessage] = useState('');
   const [refresh, setRefresh] = useState(0);
@@ -38,33 +42,48 @@ export default function BlogPage() {
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
-      setLoading(true); setError(''); setLoadFailed(false);
+      setLoading(true); setLoadError(''); setLoadFailed(false);
       Promise.all([blogApi.list(filters, controller.signal), blogApi.categories()]).then(([data, list]) => {
         if (controller.signal.aborted) return;
         if (filters.page > Math.max(1, data.pages)) { setFilters(current => ({ ...current, page: Math.max(1, data.pages) })); return; }
         setCatalog(data); setCategories(list);
-      }).catch(e => { if (!controller.signal.aborted) { setLoadFailed(true); setError(getApiErrorMessage(e, 'Não foi possível carregar os artigos.')); } })
+      }).catch(e => { if (!controller.signal.aborted) { setLoadFailed(true); setLoadError(getApiErrorMessage(e, 'Não foi possível carregar os artigos.')); } })
         .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     }, 250);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [filters, refresh]);
   const closeMenu = useCallback((restore = false) => { if (restore) menu?.anchor.trigger.focus(); setMenu(null); }, [menu]);
   function openMenu(article: Article, anchor: MenuAnchor) { setMenu({ article, anchor }); }
+  async function updateAllArticles() {
+    if (mutationInFlight.current || loading) return;
+    if (!window.confirm('Atualizar a versão pública de todos os artigos publicados, incluindo alterações salvas? Esta ação inclui todas as páginas e ignora os filtros. Rascunhos, arquivados e demonstrativos não serão publicados.')) return;
+    mutationInFlight.current = true;
+    setBusy(true); setError(''); setMessage('Buscando todos os artigos publicados…'); setMenu(null);
+    try {
+      const result = await updatePublishedArticles(blogApi, progress => { setPublicationProgress(progress); setMessage(`Atualizando artigos: ${progress.completed} de ${progress.total} processados.`); });
+      setMessage(result.total ? `${result.updated} de ${result.total} artigos atualizados na API pública.${result.interrupted ? ' Operação interrompida por falta de autorização; os demais não foram processados.' : ''}` : 'Nenhum artigo publicado para atualizar.');
+      if (result.failures.length) setError(result.failures.map(({ article, reason }) => `${article.title}: ${getApiErrorMessage(reason, 'Não foi possível atualizar este artigo.')}`).join(' • '));
+    } catch (reason) { setError(getApiErrorMessage(reason, 'Não foi possível buscar todos os artigos. Nenhuma atualização foi iniciada.')); setMessage(''); }
+    finally { mutationInFlight.current = false; setBusy(false); setPublicationProgress(null); setRefresh(value => value + 1); }
+  }
   async function action(kind: CatalogAction, article: Article) {
-    if (busy) return;
+    if (mutationInFlight.current) return;
     if (kind === 'edit' || kind === 'preview') { router.push(`/integracoes/blog/${article.id}${kind === 'preview' ? '?preview=1' : ''}`); return; }
     if (kind === 'open') { window.open(publicArticleUrl(article), '_blank', 'noopener,noreferrer'); return; }
     if (kind === 'delete' && !window.confirm(`Excluir definitivamente "${article.title}"? O artigo sairá também da API pública. As imagens compartilhadas serão preservadas.`)) return;
     if (kind === 'publication' && !window.confirm(`${isArticlePublic(article) ? 'Despublicar' : 'Publicar'} "${article.title}"?`)) return;
+    if (kind === 'update' && (article.status !== 'published' || !window.confirm(`Atualizar a versão pública de "${article.title}" com as alterações salvas?`))) return;
+    mutationInFlight.current = true;
     setBusy(true); setError(''); setMessage('');
     try {
       if (kind === 'copy') { await navigator.clipboard.writeText(publicArticleUrl(article)); setMessage(isArticlePublic(article) ? 'Link do artigo copiado.' : 'Link copiado. O artigo ainda não está disponível publicamente.'); return; }
       if (kind === 'duplicate') { await blogApi.duplicate(article, crypto.randomUUID()); setMessage('Cópia criada como rascunho.'); }
       if (kind === 'delete') { await blogApi.remove(article); setMessage('Artigo excluído. Os arquivos de imagem foram preservados.'); }
       if (kind === 'publication') { const withdrawing = isArticlePublic(article); await blogApi.publish(article, withdrawing ? 'unpublish' : 'publish'); setMessage(withdrawing ? 'Artigo retirado da API pública.' : 'Artigo disponibilizado na API pública.'); }
+      if (kind === 'update') { await blogApi.publish(article, 'publish'); setMessage(`Artigo "${article.title}" atualizado na API pública.`); }
       setRefresh(value => value + 1);
     } catch (e) { setError(getApiErrorMessage(e, 'Não foi possível concluir a ação. Atualize a listagem e tente novamente.')); }
-    finally { setBusy(false); }
+    finally { mutationInFlight.current = false; setBusy(false); }
   }
   const groups = grouped ? categories.map(c => ({ name: c.name, items: catalog?.items.filter(article => article.category === c.slug) || [] })).filter(group => group.items.length) : [{ name: '', items: catalog?.items || [] }];
   return <main className={`${base.page} ${styles.dashboard}`} data-ui="blog-management">
@@ -73,9 +92,9 @@ export default function BlogPage() {
     <section id="blog-panel-articles" role="tabpanel" aria-labelledby="blog-tab-articles" hidden={tab!=='articles'}>
     <header className={styles.header}><div><small>CONTEÚDO NETBOX</small><h1>Blog Institucional</h1><p>Crie, organize e disponibilize artigos para o site institucional.</p></div><Link className={styles.newArticle} href="/integracoes/blog/novo"><LuPlus aria-hidden="true" />Novo artigo</Link></header>
     <CatalogMetrics metrics={catalog?.metrics} />
-    <CatalogFilters value={filters} categories={categories} grouped={grouped} loading={loading || busy} onChange={setFilters} onGroup={setGrouped} onRefresh={() => setRefresh(value => value + 1)} />
+    <CatalogFilters value={filters} categories={categories} grouped={grouped} loading={loading || busy} updateProgress={publicationProgress} onChange={setFilters} onGroup={setGrouped} onUpdateAll={() => void updateAllArticles()} />
     {message && <p role="status" className={styles.notice}>{message}</p>}
-    {error && <p role="alert" className={styles.error}><LuCircleAlert aria-hidden="true" />{error}</p>}
+    {(error || loadError) && <p role="alert" className={styles.error}><LuCircleAlert aria-hidden="true" />{error || loadError}</p>}
     <div aria-busy={loading || busy} className={styles.results}>
       {loading ? <div className={styles.empty} role="status"><LuFileText aria-hidden="true" />Carregando artigos…</div> : !loadFailed && <>
         {!catalog?.items.length && <div className={styles.empty}><LuFileText aria-hidden="true" /><strong>Nenhum artigo encontrado</strong><span>Crie um artigo ou ajuste os filtros.</span></div>}

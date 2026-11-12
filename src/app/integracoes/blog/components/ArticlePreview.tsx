@@ -2,15 +2,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { FiGlobe, FiMonitor, FiRefreshCw, FiSmartphone } from 'react-icons/fi';
 import type { Article } from '../types';
+import { previewSites } from '../previewSites';
 import styles from './ArticlePreview.module.css';
 
-const previewSites = {
-  official: { label: 'Site oficial', origin: new URL(process.env.NEXT_PUBLIC_BLOG_SITE_URL || 'https://netbox.net.br').origin },
-  vercel: { label: 'Vercel', origin: 'https://site-institucional-net-box-chi.vercel.app' },
-};
-
 /** Drafts travel to the institutional iframe in memory, without saving or publishing. */
-export default function ArticlePreview({ article, previewId }: { article: Article; previewId: string }) {
+export default function ArticlePreview({ article, previewId, fullSize = false }: { article: Article; previewId: string; fullSize?: boolean }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [connected, setConnected] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
@@ -37,7 +33,7 @@ export default function ArticlePreview({ article, previewId }: { article: Articl
     return () => { window.removeEventListener('message', receive); window.clearTimeout(update); };
   }, [article, attempt, site.origin]);
   useEffect(() => { const timer = window.setTimeout(() => setTimedOut(true), 12000); return () => window.clearTimeout(timer); }, [attempt]);
-  return <div id={previewId} className={styles.preview} data-component="article-preview" data-destination={destination}>
+  return <div id={previewId} className={`${styles.preview}${fullSize ? ` ${styles.fullSize}` : ''}`} data-component="article-preview" data-destination={destination}>
     <div id={`${previewId}-toolbar`} className={styles.toolbar}>
       <span role="status"><i data-connected={connected} />{connected ? 'Prévia em tempo real' : 'Conectando ao blog…'}</span>
       <div className={styles.controls} role="group" aria-label="Controles da prévia">

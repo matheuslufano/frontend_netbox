@@ -48,13 +48,13 @@ function formatRouteSegment(segment: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export default function CompactHeader() {
+export default function CompactHeader({ revealOnTop = false }: { revealOnTop?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [backendState, setBackendState] =
     useState<ConnectionState>("checking");
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const headerRef = useHeaderScrollVisibility(calendarOpen);
+  const headerRef = useHeaderScrollVisibility(revealOnTop || calendarOpen);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarContacts, setCalendarContacts] = useState<AgendaContact[]>([]);
   const [selectedReminder, setSelectedReminder] = useState<{ contact: AgendaContact; appointment: HeaderReminder } | null>(null);
@@ -63,6 +63,24 @@ export default function CompactHeader() {
   const [reminderSaving, setReminderSaving] = useState(false);
   const [creatingReminder, setCreatingReminder] = useState(false);
   const [newReminderContact, setNewReminderContact] = useState<AgendaContact | null>(null);
+
+  useEffect(() => {
+    if (!revealOnTop) return;
+    const header = headerRef.current;
+    if (!header) return;
+
+    header.setAttribute("data-top-visible", "false");
+    const updateVisibility = (event: MouseEvent) => {
+      const visible =
+        event.clientY <= 12 ||
+        header.matches(":hover, :focus-within") ||
+        calendarOpen;
+      header.setAttribute("data-top-visible", String(visible));
+    };
+
+    document.addEventListener("mousemove", updateVisibility, { passive: true });
+    return () => document.removeEventListener("mousemove", updateVisibility);
+  }, [calendarOpen, headerRef, revealOnTop]);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,7 +189,12 @@ export default function CompactHeader() {
   }, [pathname]);
 
   return (
-    <header ref={headerRef} className={styles.compactHeader}>
+    <header
+      ref={headerRef}
+      className={styles.compactHeader}
+      data-reveal-on-top={revealOnTop ? "true" : undefined}
+      onFocusCapture={() => headerRef.current?.setAttribute("data-top-visible", "true")}
+    >
       <div className={styles.compactLeft}>
         <button
           type="button"

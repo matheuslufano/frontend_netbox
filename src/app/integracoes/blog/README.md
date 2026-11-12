@@ -1,5 +1,15 @@
 # Blog Institucional
 
+## Atualização individual e em lote
+
+No menu **Ações do artigo**, **Atualizar artigo** envia as alterações salvas de um artigo publicado para o snapshot público, usando a revisão atual e o endpoint de publicação existente. Para rascunhos, arquivados e demonstrativos, utilize **Publicar** quando apropriado; a atualização não promove esses estados automaticamente.
+
+Na seção de filtros, **Atualizar todos** atualiza todos os artigos com status `published`, de todas as páginas e independentemente da busca/categoria selecionadas. Há confirmação antes de publicar alterações, indicação de progresso e resultado com quantidade de sucessos e falhas por artigo. A operação lê todas as páginas antes de iniciar as gravações, evita IDs repetidos e mantém a proteção de revisão do backend. Conflitos não são sobrescritos nem repetidos automaticamente; falta de autorização interrompe os itens restantes. A operação não é uma transação única: sucessos anteriores permanecem publicados se outro artigo falhar. Mantenha a página aberta até o resultado.
+
+Lógica em `articlePublication.ts`, controles em `CatalogActionMenu.tsx`/`CatalogFilters.tsx`, coordenação em `page.tsx` e testes em `tests/blogPublication.test.mjs`. Os IDs são `blog-article-action-update` e `blog-update-all-articles`. As permissões ADMIN/MANAGER continuam sendo verificadas pelo backend. Recarregar a listagem não é confundido com atualizar a publicação.
+
+Na aba **Temas comemorativos**, o botão `theme-preview-site-toggle`, dentro de `theme-preview-controls`, alterna entre o site oficial e a Vercel. A escolha atualiza o iframe e o link de abrir em outra aba, preservando tema, escopo Blog/institucional, modo desktop/celular e posição início/rodapé. Não salva configurações. Os destinos são compartilhados com a prévia de artigos em `previewSites.ts`; os estilos existentes de `ThemeSettings.module.css` são reaproveitados.
+
 ## Destino da prévia do artigo
 
 O botão com ícone de globo na barra de `ArticlePreview` alterna entre **Site oficial** (`NEXT_PUBLIC_BLOG_SITE_URL`, padrão `https://netbox.net.br`) e **Vercel** (`https://site-institucional-net-box-chi.vercel.app`). O texto informa o destino atual e o tooltip informa o próximo. A troca reinicia a conexão do iframe e envia o rascunho somente para a origem escolhida; não salva nem publica. A seleção vale enquanto essa prévia está aberta e inicia no site oficial. Computador/celular e recarregamento continuam disponíveis.
