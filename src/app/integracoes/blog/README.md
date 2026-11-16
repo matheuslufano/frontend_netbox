@@ -1,5 +1,9 @@
 # Blog Institucional
 
+## Links internos na edição
+
+O editor preserva links internos iniciados por uma única barra, incluindo query e fragmento, ao converter conteúdo antigo e renderizar o documento. A API também aceita esses links em `section.link.href` e nos trechos `document[].content[].href`, permitindo atualizar imagens sem rejeitar links já existentes. URLs HTTP(S) continuam aceitas; protocolos executáveis, barras invertidas e endereços iniciados por `//` continuam bloqueados. A correção requer atualizar o painel e o backend.
+
 ## Atualização individual e em lote
 
 No menu **Ações do artigo**, **Atualizar artigo** envia as alterações salvas de um artigo publicado para o snapshot público, usando a revisão atual e o endpoint de publicação existente. Para rascunhos, arquivados e demonstrativos, utilize **Publicar** quando apropriado; a atualização não promove esses estados automaticamente.

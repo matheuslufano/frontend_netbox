@@ -41,9 +41,31 @@ import { CalendarView } from "@/app/contatos/page";
 import styles from "./CrmFilterHeader.module.css";
 
 type Option = { id: string; name: string };
-type ReminderForm = { title: string; scheduledAt: string; durationMinutes: string; reminderMinutes: string; description: string; color: string };
-type CalendarReminder = { id: string; title: string; scheduledAt: string; status: string; color?: string | null };
-const REMINDER_COLORS = ["#176b88", "#2563eb", "#7c3aed", "#db2777", "#ea580c", "#16a34a", "#dc2626", "#475569"];
+type ReminderForm = {
+  title: string;
+  scheduledAt: string;
+  durationMinutes: string;
+  reminderMinutes: string;
+  description: string;
+  color: string;
+};
+type CalendarReminder = {
+  id: string;
+  title: string;
+  scheduledAt: string;
+  status: string;
+  color?: string | null;
+};
+const REMINDER_COLORS = [
+  "#176b88",
+  "#2563eb",
+  "#7c3aed",
+  "#db2777",
+  "#ea580c",
+  "#16a34a",
+  "#dc2626",
+  "#475569",
+];
 type Props = {
   funnels: Option[];
   funnelId: string;
@@ -159,7 +181,9 @@ function valueLabel(
     ? condition.value.join(" — ")
     : String(condition.value ?? "");
   if (condition.field.endsWith("UserId")) {
-    return users.find((user) => user.id === Number(condition.value))?.name || value;
+    return (
+      users.find((user) => user.id === Number(condition.value))?.name || value
+    );
   }
   if (condition.field === "status") {
     return statuses.find((item) => item.id === value)?.name || value;
@@ -179,10 +203,21 @@ export default function CrmFilterHeader(props: Props) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarContacts, setCalendarContacts] = useState<AgendaContact[]>([]);
   const [calendarLoading, setCalendarLoading] = useState(false);
-  const [reminderModal, setReminderModal] = useState<"view" | "edit" | "new" | null>(null);
-  const [reminderContact, setReminderContact] = useState<AgendaContact | null>(null);
+  const [reminderModal, setReminderModal] = useState<
+    "view" | "edit" | "new" | null
+  >(null);
+  const [reminderContact, setReminderContact] = useState<AgendaContact | null>(
+    null,
+  );
   const [reminder, setReminder] = useState<CalendarReminder | null>(null);
-  const [reminderForm, setReminderForm] = useState<ReminderForm>({ title: "Retorno com cliente", scheduledAt: "", durationMinutes: "30", reminderMinutes: "15", description: "", color: "#176b88" });
+  const [reminderForm, setReminderForm] = useState<ReminderForm>({
+    title: "Retorno com cliente",
+    scheduledAt: "",
+    durationMinutes: "30",
+    reminderMinutes: "15",
+    description: "",
+    color: "#176b88",
+  });
   const panelRef = useRef<HTMLDivElement>(null);
   const loadedDefaultRef = useRef(false);
   const initialCallbacksRef = useRef({
@@ -211,9 +246,13 @@ export default function CrmFilterHeader(props: Props) {
           loadedDefaultRef.current = true;
           const defaultFilter = filters.find((filter) => filter.isDefault);
           if (defaultFilter) {
-            initialCallbacksRef.current.onConditionsChange(defaultFilter.conditions);
+            initialCallbacksRef.current.onConditionsChange(
+              defaultFilter.conditions,
+            );
             if (defaultFilter.funnelId) {
-              initialCallbacksRef.current.onFunnelChange(defaultFilter.funnelId);
+              initialCallbacksRef.current.onFunnelChange(
+                defaultFilter.funnelId,
+              );
             }
             if (defaultFilter.sort?.mode) {
               initialCallbacksRef.current.onSortChange(defaultFilter.sort.mode);
@@ -227,7 +266,8 @@ export default function CrmFilterHeader(props: Props) {
   useEffect(() => {
     if (!panelOpen) return;
     const close = (event: MouseEvent) => {
-      if (!panelRef.current?.contains(event.target as Node)) setPanelOpen(false);
+      if (!panelRef.current?.contains(event.target as Node))
+        setPanelOpen(false);
     };
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setPanelOpen(false);
@@ -273,11 +313,21 @@ export default function CrmFilterHeader(props: Props) {
   function openNewReminder(date: Date) {
     setReminderContact(null);
     setReminder(null);
-    setReminderForm({ title: "Retorno com cliente", scheduledAt: toDateTimeLocal(date.toISOString()), durationMinutes: "30", reminderMinutes: "15", description: "", color: "#176b88" });
+    setReminderForm({
+      title: "Retorno com cliente",
+      scheduledAt: toDateTimeLocal(date.toISOString()),
+      durationMinutes: "30",
+      reminderMinutes: "15",
+      description: "",
+      color: "#176b88",
+    });
     setReminderModal("new");
   }
 
-  function openReminder(contact: AgendaContact, appointment?: CalendarReminder) {
+  function openReminder(
+    contact: AgendaContact,
+    appointment?: CalendarReminder,
+  ) {
     const selectedReminder = appointment || contact.nextAppointment;
     if (!selectedReminder) return;
     setReminderContact(contact);
@@ -287,47 +337,86 @@ export default function CrmFilterHeader(props: Props) {
 
   function editReminder() {
     if (!reminder) return;
-    setReminderForm({ title: reminder.title, scheduledAt: toDateTimeLocal(reminder.scheduledAt), durationMinutes: "30", reminderMinutes: "15", description: "", color: reminder.color || "#176b88" });
+    setReminderForm({
+      title: reminder.title,
+      scheduledAt: toDateTimeLocal(reminder.scheduledAt),
+      durationMinutes: "30",
+      reminderMinutes: "15",
+      description: "",
+      color: reminder.color || "#176b88",
+    });
     setReminderModal("edit");
   }
 
   async function saveReminder() {
-    if (!reminderContact || !reminderForm.title.trim() || !reminderForm.scheduledAt) return;
+    if (
+      !reminderContact ||
+      !reminderForm.title.trim() ||
+      !reminderForm.scheduledAt
+    )
+      return;
     setBusy(true);
     try {
-      const payload = { ...reminderForm, durationMinutes: Number(reminderForm.durationMinutes), reminderMinutes: Number(reminderForm.reminderMinutes) };
-      if (reminderModal === "edit" && reminder) await atualizarAgendamentoContato(reminderContact.id, Number(reminder.id), payload);
+      const payload = {
+        ...reminderForm,
+        durationMinutes: Number(reminderForm.durationMinutes),
+        reminderMinutes: Number(reminderForm.reminderMinutes),
+      };
+      if (reminderModal === "edit" && reminder)
+        await atualizarAgendamentoContato(
+          reminderContact.id,
+          Number(reminder.id),
+          payload,
+        );
       else await criarAgendamentoContato(reminderContact.id, payload);
       setReminderModal(null);
       setReminder(null);
       setReminderContact(null);
-      await listarAgendaContatos().then((result) => setCalendarContacts(result.contacts || []));
-      props.onResultMessage(reminderModal === "edit" ? "Lembrete atualizado." : "Lembrete criado.");
+      await listarAgendaContatos().then((result) =>
+        setCalendarContacts(result.contacts || []),
+      );
+      props.onResultMessage(
+        reminderModal === "edit" ? "Lembrete atualizado." : "Lembrete criado.",
+      );
     } catch (error) {
-      props.onResultMessage(getApiErrorMessage(error, "Não foi possível salvar o lembrete."));
+      props.onResultMessage(
+        getApiErrorMessage(error, "Não foi possível salvar o lembrete."),
+      );
     } finally {
       setBusy(false);
     }
   }
 
   async function deleteReminder() {
-    if (!reminderContact || !reminder || !window.confirm(`Apagar o lembrete “${reminder.title}”?`)) return;
+    if (
+      !reminderContact ||
+      !reminder ||
+      !window.confirm(`Apagar o lembrete “${reminder.title}”?`)
+    )
+      return;
     setBusy(true);
     try {
       await apagarAgendamentoContato(reminderContact.id, Number(reminder.id));
       setReminderModal(null);
       setReminder(null);
       setReminderContact(null);
-      await listarAgendaContatos().then((result) => setCalendarContacts(result.contacts || []));
+      await listarAgendaContatos().then((result) =>
+        setCalendarContacts(result.contacts || []),
+      );
       props.onResultMessage("Lembrete apagado.");
     } catch (error) {
-      props.onResultMessage(getApiErrorMessage(error, "Não foi possível apagar o lembrete."));
+      props.onResultMessage(
+        getApiErrorMessage(error, "Não foi possível apagar o lembrete."),
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  function updateCondition(id: string | undefined, patch: Partial<CrmFilterCondition>) {
+  function updateCondition(
+    id: string | undefined,
+    patch: Partial<CrmFilterCondition>,
+  ) {
     setDraft((current) =>
       current.map((condition) => {
         if (condition.id !== id) return condition;
@@ -350,7 +439,9 @@ export default function CrmFilterHeader(props: Props) {
     if (!name?.trim()) return;
     const visibility =
       props.permissions.canShareFilters &&
-      window.confirm("Deseja compartilhar este filtro com os usuários autorizados?")
+      window.confirm(
+        "Deseja compartilhar este filtro com os usuários autorizados?",
+      )
         ? "SHARED"
         : "PRIVATE";
     setBusy(true);
@@ -390,7 +481,9 @@ export default function CrmFilterHeader(props: Props) {
       await refreshSavedFilters();
       props.onResultMessage("Filtro personalizado salvo.");
     } catch (error) {
-      props.onResultMessage(getApiErrorMessage(error, "Não foi possível salvar o filtro."));
+      props.onResultMessage(
+        getApiErrorMessage(error, "Não foi possível salvar o filtro."),
+      );
     } finally {
       setBusy(false);
     }
@@ -427,12 +520,20 @@ export default function CrmFilterHeader(props: Props) {
 
   return (
     <section className={styles.bar} aria-label="Cabeçalho de filtros do CRM">
-      <label className={styles.control} title={props.funnels.find((item) => item.id === props.funnelId)?.name}>
+      <label
+        className={styles.control}
+        title={props.funnels.find((item) => item.id === props.funnelId)?.name}
+      >
         <FiFilter aria-hidden="true" />
         <span className={styles.srOnly}>Funil</span>
-        <select value={props.funnelId} onChange={(event) => props.onFunnelChange(event.target.value)}>
+        <select
+          value={props.funnelId}
+          onChange={(event) => props.onFunnelChange(event.target.value)}
+        >
           {props.funnels.map((funnel) => (
-            <option key={funnel.id} value={funnel.id}>{funnel.name.toUpperCase()}</option>
+            <option key={funnel.id} value={funnel.id}>
+              {funnel.name.toUpperCase()}
+            </option>
           ))}
         </select>
         <FiChevronDown aria-hidden="true" />
@@ -442,20 +543,34 @@ export default function CrmFilterHeader(props: Props) {
         <FiUser aria-hidden="true" />
         <span className={styles.srOnly}>Responsável</span>
         <select
-          value={props.responsibleUserId ? `user:${props.responsibleUserId}` : props.scope}
+          value={
+            props.responsibleUserId
+              ? `user:${props.responsibleUserId}`
+              : props.scope
+          }
           onChange={(event) => {
             if (event.target.value.startsWith("user:")) {
-              props.onResponsibleUserChange(Number(event.target.value.slice(5)));
+              props.onResponsibleUserChange(
+                Number(event.target.value.slice(5)),
+              );
             } else {
               props.onResponsibleUserChange(null);
               props.onScopeChange(event.target.value);
             }
           }}
         >
-          {scopeOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
+          {scopeOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
+            </option>
+          ))}
           {props.users.length > 0 && (
             <optgroup label="Usuário específico">
-              {props.users.map((user) => <option key={user.id} value={`user:${user.id}`}>{user.name}</option>)}
+              {props.users.map((user) => (
+                <option key={user.id} value={`user:${user.id}`}>
+                  {user.name}
+                </option>
+              ))}
             </optgroup>
           )}
         </select>
@@ -465,9 +580,16 @@ export default function CrmFilterHeader(props: Props) {
       <label className={styles.control}>
         <FiSliders aria-hidden="true" />
         <span className={styles.srOnly}>Status</span>
-        <select value={props.status} onChange={(event) => props.onStatusChange(event.target.value)}>
+        <select
+          value={props.status}
+          onChange={(event) => props.onStatusChange(event.target.value)}
+        >
           <option value="all">Todos os status</option>
-          {props.statuses.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          {props.statuses.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
         </select>
         <FiChevronDown aria-hidden="true" />
       </label>
@@ -475,8 +597,15 @@ export default function CrmFilterHeader(props: Props) {
       <label className={styles.control}>
         <FiList aria-hidden="true" />
         <span className={styles.srOnly}>Ordenação</span>
-        <select value={props.sort} onChange={(event) => props.onSortChange(event.target.value)}>
-          {sortOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        <select
+          value={props.sort}
+          onChange={(event) => props.onSortChange(event.target.value)}
+        >
+          {sortOptions.map(([id, name]) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
         </select>
         <FiChevronDown aria-hidden="true" />
       </label>
@@ -506,13 +635,26 @@ export default function CrmFilterHeader(props: Props) {
         </button>
 
         {panelOpen && (
-          <div id="crm-additional-filters" className={styles.panel} role="dialog" aria-label="Filtros adicionais">
+          <div
+            id="crm-additional-filters"
+            className={styles.panel}
+            role="dialog"
+            aria-label="Filtros adicionais"
+          >
             <header>
               <div>
                 <strong>Funil</strong>
-                <small>Crie funis e combine filtros adicionais usando “E”.</small>
+                <small>
+                  Crie funis e combine filtros adicionais usando “E”.
+                </small>
               </div>
-              <button type="button" onClick={() => setPanelOpen(false)} aria-label="Fechar filtros"><FiX /></button>
+              <button
+                type="button"
+                onClick={() => setPanelOpen(false)}
+                aria-label="Fechar filtros"
+              >
+                <FiX />
+              </button>
             </header>
 
             {props.permissions.canTransfer && (
@@ -535,25 +677,58 @@ export default function CrmFilterHeader(props: Props) {
                     <button
                       type="button"
                       onClick={() => {
-                        setDraft(filter.conditions.map((item) => ({ ...item, id: item.id || crypto.randomUUID() })));
+                        setDraft(
+                          filter.conditions.map((item) => ({
+                            ...item,
+                            id: item.id || crypto.randomUUID(),
+                          })),
+                        );
                         setEditingId(filter.ownerUserId ? filter.id : null);
                       }}
                     >
                       {filter.isDefault && <FiStar aria-label="Padrão" />}
                       {filter.name}
                     </button>
-                    <button type="button" title="Definir como padrão" onClick={() => void definirFiltroCrmPadrao(filter.id).then(refreshSavedFilters)}><FiStar /></button>
-                    <button type="button" title="Duplicar" onClick={() => void duplicarFiltroCrmSalvo(filter.id).then(refreshSavedFilters)}><FiCopy /></button>
+                    <button
+                      type="button"
+                      title="Definir como padrão"
+                      onClick={() =>
+                        void definirFiltroCrmPadrao(filter.id).then(
+                          refreshSavedFilters,
+                        )
+                      }
+                    >
+                      <FiStar />
+                    </button>
+                    <button
+                      type="button"
+                      title="Duplicar"
+                      onClick={() =>
+                        void duplicarFiltroCrmSalvo(filter.id).then(
+                          refreshSavedFilters,
+                        )
+                      }
+                    >
+                      <FiCopy />
+                    </button>
                     {filter.ownerUserId && (
                       <button
                         type="button"
                         title="Excluir"
                         onClick={() => {
-                          if (window.confirm(`Excluir definitivamente “${filter.name}”?`)) {
-                            void apagarFiltroCrmSalvo(filter.id).then(refreshSavedFilters);
+                          if (
+                            window.confirm(
+                              `Excluir definitivamente “${filter.name}”?`,
+                            )
+                          ) {
+                            void apagarFiltroCrmSalvo(filter.id).then(
+                              refreshSavedFilters,
+                            );
                           }
                         }}
-                      ><FiTrash2 /></button>
+                      >
+                        <FiTrash2 />
+                      </button>
                     )}
                   </div>
                 ))}
@@ -563,35 +738,110 @@ export default function CrmFilterHeader(props: Props) {
             <div className={styles.conditions}>
               {draft.map((condition) => {
                 const meta = fieldMeta(condition.field);
-                const hidesValue = ["empty", "not_empty"].includes(condition.operator);
+                const hidesValue = ["empty", "not_empty"].includes(
+                  condition.operator,
+                );
                 const optionSource =
-                  meta.type === "user" ? props.users.map((user) => ({ id: String(user.id), name: user.name })) :
-                  meta.type === "status" ? props.statuses :
-                  meta.type === "stage" ? props.stages : null;
+                  meta.type === "user"
+                    ? props.users.map((user) => ({
+                        id: String(user.id),
+                        name: user.name,
+                      }))
+                    : meta.type === "status"
+                      ? props.statuses
+                      : meta.type === "stage"
+                        ? props.stages
+                        : null;
                 return (
                   <article key={condition.id}>
-                    <select aria-label="Campo" value={condition.field} onChange={(event) => updateCondition(condition.id, { field: event.target.value })}>
-                      {fields.map((field) => <option key={field.id} value={field.id}>{field.name}</option>)}
+                    <select
+                      aria-label="Campo"
+                      value={condition.field}
+                      onChange={(event) =>
+                        updateCondition(condition.id, {
+                          field: event.target.value,
+                        })
+                      }
+                    >
+                      {fields.map((field) => (
+                        <option key={field.id} value={field.id}>
+                          {field.name}
+                        </option>
+                      ))}
                     </select>
-                    <select aria-label="Operador" value={condition.operator} onChange={(event) => updateCondition(condition.id, { operator: event.target.value })}>
-                      {operatorList(condition.field).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                    <select
+                      aria-label="Operador"
+                      value={condition.operator}
+                      onChange={(event) =>
+                        updateCondition(condition.id, {
+                          operator: event.target.value,
+                        })
+                      }
+                    >
+                      {operatorList(condition.field).map(([id, name]) => (
+                        <option key={id} value={id}>
+                          {name}
+                        </option>
+                      ))}
                     </select>
                     {!hidesValue && optionSource ? (
-                      <select aria-label="Valor" value={String(condition.value ?? "")} onChange={(event) => updateCondition(condition.id, { value: event.target.value })}>
+                      <select
+                        aria-label="Valor"
+                        value={String(condition.value ?? "")}
+                        onChange={(event) =>
+                          updateCondition(condition.id, {
+                            value: event.target.value,
+                          })
+                        }
+                      >
                         <option value="">Selecione</option>
-                        {optionSource.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                        {optionSource.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
                       </select>
                     ) : !hidesValue ? (
                       <input
                         aria-label="Valor"
-                        type={meta.type === "date" ? "date" : meta.type === "number" ? "number" : "text"}
+                        type={
+                          meta.type === "date"
+                            ? "date"
+                            : meta.type === "number"
+                              ? "number"
+                              : "text"
+                        }
                         value={String(condition.value ?? "")}
-                        onChange={(event) => updateCondition(condition.id, { value: event.target.value })}
+                        onChange={(event) =>
+                          updateCondition(condition.id, {
+                            value: event.target.value,
+                          })
+                        }
                       />
-                    ) : <span className={styles.noValue}>Sem valor</span>}
-                    <button type="button" onClick={() => setDraft((current) => current.filter((item) => item.id !== condition.id))} aria-label={`Remover filtro ${meta.name}`}><FiTrash2 /></button>
-                    <small title={`${meta.name} ${condition.operator} ${valueLabel(condition, props.users, props.statuses, props.stages)}`}>
-                      {meta.name} · {valueLabel(condition, props.users, props.statuses, props.stages) || "sem valor"}
+                    ) : (
+                      <span className={styles.noValue}>Sem valor</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft((current) =>
+                          current.filter((item) => item.id !== condition.id),
+                        )
+                      }
+                      aria-label={`Remover filtro ${meta.name}`}
+                    >
+                      <FiTrash2 />
+                    </button>
+                    <small
+                      title={`${meta.name} ${condition.operator} ${valueLabel(condition, props.users, props.statuses, props.stages)}`}
+                    >
+                      {meta.name} ·{" "}
+                      {valueLabel(
+                        condition,
+                        props.users,
+                        props.statuses,
+                        props.stages,
+                      ) || "sem valor"}
                     </small>
                   </article>
                 );
@@ -599,94 +849,338 @@ export default function CrmFilterHeader(props: Props) {
               {!draft.length && <p>Nenhum filtro adicional ativo.</p>}
             </div>
 
-            <button type="button" className={styles.addButton} onClick={() => setDraft((current) => [...current, newCondition()])}>
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={() =>
+                setDraft((current) => [...current, newCondition()])
+              }
+            >
               <FiPlus aria-hidden="true" /> Adicionar filtro
             </button>
 
             <footer>
-              <button type="button" onClick={() => setDraft([])}>Limpar todos</button>
-              <button type="button" onClick={() => { setDraft(props.conditions); setPanelOpen(false); }}>Cancelar alterações</button>
-              <button type="button" onClick={() => void saveFilter()} disabled={busy}><FiSave /> Salvar visualização</button>
-              <button type="button" className={styles.apply} onClick={() => { props.onConditionsChange(draft); setPanelOpen(false); }}>
+              <button type="button" onClick={() => setDraft([])}>
+                Limpar todos
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft(props.conditions);
+                  setPanelOpen(false);
+                }}
+              >
+                Cancelar alterações
+              </button>
+              <button
+                type="button"
+                onClick={() => void saveFilter()}
+                disabled={busy}
+              >
+                <FiSave /> Salvar visualização
+              </button>
+              <button
+                type="button"
+                className={styles.apply}
+                onClick={() => {
+                  props.onConditionsChange(draft);
+                  setPanelOpen(false);
+                }}
+              >
                 Aplicar filtros
               </button>
             </footer>
           </div>
         )}
 
-        {calendarOpen && typeof document !== "undefined" && createPortal((
-          <div
-            className={styles.calendarOverlay}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Agenda de contatos"
-            onClick={(event) => event.target === event.currentTarget && setCalendarOpen(false)}
-          >
-            <section className={styles.calendarModal}>
-              <header className={styles.calendarModalHeader}>
-                <div>
-                  <span>Agenda de clientes</span>
-                  <h2>Calendário</h2>
-                </div>
-                <button type="button" onClick={() => setCalendarOpen(false)} aria-label="Fechar agenda">
-                  <FiX />
-                </button>
-              </header>
-              {calendarLoading ? (
-                <div className={styles.calendarLoading}>Carregando agenda...</div>
-              ) : (
-                <CalendarView
-                  contacts={calendarContacts.filter((contact) => Boolean(contact.name || contact.phone || contact.document))}
-                  onOpen={(contact) => openReminder(contact)}
-                  onEdit={(contact, appointment) => openReminder(contact, appointment)}
-                  onCreateDate={openNewReminder}
-                />
-              )}
-              {reminderModal && (
-                <div className={styles.reminderOverlay} role="dialog" aria-modal="true" aria-label={reminderModal === "view" ? "Detalhes do lembrete" : "Agendar lembrete"} onClick={(event) => event.target === event.currentTarget && setReminderModal(null)}>
-                  <section className={styles.reminderModal}>
-                    <header className={styles.reminderModalHeader}>
-                      <h3>{reminderModal === "view" ? "Lembrete" : reminderModal === "edit" ? "Editar lembrete" : "Novo lembrete"}</h3>
-                      <button type="button" onClick={() => setReminderModal(null)} aria-label="Fechar lembrete"><FiX /></button>
-                    </header>
-                    {reminderModal === "view" && reminder ? (
-                      <div className={styles.reminderDetails}>
-                        <div className={styles.reminderDetailTitle} style={{ borderLeftColor: reminder.color || "#176b88", backgroundColor: reminder.color ? `${reminder.color}18` : undefined }}><FiCalendar /><strong>{reminder.title}</strong></div>
-                        <span>{reminderContact?.name || "Contato"}</span>
-                        <time>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "full", timeStyle: "short" }).format(new Date(reminder.scheduledAt))}</time>
-                        <small>Status: {reminder.status}</small>
-                        <div className={styles.reminderActions}>
-                          <button type="button" className={styles.reminderDeleteButton} onClick={() => void deleteReminder()} disabled={busy}><FiTrash2 /> Apagar</button>
-                          <button type="button" className={styles.reminderPrimaryButton} onClick={editReminder} disabled={busy}>Editar lembrete</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={styles.reminderForm}>
-                        {reminderModal === "new" && <label><span>Contato</span><select value={reminderContact?.id || ""} onChange={(event) => setReminderContact(calendarContacts.find((contact) => contact.id === event.target.value) || null)}><option value="">Selecione o contato</option>{calendarContacts.filter((contact) => Boolean(contact.name || contact.phone || contact.document)).map((contact) => <option key={contact.id} value={contact.id}>{contact.name || "Contato"}</option>)}</select></label>}
-                        <label><span>Título</span><input value={reminderForm.title} onChange={(event) => setReminderForm({ ...reminderForm, title: event.target.value })} /></label>
-                        <label><span>Data e hora</span><input type="datetime-local" value={reminderForm.scheduledAt} onChange={(event) => setReminderForm({ ...reminderForm, scheduledAt: event.target.value })} /></label>
-                        <label><span>Duração (minutos)</span><input type="number" min="5" value={reminderForm.durationMinutes} onChange={(event) => setReminderForm({ ...reminderForm, durationMinutes: event.target.value })} /></label>
-                        <label><span>Lembrete (minutos antes)</span><input type="number" min="0" value={reminderForm.reminderMinutes} onChange={(event) => setReminderForm({ ...reminderForm, reminderMinutes: event.target.value })} /></label>
-                        <fieldset className={styles.reminderColorField}>
-                          <legend>Cor do lembrete</legend>
-                          <div className={styles.reminderColorChoices}>
-                            {REMINDER_COLORS.map((color) => <button type="button" key={color} className={reminderForm.color === color ? styles.reminderColorActive : ""} style={{ backgroundColor: color }} onClick={() => setReminderForm({ ...reminderForm, color })} aria-label={`Selecionar cor ${color}`} aria-pressed={reminderForm.color === color} />)}
-                            <label className={styles.reminderCustomColor}><span>Personalizada</span><input type="color" value={reminderForm.color} onChange={(event) => setReminderForm({ ...reminderForm, color: event.target.value })} /></label>
-                          </div>
-                          <div className={styles.reminderColorPreview} style={{ borderLeftColor: reminderForm.color, backgroundColor: `${reminderForm.color}18` }}><FiCalendar /><span>{reminderForm.title || "Prévia do lembrete"}</span></div>
-                        </fieldset>
-                        <label className={styles.reminderFullField}><span>Observação</span><textarea value={reminderForm.description} onChange={(event) => setReminderForm({ ...reminderForm, description: event.target.value })} /></label>
-                        <button type="button" className={styles.reminderPrimaryButton} onClick={() => void saveReminder()} disabled={busy || !reminderContact || !reminderForm.title.trim() || !reminderForm.scheduledAt}>{busy ? "Salvando..." : "Salvar lembrete"}</button>
-                      </div>
+        {calendarOpen &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              className={styles.calendarOverlay}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Agenda de contatos"
+              onClick={(event) =>
+                event.target === event.currentTarget && setCalendarOpen(false)
+              }
+            >
+              <section className={styles.calendarModal}>
+                <header className={styles.calendarModalHeader}>
+                  <div>
+                    <span>Agenda de clientes</span>
+                    <h2>Calendário</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCalendarOpen(false)}
+                    aria-label="Fechar agenda"
+                  >
+                    <FiX />
+                  </button>
+                </header>
+                {calendarLoading ? (
+                  <div className={styles.calendarLoading}>
+                    Carregando agenda...
+                  </div>
+                ) : (
+                  <CalendarView
+                    contacts={calendarContacts.filter((contact) =>
+                      Boolean(
+                        contact.name || contact.phone || contact.document,
+                      ),
                     )}
-                  </section>
-                </div>
-              )}
-            </section>
-          </div>
-        ), document.body)}
+                    onOpen={(contact) => openReminder(contact)}
+                    onEdit={(contact, appointment) =>
+                      openReminder(contact, appointment)
+                    }
+                    onCreateDate={openNewReminder}
+                  />
+                )}
+                {reminderModal && (
+                  <div
+                    className={styles.reminderOverlay}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={
+                      reminderModal === "view"
+                        ? "Detalhes do lembrete"
+                        : "Agendar lembrete"
+                    }
+                    onClick={(event) =>
+                      event.target === event.currentTarget &&
+                      setReminderModal(null)
+                    }
+                  >
+                    <section className={styles.reminderModal}>
+                      <header className={styles.reminderModalHeader}>
+                        <h3>
+                          {reminderModal === "view"
+                            ? "Lembrete"
+                            : reminderModal === "edit"
+                              ? "Editar lembrete"
+                              : "Novo lembrete"}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setReminderModal(null)}
+                          aria-label="Fechar lembrete"
+                        >
+                          <FiX />
+                        </button>
+                      </header>
+                      {reminderModal === "view" && reminder ? (
+                        <div className={styles.reminderDetails}>
+                          <div
+                            className={styles.reminderDetailTitle}
+                            style={{
+                              borderLeftColor: reminder.color || "#176b88",
+                              backgroundColor: reminder.color
+                                ? `${reminder.color}18`
+                                : undefined,
+                            }}
+                          >
+                            <FiCalendar />
+                            <strong>{reminder.title}</strong>
+                          </div>
+                          <span>{reminderContact?.name || "Contato"}</span>
+                          <time>
+                            {new Intl.DateTimeFormat("pt-BR", {
+                              dateStyle: "full",
+                              timeStyle: "short",
+                            }).format(new Date(reminder.scheduledAt))}
+                          </time>
+                          <small>Status: {reminder.status}</small>
+                          <div className={styles.reminderActions}>
+                            <button
+                              type="button"
+                              className={styles.reminderDeleteButton}
+                              onClick={() => void deleteReminder()}
+                              disabled={busy}
+                            >
+                              <FiTrash2 /> Apagar
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.reminderPrimaryButton}
+                              onClick={editReminder}
+                              disabled={busy}
+                            >
+                              Editar lembrete
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.reminderForm}>
+                          {reminderModal === "new" && (
+                            <label>
+                              <span>Contato</span>
+                              <select
+                                value={reminderContact?.id || ""}
+                                onChange={(event) =>
+                                  setReminderContact(
+                                    calendarContacts.find(
+                                      (contact) =>
+                                        contact.id === event.target.value,
+                                    ) || null,
+                                  )
+                                }
+                              >
+                                <option value="">Selecione o contato</option>
+                                {calendarContacts
+                                  .filter((contact) =>
+                                    Boolean(
+                                      contact.name ||
+                                      contact.phone ||
+                                      contact.document,
+                                    ),
+                                  )
+                                  .map((contact) => (
+                                    <option key={contact.id} value={contact.id}>
+                                      {contact.name || "Contato"}
+                                    </option>
+                                  ))}
+                              </select>
+                            </label>
+                          )}
+                          <label>
+                            <span>Título</span>
+                            <input
+                              value={reminderForm.title}
+                              onChange={(event) =>
+                                setReminderForm({
+                                  ...reminderForm,
+                                  title: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            <span>Data e hora</span>
+                            <input
+                              type="datetime-local"
+                              value={reminderForm.scheduledAt}
+                              onChange={(event) =>
+                                setReminderForm({
+                                  ...reminderForm,
+                                  scheduledAt: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            <span>Duração (minutos)</span>
+                            <input
+                              type="number"
+                              min="5"
+                              value={reminderForm.durationMinutes}
+                              onChange={(event) =>
+                                setReminderForm({
+                                  ...reminderForm,
+                                  durationMinutes: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            <span>Lembrete (minutos antes)</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={reminderForm.reminderMinutes}
+                              onChange={(event) =>
+                                setReminderForm({
+                                  ...reminderForm,
+                                  reminderMinutes: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <fieldset className={styles.reminderColorField}>
+                            <legend>Cor do lembrete</legend>
+                            <div className={styles.reminderColorChoices}>
+                              {REMINDER_COLORS.map((color) => (
+                                <button
+                                  type="button"
+                                  key={color}
+                                  className={
+                                    reminderForm.color === color
+                                      ? styles.reminderColorActive
+                                      : ""
+                                  }
+                                  style={{ backgroundColor: color }}
+                                  onClick={() =>
+                                    setReminderForm({ ...reminderForm, color })
+                                  }
+                                  aria-label={`Selecionar cor ${color}`}
+                                  aria-pressed={reminderForm.color === color}
+                                />
+                              ))}
+                              <label className={styles.reminderCustomColor}>
+                                <span>Personalizada</span>
+                                <input
+                                  type="color"
+                                  value={reminderForm.color}
+                                  onChange={(event) =>
+                                    setReminderForm({
+                                      ...reminderForm,
+                                      color: event.target.value,
+                                    })
+                                  }
+                                />
+                              </label>
+                            </div>
+                            <div
+                              className={styles.reminderColorPreview}
+                              style={{
+                                borderLeftColor: reminderForm.color,
+                                backgroundColor: `${reminderForm.color}18`,
+                              }}
+                            >
+                              <FiCalendar />
+                              <span>
+                                {reminderForm.title || "Prévia do lembrete"}
+                              </span>
+                            </div>
+                          </fieldset>
+                          <label className={styles.reminderFullField}>
+                            <span>Observação</span>
+                            <textarea
+                              value={reminderForm.description}
+                              onChange={(event) =>
+                                setReminderForm({
+                                  ...reminderForm,
+                                  description: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            className={styles.reminderPrimaryButton}
+                            onClick={() => void saveReminder()}
+                            disabled={
+                              busy ||
+                              !reminderContact ||
+                              !reminderForm.title.trim() ||
+                              !reminderForm.scheduledAt
+                            }
+                          >
+                            {busy ? "Salvando..." : "Salvar lembrete"}
+                          </button>
+                        </div>
+                      )}
+                    </section>
+                  </div>
+                )}
+              </section>
+            </div>,
+            document.body,
+          )}
       </div>
-      <span className={styles.srOnly} aria-live="polite">{props.conditions.length} filtros adicionais aplicados</span>
+      <span className={styles.srOnly} aria-live="polite">
+        {props.conditions.length} filtros adicionais aplicados
+      </span>
     </section>
   );
 }

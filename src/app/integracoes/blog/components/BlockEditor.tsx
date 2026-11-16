@@ -71,7 +71,7 @@ export default function BlockEditor({ value, onChange, onBusyChange, disabled = 
   }
   function open(type: typeof insert) { remember(); setInsert(type); setUrl(''); setLabel(window.getSelection()?.toString() || ''); setError(''); }
   function add() {
-    const href = insert === 'video' ? videoSource(url) : safeHref(url, insert === 'image');
+    const href = insert === 'video' ? videoSource(url) : safeHref(url, true);
     if (!href) { setError(insert === 'video' ? 'Use YouTube, Vimeo ou um arquivo MP4/WebM.' : 'Informe uma URL HTTP(S) válida.'); return; }
     if (insert !== 'video' && !label.trim()) { setError(insert === 'image' ? 'Descreva a imagem.' : 'Informe o texto do link.'); return; }
     restore();

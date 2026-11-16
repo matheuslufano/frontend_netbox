@@ -50,7 +50,7 @@ export function documentHtml(blocks: RichBlock[], imageUrl: (src: string) => str
       if (run.italic) value = `<em>${value}</em>`;
       if (run.underline) value = `<u>${value}</u>`;
       if (run.font || run.size) value = `<span style="${run.font ? `font-family:${fonts[run.font]};` : ''}${run.size ? `font-size:${sizes[run.size]};` : ''}">${value}</span>`;
-      const href = run.href && safeHref(run.href);
+      const href = run.href && safeHref(run.href, true);
       return href ? `<a href="${escape(href)}">${value}</a>` : value;
     }).join('');
     const html = `<${tag} style="text-align:${block.align || 'left'}">${content || '<br>'}</${tag}>`;
@@ -70,7 +70,7 @@ export function readDocument(root: HTMLElement): RichBlock[] {
     if (['I', 'EM'].includes(node.tagName)) marks.italic = true;
     if (node.tagName === 'U' || node.style.textDecoration.includes('underline')) marks.underline = true;
     if (node.style.fontStyle === 'italic') marks.italic = true;
-    if (node.tagName === 'A') marks.href = safeHref(node.getAttribute('href') || '');
+    if (node.tagName === 'A') marks.href = safeHref(node.getAttribute('href') || '', true);
     const family = node.getAttribute('face') || node.style.fontFamily;
     if (/georgia|serif/i.test(family) && !/sans/i.test(family)) marks.font = 'serif';
     else if (/mono/i.test(family)) marks.font = 'mono';

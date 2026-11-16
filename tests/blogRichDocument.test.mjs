@@ -17,6 +17,15 @@ test('legacy paragraphs, headings, lists, links and images survive conversion wi
   assert.deepEqual(saved[0].paragraphs, ['Título', 'Primeiro', 'Segundo', 'Item', 'Fonte']);
   assert.deepEqual(toDocument(saved), blocks);
 });
+test('internal links survive legacy conversion and editor rendering', () => {
+  for (const href of ['/site/blog/wifi-5-e-wifi-6', '/site#planos-netbox', '/site/blog?categoria=hqs']) {
+    const blocks = toDocument([{ heading: '', paragraphs: [], link: { label: 'Leia mais', href } }]);
+    assert.ok(documentHtml(blocks, src => src).includes(`href="${href}"`));
+    assert.equal(safeHref(href, true), href);
+  }
+  for (const href of ['//example.org', '/\\example.org', 'javascript:alert(1)', '/bad path']) assert.equal(safeHref(href, true), '');
+});
+
 test('editable HTML escapes text and URLs and retains supported formatting', () => {
   const html = documentHtml([{ type: 'paragraph', content: [{ text: '<script>alert(1)</script>', bold: true, href: 'javascript:alert(1)' }, { text: 'Fonte', font: 'serif', italic: true }] }, { type: 'image', src: '/blog/image.webp', alt: '"><svg onload=alert(1)>' }], src => 'https://example.org' + src);
   assert.ok(html.includes('&lt;script&gt;'));
