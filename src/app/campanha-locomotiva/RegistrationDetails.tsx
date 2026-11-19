@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState } from "react";
-import { LuSave, LuX, LuMail, LuEye } from "react-icons/lu";
+import { LuSave, LuX, LuMail } from "react-icons/lu";
 import type { Registration, CampaignConfig } from "./types";
 import { statusLabels } from "./types";
 import styles from "./campaign.module.css";
@@ -9,24 +9,21 @@ export default function RegistrationDetails({
   record,
   config,
   busy,
-  canReadCpf,
   onClose,
   onSave,
   onRetry,
-  onCpf,
 }: {
   record: Registration;
   config: CampaignConfig;
   busy: boolean;
-  canReadCpf: boolean;
   onClose: () => void;
   onSave: (data: Registration & { reason: string }) => Promise<void>;
   onRetry: (id: string) => Promise<void>;
-  onCpf: () => Promise<string>;
 }) {
-  const [draft, setDraft] = useState(record),
-    [reason, setReason] = useState(""),
-    [cpf, setCpf] = useState(record.cpf);
+  const { cpfFull, ...editableRecord } = record;
+  const [draft, setDraft] = useState(editableRecord),
+    [reason, setReason] = useState("");
+  const cpf = cpfFull?.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4") ?? record.cpf;
   const transitions: Record<string, string[]> = {
     PENDING: ["CONFIRMED", "REJECTED", "CANCELLED"],
     CONFIRMED: ["CANCELLED", "ATTENDED", "ABSENT"],
@@ -56,27 +53,18 @@ export default function RegistrationDetails({
           height={80}
         />
       )}
-      <p>
-        <a href={record.profileUrl} target="_blank" rel="noreferrer">
-          @{record.instagram}
-        </a>{" "}
-        · {record.city}/{record.uf}
-      </p>
-      <p>
-        {record.email} · {record.phone}
-      </p>
-      <p>
-        CPF: {cpf}{" "}
-        {canReadCpf && (
-          <button
-            id="locomotiva-reveal-cpf"
-            onClick={async () => setCpf(await onCpf())}
-          >
-            <LuEye />
-            Consultar CPF
-          </button>
-        )}
-      </p>
+      <dl id="locomotiva-registration-participant-data" className={styles.fields}>
+        <div><dt>Nome completo</dt><dd>{record.name}</dd></div>
+        <div><dt>CPF</dt><dd id="locomotiva-registration-cpf">{cpf}</dd></div>
+        <div><dt>E-mail</dt><dd>{record.email}</dd></div>
+        <div><dt>WhatsApp</dt><dd>{record.phone}</dd></div>
+        <div><dt>Cidade</dt><dd>{record.city}</dd></div>
+        <div><dt>UF</dt><dd>{record.uf}</dd></div>
+        <div><dt>Instagram</dt><dd><a href={record.profileUrl} target="_blank" rel="noreferrer">@{record.instagram}</a></dd></div>
+        <div><dt>Link informado</dt><dd><a href={record.profileUrl} target="_blank" rel="noreferrer">{record.profileUrl}</a></dd></div>
+        <div><dt>Protocolo</dt><dd>{record.id}</dd></div>
+        {record.createdAt && <div><dt>Solicitação enviada em</dt><dd>{new Date(record.createdAt).toLocaleString("pt-BR")}</dd></div>}
+      </dl>
       <p>
         Foto:{" "}
         {record.photoState === "MANUAL"

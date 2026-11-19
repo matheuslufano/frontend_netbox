@@ -6,6 +6,7 @@ export type CampaignConfig = {
   dinner: string[];
   minimumHours: number;
 } & Record<string, string | number | boolean | string[]>;
+export const requiredDocumentApprovals = ["imageTerm", "privacy"];
 export type Availability = {
   date: string;
   state: string;
@@ -23,6 +24,8 @@ export type Registration = {
   email: string;
   phone: string;
   cpf: string;
+  cpfFull?: string;
+  createdAt?: string;
   date: string;
   time: string;
   period: string;
@@ -63,6 +66,12 @@ export type Invite = {
   sentAt?: string;
 };
 export type Dashboard = {
+  settings?: {
+    draft: CampaignConfig;
+    version: number;
+    updatedAt: string;
+    reviews: Record<string, { status: "draft" | "review" | "approved"; version: number; by?: string; at?: string }>;
+  };
   config: CampaignConfig;
   availability: Availability[];
   registrations: Registration[];
@@ -70,7 +79,9 @@ export type Dashboard = {
   missing: string[];
   canReadCpf: boolean;
   mailConfigured: boolean;
+  localTestEnabled?: boolean;
 };
+export type SettingsOperation = "save" | "review" | "approve" | "publish" | "close";
 export const statusLabels: Record<string, string> = {
   PENDING: "Em análise",
   CONFIRMED: "Confirmada",

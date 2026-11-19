@@ -91,3 +91,8 @@ O editor permite selecionar usuários ativos como autores e mostra a foto do res
 # Créditos do rodapé
 
 `src/components/layout/FooterCredits.tsx` adapta os créditos da campanha de 10 anos para Netbox Afiliados, com ano atual, nome da empresa e “Site desenvolvido por @Matheus Mota 🧑‍💻”. AppShell inclui o rodapé no login e nas telas autenticadas. O cartão do portfólio usa a imagem original em `public/images/matheus/portfolio-preview.png`, abre acima do nome por hover/foco e mantém link externo, transição de 180 ms e redução de movimento. O efeito não rastreia continuamente o cursor. CSS Modules acompanha os temas claro/escuro; o layout flexível reserva espaço ao rodapé inclusive no CRM sem alterar suas rotas ou permissões. Referências: CampaignFooter de netbox-10-anos e https://freefrontend.com/css-tabs/. Sem dependências novas.
+# Configurações da Campanha Locomotiva
+
+A tela `/campanha-locomotiva?secao=settings` organiza as regras em sete seções. As pendências levam ao campo correspondente. Datas e chegadas são escolhidas individualmente, e mudanças em dias ocupados exigem confirmação da seleção.
+
+O painel usa `GET /admin/locomotiva` e `PUT /admin/locomotiva/config`. O PUT recebe `version` e uma `operation` de salvamento, revisão, aprovação, publicação ou fechamento. Salvar mantém a configuração pública vigente. A publicação valida os documentos aprovados e só muda a versão pública quando as regras apresentadas ao participante mudam. Fechar mantém solicitações e aceites anteriores. As versões e o rascunho administrativo ficam no JSON de configuração existente, sem uma migração de banco.

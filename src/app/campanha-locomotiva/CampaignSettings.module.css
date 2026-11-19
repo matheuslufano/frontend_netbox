@@ -1,0 +1,140 @@
+.workspace {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: var(--nb-background, #f5f6f7);
+  border-radius: 12px;
+}
+.workspace > header,
+.section,
+.actionBar {
+  padding: clamp(0.9rem, 2vw, 1.4rem);
+  background: var(--nb-surface, #fff);
+  border: 1px solid var(--nb-border, #ddd);
+  border-radius: 12px;
+}
+.workspace h2,
+.section h3 {
+  margin: 0;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.navigation,
+.section,
+.document,
+.section fieldset {
+  display: grid;
+  gap: 0.9rem;
+}
+.navigation button {
+  justify-items: start;
+  display: grid;
+  text-align: left;
+}
+.workspace button[aria-current],
+.workspace button[aria-pressed="true"],
+.actionBar button {
+  border-color: #c45826;
+  box-shadow: inset 0 -2px #c45826;
+}
+.workspace button {
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.workspace .sectionPicker {
+  display: none;
+}
+.section {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.section fieldset,
+.document {
+  min-width: 0;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--nb-border, #ddd);
+  border-radius: 8px;
+}
+.actions,
+.actionBar {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.calendar,
+.shortFields {
+  display: grid;
+  gap: 0.5rem;
+}
+.calendar {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+}
+.workspace .calendar button {
+  flex-direction: column;
+  padding-inline: 0;
+  gap: 0;
+}
+.workspace .activationButton {
+  background: #a84114;
+  border-color: #a84114;
+  color: #fff;
+}
+.workspace .activationButton:not(:disabled):hover {
+  background: #87340f;
+}
+.pendingSettings {
+  padding: 0.75rem 1rem;
+  border-inline-start: 3px solid #c45826;
+  background: #fff2e8;
+  color: #94360f;
+  border-radius: 6px;
+}
+.pendingSettings a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.shortFields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.actionBar {
+  justify-content: space-between;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+.preview {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+@media (max-width: 760px) {
+  .layout,
+  .shortFields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .navigation {
+    display: none;
+  }
+  .workspace .sectionPicker {
+    display: grid;
+  }
+  .actionBar {
+    position: static;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace button {
+    transition: none;
+  }
+}
