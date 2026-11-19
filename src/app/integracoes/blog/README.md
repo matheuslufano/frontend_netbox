@@ -1,5 +1,15 @@
 # Blog Institucional
 
+## Busca de imagens livres por tema
+
+Na criação e edição, cada campo de **Imagens do artigo** possui o botão de lupa **Imagens livres**. Abre `FreeMediaModal` com busca por tema e filtros Vertical, Horizontal e GIF transparente, independentemente da categoria do artigo. A orientação inicial acompanha o campo selecionado; o usuário pode trocar o filtro.
+
+Os resultados vêm do Wikimedia Commons, limitados a CC0 ou domínio público e até 8 MB. Cada resultado mostra dimensões, autor, licença e link da origem. GIFs precisam ser animados e declarar transparência em todos os quadros; a prévia quadriculada permite conferir o recorte. Não há remoção automática de fundo nem garantia de resultados para qualquer tema. A busca aceita termos em português e inglês, carrega mais lotes e apresenta erros da fonte.
+
+**Usar imagem** importa os bytes no backend e preenche somente o campo escolhido e sua descrição editável. Ainda é necessário salvar/publicar o artigo. Durante a importação, fechamento e salvamento ficam bloqueados. A busca pendente é cancelada ao fechar o diálogo ou iniciar outra pesquisa.
+
+IDs: `article-poster-free-media-button`, `article-landscape-free-media-button`; controles do modal usam esses mesmos prefixos, como `article-poster-free-media-query`. `data-component="free-media-search"` identifica o diálogo. Estilos compartilhados com o catálogo em `components/ImageSearchModal.module.css`; botões dos campos em `components/ImagePicker.module.css`. Sem nova dependência ou chave de API. Requer o backend com `/admin/blog/free-media/search` e `/admin/blog/free-media/import`.
+
 ## Links internos na edição
 
 O editor preserva links internos iniciados por uma única barra, incluindo query e fragmento, ao converter conteúdo antigo e renderizar o documento. A API também aceita esses links em `section.link.href` e nos trechos `document[].content[].href`, permitindo atualizar imagens sem rejeitar links já existentes. URLs HTTP(S) continuam aceitas; protocolos executáveis, barras invertidas e endereços iniciados por `//` continuam bloqueados. A correção requer atualizar o painel e o backend.

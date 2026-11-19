@@ -5,7 +5,7 @@ import { FiArrowLeft, FiArrowRight, FiDownload, FiFilm, FiBookOpen, FiMonitor, F
 import { blogApi } from '../api';
 import { catalogLabels, type CatalogProvider, type CatalogWork, type CatalogImage } from '../imageCatalog';
 import { getApiErrorMessage } from '@/lib/api';
-import styles from './CatalogImageModal.module.css';
+import styles from './ImageSearchModal.module.css';
 
 /** Native modal traps focus and restores it to the image-picker trigger on close. */
 export default function CatalogImageModal({ provider, variant, onClose, onSelect, onBusyChange }: { provider: CatalogProvider; variant: 'poster' | 'landscape'; onClose: () => void; onSelect: (url: string, alt: string) => void; onBusyChange?: (busy: boolean) => void }) {

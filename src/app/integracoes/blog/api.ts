@@ -1,9 +1,12 @@
 import api from '@/lib/api';
 import type { Article, Author, Catalog, Category } from './types';
 import type { CatalogProvider, CatalogWork, CatalogImage } from './imageCatalog';
+import type { FreeMediaMode, FreeMediaResults } from './freeMedia';
 const base = '/admin/blog';
 const catalogBase = (provider: CatalogProvider) => provider === 'tmdb' ? `${base}/tmdb` : `${base}/catalog/${provider}`;
 export const blogApi = {
+  searchFreeMedia: async (q: string, mode: FreeMediaMode, offset: number, signal: AbortSignal) => (await api.get<FreeMediaResults>(`${base}/free-media/search`, { params: { q, mode, offset }, signal, timeout: 90000 })).data,
+  importFreeMedia: async (id: number, mode: FreeMediaMode) => (await api.post<{ url: string; alt: string }>(`${base}/free-media/import`, { id, mode }, { timeout: 45000 })).data,
   authors: async () => (await api.get<Author[]>(`${base}/authors`)).data,
   searchImages: async (q: string, page: number, signal?: AbortSignal, provider: CatalogProvider = 'tmdb') => (await api.get<{ page: number; pages: number; results: CatalogWork[] }>(`${catalogBase(provider)}/search`, { params: { q, page }, signal })).data,
   workImages: async (work: CatalogWork, signal?: AbortSignal, provider: CatalogProvider = 'tmdb') => (await api.get<{ title: string; images: CatalogImage[] }>(`${catalogBase(provider)}/${work.kind}/${work.id}/images`, { signal })).data,

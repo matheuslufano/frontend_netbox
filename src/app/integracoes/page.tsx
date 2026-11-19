@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiActivity,
+  FiUsers,
   FiArrowLeft,
   FiClock,
   FiCode,
@@ -227,6 +228,15 @@ export default function IntegracoesPage() {
           aria-label="Integrações disponíveis"
         >
           <IntegrationCard
+            id="integration-partnerships"
+            icon={<FiUsers aria-hidden="true" />}
+            name="Parcerias"
+            description="Configure campanhas de parceiros e acompanhe inscrições, visitas e aprovações da Locomotiva."
+            status="Gestão de campanhas"
+            available
+            onOpen={() => router.push("/integracoes/parcerias")}
+          />
+          <IntegrationCard
             icon={<FiFileText aria-hidden="true" />}
             name="Blog Institucional"
             description="Gerencie, edite e publique artigos no site institucional da Netbox."
@@ -355,6 +365,7 @@ export default function IntegracoesPage() {
 }
 
 function IntegrationCard({
+  id,
   icon,
   name,
   description,
@@ -362,6 +373,7 @@ function IntegrationCard({
   available = false,
   onOpen,
 }: {
+  id?: string;
   icon: React.ReactNode;
   name: string;
   description: string;
@@ -370,7 +382,7 @@ function IntegrationCard({
   onOpen: () => void;
 }) {
   return (
-    <article className={styles.integrationCard}>
+    <article id={id} className={styles.integrationCard}>
       <div className={styles.cardTopline}>
         <span className={styles.integrationIcon}>{icon}</span>
         <span className={available ? styles.availableBadge : styles.soonBadge}>
@@ -379,7 +391,7 @@ function IntegrationCard({
       </div>
       <h2>{name}</h2>
       <p>{description}</p>
-      <button type="button" onClick={onOpen}>
+      <button id={id ? `${id}-open` : undefined} type="button" onClick={onOpen}>
         Abrir integração <FiShare2 aria-hidden="true" />
       </button>
     </article>

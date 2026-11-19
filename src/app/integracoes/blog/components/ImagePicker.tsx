@@ -1,8 +1,9 @@
 'use client';
 import { useId, useRef, useState } from 'react';
 import Image from 'next/image';
-import { LuCircleAlert, LuImage, LuImages, LuLink, LuLoaderCircle, LuTrash2, LuUpload } from 'react-icons/lu';
+import { LuCircleAlert, LuImage, LuImages, LuLink, LuLoaderCircle, LuSearch, LuTrash2, LuUpload } from 'react-icons/lu';
 import CatalogImageModal from './CatalogImageModal';
+import FreeMediaModal from './FreeMediaModal';
 import { imageCatalog, catalogLabels } from '../imageCatalog';
 import { blogApi } from '../api';
 import { getApiErrorMessage } from '@/lib/api';
@@ -24,6 +25,7 @@ export default function ImagePicker({ value, alt, title, description, variant, c
   const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [freeMediaOpen, setFreeMediaOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const urlInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
@@ -44,6 +46,7 @@ export default function ImagePicker({ value, alt, title, description, variant, c
       {busy && <span className={styles.uploading} role="status"><LuLoaderCircle className={styles.spinner} aria-hidden="true" />Enviando imagem…</span>}
     </div>
       <div className={styles.actions} role="group" aria-label={`Ações da ${title.toLowerCase()}`}>
+        <button id={`article-${variant}-free-media-button`} type="button" disabled={busy} onClick={() => setFreeMediaOpen(true)} title="Buscar imagens livres e GIFs transparentes" aria-label={`Buscar imagens livres para ${title.toLowerCase()}`}><LuSearch aria-hidden="true" /><span className={styles.actionLabel}>Imagens livres</span></button>
         <button type="button" disabled={busy || !catalogAvailable} onClick={() => setCatalogOpen(true)} title={catalogAvailable ? `Buscar imagens: ${catalogLabels[provider].title}` : 'A Metron fornece capas de HQs. Envie a imagem horizontal ou use um link.'} aria-label={`Buscar imagens: ${catalogLabels[provider].title}`}><LuImages aria-hidden="true" /><span className={styles.actionLabel}>Catálogo</span></button>
         <button type="button" className={styles.uploadButton} disabled={busy} onClick={() => fileInput.current?.click()} title={value ? 'Trocar imagem' : 'Enviar imagem'} aria-label={`Enviar ${title.toLowerCase()} do computador`}><LuUpload aria-hidden="true" /><span className={styles.actionLabel}>{value ? 'Trocar' : 'Enviar'}</span></button>
         <button type="button" disabled={busy} aria-expanded={linkOpen} aria-controls={`${id}-url`} onClick={() => { setLinkOpen(!linkOpen); if (!linkOpen) requestAnimationFrame(() => urlInput.current?.focus()); }} title="Usar link de imagem" aria-label="Usar link de imagem"><LuLink aria-hidden="true" /><span className={styles.actionLabel}>Link</span></button>
@@ -65,5 +68,6 @@ export default function ImagePicker({ value, alt, title, description, variant, c
       {error && <p role="alert" className={styles.error}>{error}</p>}
     </div>
     {catalogOpen && catalogAvailable && <CatalogImageModal key={provider} provider={provider} variant={variant} onClose={() => setCatalogOpen(false)} onBusyChange={active => { setBusy(active); onBusyChange?.(active); }} onSelect={(url, description) => { change(url); onAltChange(description); }} />}
+    {freeMediaOpen && <FreeMediaModal variant={variant} onClose={() => setFreeMediaOpen(false)} onBusyChange={active => { setBusy(active); onBusyChange?.(active); }} onSelect={(url, description) => { change(url); onAltChange(description); }} />}
   </section>;
 }

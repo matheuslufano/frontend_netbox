@@ -15,8 +15,8 @@
 .placeholder strong { font-size: 12px; }
 .placeholder span { font-size: 12px; color: var(--muted); }
 .body { display: grid; align-content: start; gap: 5px; min-width: 0; padding: 8px; }
-.actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-width: 0; }
-.card[data-variant=poster] .actions { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(4, minmax(32px, 1fr)); }
+.actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; min-width: 0; }
+.card[data-variant=poster] .actions { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(5, minmax(32px, 1fr)); }
 .card[data-variant] .actions button { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 32px; padding: 6px; font-size: 11px; color: inherit; background: var(--surface); transition: background .16s, border-color .16s; }
 .card[data-variant=poster] .actions button { flex-direction: column; gap: 6px; }
 .actionLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

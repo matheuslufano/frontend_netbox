@@ -26,3 +26,17 @@
 .results button, .grid .image { background: var(--editor-card); box-shadow: var(--editor-shadow); }
 .modal header { padding-bottom: 12px; border-bottom: 1px solid var(--border); }
 .modal footer { font-size: 10px; line-height: 1.5; }
+
+/* Shared search dialog; free-media results also expose provenance before importing. */
+.grid[data-free-media] { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.resultCard { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--editor-card); font-size: 12px; }
+.resultCard strong, .author { overflow-wrap: anywhere; }
+.author { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.resultCard small { color: var(--muted); }
+.resultCard a { display: inline-flex; align-items: center; gap: 5px; color: var(--text); text-decoration: underline; }
+.resultCard button { margin-top: auto; }
+.freePreview { display: grid; place-items: center; height: 150px; overflow: hidden; border-radius: 6px; background: repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 0 / 16px 16px; }
+.freePreview img { display: block; width: 100%; height: 150px; object-fit: contain; }
+.licenseNotice { padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+.modal a:focus-visible { outline: 2px solid #c84a0d; outline-offset: 3px; }
+@media(max-width: 550px) { .grid[data-free-media] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

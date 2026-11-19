@@ -263,6 +263,18 @@ export default function Sidebar() {
 
           <li className={styles.button}>
             <Link
+              id="navigation-locomotiva-campaign"
+              href="/campanha-locomotiva"
+              className={`${styles.menuItem} ${pathname === '/campanha-locomotiva' ? styles.menuItemActive : ''}`}
+              aria-current={pathname === '/campanha-locomotiva' ? 'page' : undefined}
+              aria-label="Campanha Locomotiva"
+            >
+              <FiUsers className={styles.icon} />
+              <span className={styles.itemLabel}>Campanha Locomotiva</span>
+            </Link>
+          </li>
+          <li className={styles.button}>
+            <Link
               href="/integracoes"
               className={`${styles.menuItem} ${
                 pathname === "/integracoes"
