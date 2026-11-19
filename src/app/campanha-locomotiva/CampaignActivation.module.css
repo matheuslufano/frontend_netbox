@@ -1,0 +1,314 @@
+.activation,
+.confirmation {
+  display: grid;
+  gap: 18px;
+}
+.activationHeading h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.5vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.activationHeading p {
+  margin: 6px 0 0;
+  color: #504c53;
+  font-size: 1.1rem;
+}
+.activationHeading + .navigation {
+  margin-top: 12px;
+}
+:global(#locomotiva-admin) .navigation {
+  background: transparent;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding: 0;
+  gap: 3px;
+}
+:global(#locomotiva-admin) .navigation button {
+  border-radius: 0;
+  font-size: 0.98rem;
+}
+:global(#locomotiva-admin) .navigation [aria-current] {
+  background: transparent;
+  color: #b83d24;
+  border-bottom: 3px solid #ed593c;
+}
+.card {
+  min-width: 0;
+  padding: clamp(12px, 2vw, 18px);
+  border: 1px solid #dcd5d5;
+  border-radius: 13px;
+  background: var(--nb-surface);
+}
+.card h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.42rem);
+  font-weight: 800;
+}
+.cardHeading,
+.checklistLink,
+.statePill,
+.publicLink p,
+.readyMessage,
+.warning,
+.modalInfo,
+.confirmationFacts li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.cardHeading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.cardHeading span,
+.modalInfo {
+  color: #504c53;
+}
+.progress {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  margin: 14px 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #e5dfe6;
+  overflow: hidden;
+}
+.progress::-webkit-progress-bar {
+  background: #e5dfe6;
+}
+.progress::-webkit-progress-value {
+  background: #348544;
+  border-radius: 999px;
+}
+.progress::-moz-progress-bar {
+  background: #348544;
+  border-radius: 999px;
+}
+.checklist,
+.stateList,
+.confirmationFacts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checklist {
+  display: grid;
+  gap: 6px;
+}
+.checklistLink {
+  min-height: 42px;
+  padding: 6px 12px;
+  border: 1px solid #f0d4a6;
+  border-radius: 9px;
+  background: #fff0d6;
+  color: #251d16;
+  text-decoration: none;
+}
+.checklistLink[data-ready="true"],
+.readyMessage {
+  border-color: #cde5cf;
+  background: #e1f1e2;
+}
+.checklistLink:hover {
+  text-decoration: underline;
+}
+.checkIcon {
+  color: #fff;
+  background: #1d752d;
+  border-radius: 50%;
+  padding: 3px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.pendingIcon {
+  color: #9a520d;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.checkChevron {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+.reviewLabel {
+  margin-inline-start: auto;
+  color: #a7341f;
+  border: 1px solid #e77d66;
+  border-radius: 7px;
+  padding: 3px 9px;
+  font-weight: 650;
+}
+.reviewLabel + .checkChevron {
+  margin-inline-start: 0;
+}
+.publicationGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 16px;
+  margin: 15px 0;
+}
+.publicationOptions {
+  display: grid;
+  gap: 11px;
+}
+.publicationOptions > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.publicationOptions svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #68616b;
+}
+.publicationOptions .manualIcon {
+  color: #c44026;
+  fill: #ffcec0;
+}
+.publicationOptions small {
+  display: block;
+  color: #56515a;
+}
+.publicLink {
+  min-width: 0;
+  border-inline-start: 1px solid #ded8db;
+  padding-inline-start: 16px;
+}
+.publicLink p {
+  margin: 0 0 9px;
+}
+.publicLink .lockedLink {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f0ecef;
+  color: #56515a;
+}
+.publicationActions,
+.confirmationActions {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-wrap: wrap;
+}
+.activation button.primaryButton {
+  background: #bb4129;
+  border-color: #bb4129;
+  color: #fff;
+  font-weight: 750;
+}
+.publicationActions .primaryButton {
+  min-width: min(245px, 100%);
+}
+.activation .disclosure {
+  margin-top: 12px;
+  padding-top: 9px;
+}
+.disclosure a {
+  color: #9e402a;
+  text-decoration: underline;
+}
+.stateList {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.statePill {
+  justify-content: center;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 0.9rem;
+  font-weight: 750;
+  background: #e5dfe9;
+  color: #453a50;
+}
+.statePill[data-state="open"] {
+  background: #e0f1e2;
+  color: #235d2d;
+}
+.statePill[data-state="paused"] {
+  background: #fff0d4;
+  color: #874512;
+}
+.statePill[data-state="ended"] {
+  background: #efebed;
+  color: #545054;
+}
+.statePill[aria-current] {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.confirmation {
+  gap: 14px;
+}
+.confirmation p {
+  margin: 0;
+}
+.readyMessage,
+.warning {
+  padding: 10px;
+  border-radius: 9px;
+  color: #245b2c;
+  font-weight: 700;
+}
+.warning {
+  background: #fff1dc;
+  color: #754621;
+}
+.confirmationFacts {
+  padding: 4px 14px;
+  border: 1px solid #e5dfdf;
+  border-radius: 11px;
+  background: #f5f2f2;
+}
+.confirmationFacts li {
+  padding: 10px 0;
+}
+.confirmationFacts li + li {
+  border-top: 1px solid #e5dfdf;
+}
+.confirmationFacts svg {
+  color: #645e65;
+  font-size: 1.25rem;
+}
+.confirmation .reviewCheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+.reviewCheck input {
+  accent-color: #bb4129;
+  width: 18px;
+  height: 18px;
+}
+.confirmationActions {
+  justify-content: flex-end;
+}
+.confirmationActions button {
+  flex: 1;
+}
+.confirmationActions .primaryButton {
+  flex: 1.5;
+}
+@media (max-width: 610px) {
+  .publicationGrid {
+    grid-template-columns: 1fr;
+  }
+  .publicLink {
+    border-inline-start: 0;
+    border-top: 1px solid #ded8db;
+    padding: 12px 0 0;
+  }
+  .stateList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reviewLabel {
+    font-size: 0.8rem;
+    padding-inline: 5px;
+  }
+}

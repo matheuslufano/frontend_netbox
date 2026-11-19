@@ -146,6 +146,8 @@
   margin-inline-start: 0;
   overflow-wrap: anywhere;
 }
+.registrationActions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.page .registrationDeleteButton { border-color: #a12624; color: #a12624; }
 .page label {
   display: grid;
   gap: 7px;

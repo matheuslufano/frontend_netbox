@@ -12,7 +12,10 @@ export type Availability = {
   state: string;
   times: { lunch: string[]; dinner: string[] };
 };
+export type ReservationQuickAction = "approve" | "reject" | "reschedule" | "delete";
+
 export type Registration = {
+  inviteId?: string | null;
   id: string;
   name: string;
   instagram: string;
@@ -66,11 +69,13 @@ export type Invite = {
   sentAt?: string;
 };
 export type Dashboard = {
+  mailTemplates?: Record<string, { subject: string; body: string }>;
   settings?: {
     draft: CampaignConfig;
     version: number;
     updatedAt: string;
     reviews: Record<string, { status: "draft" | "review" | "approved"; version: number; by?: string; at?: string }>;
+    history?: { revision: number; at?: string; reviews?: Record<string, { version: number; by?: string }> }[];
   };
   config: CampaignConfig;
   availability: Availability[];

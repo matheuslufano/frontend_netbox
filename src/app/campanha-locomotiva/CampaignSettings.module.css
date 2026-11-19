@@ -1,8 +1,13 @@
 .workspace {
+  --settings-paper: #fffdfc;
+  --settings-border: #ddd4cf;
+  --settings-accent: #af410e;
+  color: #2d1b16;
+  color-scheme: light;
   display: grid;
   gap: 1.25rem;
   padding: clamp(0.75rem, 2vw, 1.5rem);
-  background: var(--nb-background, #f5f6f7);
+  background: #f6f1ee;
   border-radius: 12px;
 }
 .workspace > header,
@@ -13,15 +18,58 @@
   border: 1px solid var(--nb-border, #ddd);
   border-radius: 12px;
 }
+.workspace .settingsHeader {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.settingsHeader h2 {
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.breadcrumb {
+  margin-bottom: 0.8rem;
+  font-size: 0.86rem;
+}
+.breadcrumb strong {
+  color: var(--settings-accent);
+}
+.headerRow,
+.previewMonth {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.workspace :is(button, input:not([type="checkbox"]), select, textarea) {
+  background: var(--settings-paper);
+  color: inherit;
+  border-color: var(--settings-border);
+}
+.workspace .activationButton {
+  background: var(--settings-accent);
+  border-color: var(--settings-accent);
+  color: white;
+}
 .workspace h2,
 .section h3 {
   margin: 0;
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+}
+.layout[data-agenda="true"] {
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+}
+.layout[data-agenda="true"] > .section {
+  padding: 0;
+  border: 0;
+  background: none;
 }
 .navigation,
 .section,
@@ -31,9 +79,22 @@
   gap: 0.9rem;
 }
 .navigation button {
-  justify-items: start;
-  display: grid;
-  text-align: left;
+  justify-content: flex-start;
+  border-radius: 8px 8px 0 0;
+}
+.workspace .navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--settings-border);
+}
+.workspace .navigation button {
+  background: transparent;
+  border-color: transparent;
+}
+.workspace .navigation button[aria-current] {
+  background: #fff0e0;
+  color: var(--settings-accent);
 }
 .workspace button[aria-current],
 .workspace button[aria-pressed="true"],
@@ -42,7 +103,9 @@
   box-shadow: inset 0 -2px #c45826;
 }
 .workspace button {
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 .workspace .sectionPicker {
   display: none;
@@ -50,6 +113,87 @@
 .section {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.workspace
+  :is(
+    .section,
+    .agendaCard,
+    .previewPanel > .document,
+    .actionBar,
+    .settingsDialog
+  ) {
+  background: var(--settings-paper);
+  border: 1px solid var(--settings-border);
+  color: inherit;
+  border-radius: 11px;
+}
+.agendaCard,
+.previewPanel,
+.settingsDialog {
+  display: grid;
+  gap: 0.9rem;
+}
+.agendaCard,
+.settingsDialog {
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+}
+.agendaCard h3,
+.previewPanel h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+.agendaCard h3 svg,
+.previewPanel h3 svg {
+  color: var(--settings-accent);
+}
+.previewPanel h3 small {
+  margin-left: auto;
+  background: #ffecd5;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+.previewPanel h4 {
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+.previewPanel .calendar button {
+  min-height: 28px;
+  padding-block: 2px;
+}
+.workspace .previewPanel [data-booking-preview-state="Disponível"] {
+  background: #e1f4db;
+}
+.workspace .previewPanel [data-booking-preview-state="Ocupado"] {
+  background: #eee9e4;
+  opacity: 1;
+}
+.workspace .previewPanel [data-booking-preview-state="Bloqueado"] {
+  background: #f9e6e4;
+  opacity: 1;
+}
+.workspace .previewPanel button[aria-pressed="true"] {
+  background: #ffebd9;
+}
+.previewLegend {
+  font-size: 0.82rem;
+}
+.workspace .settingsDialog {
+  display: none;
+  inset: 0;
+  margin: auto;
+  width: min(660px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+.workspace .settingsDialog[open] {
+  display: grid;
+}
+.settingsDialog::backdrop {
+  background: #321a13a0;
 }
 .section fieldset,
 .document {
@@ -119,11 +263,12 @@
   line-height: 1.6;
 }
 @media (max-width: 760px) {
-  .layout,
+  .layout[data-agenda="true"],
   .shortFields {
     grid-template-columns: minmax(0, 1fr);
   }
-  .navigation {
+  .workspace .navigation,
+  .inlinePreview {
     display: none;
   }
   .workspace .sectionPicker {

@@ -1,0 +1,373 @@
+.page,
+.registrationDialog {
+  --locomotiva-cream: #f8f2eb;
+  --locomotiva-paper: #fcfaf8;
+  --locomotiva-copper: #ad5d2c;
+  --locomotiva-copper-dark: #874219;
+  --locomotiva-line: #ccad98;
+  --locomotiva-fill: linear-gradient(180deg, #ac5e31, #8e471e);
+  background: var(--locomotiva-cream);
+  color: #171413;
+  color-scheme: light;
+}
+
+.page {
+  padding: clamp(16px, 2vw, 28px);
+  border-block: 2px solid var(--locomotiva-copper);
+  border-radius: 14px 14px 0 0;
+}
+
+.campaignHeader,
+.detailHeader,
+.listFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.campaignHeader h1 {
+  font-size: clamp(26px, 4vw, 48px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+
+.campaignHeader img {
+  width: clamp(72px, 15vw, 150px);
+  height: auto;
+  max-height: 76px;
+  object-fit: contain;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 8px;
+  overflow-x: auto;
+  border-bottom: 2px solid var(--locomotiva-copper);
+}
+
+.page .tabs button {
+  flex: 0 0 auto;
+  padding-inline: clamp(16px, 3vw, 36px);
+  border: 1px solid var(--locomotiva-line);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+}
+
+.page .tabs [aria-current],
+.page .primaryButton,
+.registrationDialog button.primaryButton,
+.page .pagination [aria-current] {
+  background: var(--locomotiva-fill);
+  color: #fff;
+  border-color: var(--locomotiva-copper-dark);
+  font-weight: 700;
+}
+
+.influencers h2 { font-size: clamp(23px, 3vw, 36px); font-weight: 800; margin: 12px 4px; }
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.65fr) minmax(124px, 1fr) minmax(124px, 1fr) auto;
+  gap: clamp(8px, 2vw, 24px);
+  margin: 0 4px 16px;
+}
+
+.page .filters .search,
+.page .filters select {
+  min-width: 0;
+  border: 1px solid #a49a91;
+  border-radius: 10px;
+  color: inherit;
+  background: var(--locomotiva-paper);
+}
+
+.page .filters .search {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-inline: 12px;
+}
+
+.page .filters .search input {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.page .tableContainer,
+.registrationDialog .detailCard,
+.registrationDialog .profileCard {
+  border: 1px solid var(--locomotiva-copper);
+  border-radius: 14px;
+  background: var(--locomotiva-paper);
+}
+
+.tableContainer { overflow: auto; }
+.table { width: 100%; border-collapse: collapse; text-align: left; }
+.table thead { background: #f0e9e1; }
+.table :is(th, td) { padding: 7px clamp(10px, 1.35vw, 20px); }
+.table tbody tr + tr { border-top: 1px solid #d9d1cb; }
+.table tbody tr:hover { background: #f6eee5; }
+.table small { display: block; }
+.page .person,
+.page .rowAction { padding: 0; border-color: transparent; background: transparent; }
+.page .person { text-align: left; font-weight: 750; justify-content: flex-start; }
+.page .rowAction { color: var(--locomotiva-copper-dark); min-width: 44px; }
+.rowAction svg { font-size: 25px; }
+.person img,
+.profileCard img { object-fit: cover; border-radius: 50%; }
+.person img,
+.avatarPlaceholder { flex-shrink: 0; }
+.avatarPlaceholder {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ead9ca;
+  color: var(--locomotiva-copper-dark);
+}
+
+.cellWithIcon,
+.badge,
+.listFooter p,
+.profileLink,
+.detailCard h3,
+.documentList summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cellWithIcon svg { flex-shrink: 0; font-size: 22px; }
+.badge { display: inline-flex; padding: 5px 12px; border-radius: 999px; white-space: nowrap; font-size: .88rem; font-weight: 650; }
+.badge[data-tone="neutral"] { background: #ede6df; color: #583b28; }
+.badge[data-tone="green"] { background: #e0ecd8; color: #244c1e; }
+.badge[data-tone="amber"] { background: #fbe8bc; color: #69410c; }
+.listFooter { margin-top: 14px; flex-wrap: wrap; }
+.listFooter p { font-style: italic; }
+.listFooter p svg { color: var(--locomotiva-copper-dark); }
+.pagination { display: flex; gap: 8px; }
+.page .pagination button { min-width: 40px; min-height: 40px; padding: 6px; background: var(--locomotiva-paper); border-color: var(--locomotiva-line); }
+
+.registrationDialog {
+  inset: 0;
+  margin: auto;
+  width: min(1340px, calc(100% - 28px));
+  max-height: calc(100dvh - 28px);
+  padding: clamp(12px, 2vw, 22px);
+  border: 1px solid var(--locomotiva-copper);
+  border-radius: 14px;
+  overflow: auto;
+}
+
+.registrationDialog::backdrop { background: #201613a6; }
+.detailHeader { padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--locomotiva-copper); }
+.detailHeader h2 { font-size: clamp(17px, 2vw, 23px); font-weight: 750; }
+.detailLayout { display: grid; grid-template-columns: minmax(160px, .9fr) minmax(0, 2fr) minmax(180px, 1.1fr); align-items: start; gap: 14px; }
+.detailMain { display: grid; gap: 14px; min-width: 0; }
+.detailCard,
+.profileCard { overflow-wrap: anywhere; padding: clamp(12px, 1.4vw, 18px); }
+.detailCard h3 { margin-bottom: 12px; font-size: clamp(17px, 1.9vw, 23px); font-weight: 800; flex-wrap: wrap; }
+.detailCard h3 svg { color: var(--locomotiva-copper-dark); }
+.profileCard { grid-row: span 2; text-align: center; }
+.profileCard img,
+.profileCard .avatarPlaceholder { width: min(100%, 176px); height: auto; aspect-ratio: 1; margin-inline: auto; }
+.profileCard .avatarPlaceholder svg { font-size: 48px; }
+.profileCard h3 { margin-top: 8px; font-size: 23px; font-weight: 800; }
+.profileCard dl { display: grid; grid-template-columns: 1fr; gap: 7px; text-align: left; margin-block: 12px; }
+.profileCard dl dt { font-weight: 700; }
+.profileLink { justify-content: center; padding: 8px; border: 1px solid var(--locomotiva-copper); border-radius: 8px; color: var(--locomotiva-copper-dark); margin-block: 10px; }
+.visitSummary { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-block: 16px; }
+.visitSummary span { padding-inline-end: 9px; border-inline-end: 1px solid var(--locomotiva-line); }
+.visitSummary svg { display: inline; vertical-align: middle; }
+.documentList li + li { border-top: 1px solid #d9d1cb; }
+.documentList summary small { margin-inline-start: auto; font-weight: 400; }
+.documentList summary svg { color: #367131; flex-shrink: 0; }
+.timeline { padding-inline-start: 19px; margin: 10px 0 18px 7px; border-left: 1px solid var(--locomotiva-copper); }
+.timeline li { position: relative; padding-bottom: 16px; }
+.timeline li::before { content: ""; position: absolute; left: -25px; top: .45em; width: 11px; height: 11px; border-radius: 50%; background: var(--locomotiva-copper-dark); }
+.timeline time { display: block; font-size: .85rem; }
+.notesCard { grid-column: 2 / -1; }
+.notesCard form { display: flex; align-items: center; gap: 12px; }
+.registrationDialog :is(input, select, textarea, button) { color-scheme: light; }
+.registrationDialog :is(select, textarea, button) { color: #171413; background: var(--locomotiva-paper); }
+.registrationDialog button { transition: border-color 160ms, box-shadow 160ms; }
+.registrationDialog button:not(:disabled):hover { box-shadow: 0 0 0 1px var(--locomotiva-line); }
+
+.registrationHistorySummary { display: flex; align-items: center; gap: 8px; font-weight: 750; cursor: pointer; }
+.reservationSurface { display: grid; min-width: 0; }
+:global(#locomotiva-admin)[data-reservation-open="true"] {
+  background: #f8f2eb;
+  padding: 12px clamp(12px, 1.45vw, 20px);
+}
+:global(#locomotiva-admin)[data-reservation-open="true"] :global(#locomotiva-workspace-header) { display: none; }
+:global(#locomotiva-admin)[data-reservation-open="true"] :global(#locomotiva-dashboard-navigation) {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #ad5d2c;
+  border-radius: 0;
+  margin-block: 0 10px;
+  padding: 0 0 5px;
+}
+:global(#locomotiva-admin)[data-reservation-open="true"] :global(#locomotiva-dashboard-navigation) :is(:global(#locomotiva-tab-email), :global(#locomotiva-tab-activation)) { display: none; }
+:global(#locomotiva-admin)[data-reservation-open="true"] :global(#locomotiva-dashboard-navigation) button {
+  min-height: 38px;
+  border-radius: 8px;
+  padding-inline: clamp(12px, 2.4vw, 30px);
+  font-size: 1rem;
+}
+:global(#locomotiva-admin)[data-reservation-open="true"] :global(#locomotiva-dashboard-navigation) [aria-current] {
+  background: #a9572b;
+  color: #fff;
+  border-color: #a9572b;
+}
+.reservationUnderlying,
+.registrationOverlay { grid-area: 1 / 1; min-width: 0; }
+.reservationUnderlying[inert] { visibility: hidden; }
+.registrationOverlay { position: relative; z-index: 1; align-self: stretch; background: #f8f2eb; }
+.registrationOverlay .registrationDialog {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0 0 16px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  color: #201712;
+}
+.registrationOverlay .registrationDialog[data-registration-view="reject"] {
+  width: min(500px, 100%);
+  margin: 18px auto;
+  padding: 16px;
+  border: 1px solid var(--locomotiva-line);
+  border-radius: 14px;
+  background: var(--locomotiva-paper);
+}
+.registrationOverlay .detailHeader { border: 0; padding-bottom: 0; margin-bottom: 10px; }
+.registrationOverlay .detailHeader button { min-width: 34px; min-height: 34px; padding: 0; }
+.registrationOverlay .detailHeader h2 { padding-inline-end: 38px; }
+.detailHeader h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 1rem; }
+.detailHeader h2 svg { color: var(--locomotiva-copper-dark); }
+.registrationOverlay .profileCard,
+.registrationOverlay .detailCard { border-color: var(--locomotiva-copper); }
+.registrationOverlay .detailCard h3 { margin: 0 0 10px; line-height: 1.2; }
+.registrationOverlay .detailCard h3 svg { font-size: 1.35em; }
+.registrationOverlay .detailCard:has(.documentList) h3,
+.registrationOverlay .detailCard:has(.visitSummary) h3,
+.registrationOverlay .detailCard h3.registrationHistorySummary {
+  background: #f6eee4;
+  margin-inline: calc(-1 * clamp(12px, 1.4vw, 18px));
+  margin-top: calc(-1 * clamp(12px, 1.4vw, 18px));
+  padding: 11px clamp(12px, 1.4vw, 18px);
+  border-radius: 13px 13px 0 0;
+}
+.registrationIdentityName p { color: #44342b; }
+.registrationIdentityName h3 { margin: 7px 0 0; }
+.registrationIdentityName p { margin: 0; }
+.registrationOverlay .profileCard .badge { margin-top: 8px; }
+.registrationOverlay .profileCard dl { gap: 8px; margin-block: 9px; }
+.registrationOverlay .profileCard dl > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; }
+.registrationOverlay .profileCard dd { padding: 0; min-width: 0; }
+.registrationOverlay .profileCard dt { display: flex; align-items: center; gap: 7px; font-size: .85rem; }
+.registrationContactLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.registrationOverlay .profileCard dt svg { font-size: 1.2rem; }
+.registrationOverlay .profileCard .badge { min-width: min(100%, 180px); justify-content: center; padding-block: 8px; }
+.registrationOverlay .profileCard dt svg,
+.registrationOverlay .visitSummary svg,
+.registrationHistorySummary svg { color: var(--locomotiva-copper-dark); }
+.registrationOverlay .detailLayout { grid-template-columns: minmax(150px, 22fr) minmax(0, 48fr) minmax(160px, 27fr); }
+.registrationOverlay .detailLayout > aside:last-of-type { align-self: stretch; }
+.registrationOverlay .detailCard details,
+.registrationOverlay .profileCard details { margin-top: 9px; padding-top: 7px; }
+.registrationOverlay .visitSummary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.registrationOverlay .visitSummary > span { min-width: 0; }
+.registrationOverlay .visitSummary svg { margin-inline-end: 6px; font-size: 1.2em; }
+.registrationOverlay .visitSummary > span:last-child { border-inline-end: 0; }
+.registrationOverlay .detailCard:has(.visitSummary) button { font-size: .91rem; }
+.registrationOverlay .detailCard:has(.visitSummary) button[id$="-approve"] { flex: 1.4; }
+.registrationOverlay .detailCard:has(.visitSummary) :is(button[id$="-reject"], button[id$="-reschedule"]) { flex: 1; border-color: var(--locomotiva-copper); }
+.registrationOverlay [data-registration-view="review"] .registrationVisitEditor:not([open]) { display: none; }
+.registrationOverlay .registrationDelivery { border: 0; margin: 0; padding: 0; }
+.registrationDelivery > summary { list-style: none; }
+.registrationDelivery > summary::-webkit-details-marker { display: none; }
+.registrationOverlay .registrationDelivery h3 { margin: 0; }
+.registrationDelivery h3 small { margin-inline-start: auto; }
+.registrationOverlay .registrationRecords {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 43px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: #5b4135;
+  font-size: .85rem;
+}
+.registrationRecords > summary {
+  width: 34px;
+  min-height: 34px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  background: var(--locomotiva-paper);
+  border: 1px solid var(--locomotiva-line);
+  border-radius: 8px;
+  list-style: none;
+}
+.registrationRecords > summary::-webkit-details-marker { display: none; }
+.registrationOverlay .registrationRecords[open] {
+  width: min(380px, calc(100% - 55px));
+  max-height: min(520px, 75vh);
+  overflow: auto;
+  padding: 10px;
+  background: var(--locomotiva-paper);
+  border: 1px solid var(--locomotiva-line);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px #321c1826;
+  overflow-wrap: anywhere;
+}
+.registrationOverlay .timeline p { margin: 5px 0 0; font-size: .9rem; }
+.registrationOverlay .documentList,
+.registrationOverlay .timeline { list-style: none; }
+.registrationOverlay .documentList { margin: 0; padding: 0; }
+.registrationOverlay .documentList li details { border: 0; margin: 0; padding-block: 7px; }
+.registrationOverlay .documentList summary { font-weight: 550; }
+.registrationOverlay .documentList summary svg { background: #286838; color: #fff; border-radius: 50%; padding: 2px; font-size: 19px; }
+.registrationOverlay .timeline li { padding-bottom: 24px; }
+.registrationOverlay .notesCard textarea { min-height: 76px; }
+.registrationOverlay .notesCard form { margin-top: 8px; }
+.registrationOverlay .notesCard button { flex-shrink: 0; white-space: nowrap; }
+.registrationOverlay .notesCard textarea { min-width: 0; }
+@media (max-width: 1050px) {
+  .registrationOverlay .visitSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .registrationOverlay .detailLayout { grid-template-columns: minmax(0, 1fr); }
+  .registrationOverlay .profileCard,
+  .registrationOverlay .notesCard { grid-row: auto; grid-column: auto; }
+}
+
+@media (max-width: 920px) {
+  .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .detailLayout { grid-template-columns: minmax(160px, 1fr) minmax(0, 2fr); }
+  .notesCard { grid-column: 1 / -1; }
+}
+
+@media (max-width: 590px) {
+  .filters,
+  .detailLayout { grid-template-columns: minmax(0, 1fr); }
+  .profileCard { grid-row: auto; }
+  .notesCard form { align-items: stretch; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registrationDialog button { transition: none; }
+}

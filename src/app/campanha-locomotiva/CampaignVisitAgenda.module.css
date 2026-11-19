@@ -1,0 +1,313 @@
+.agenda {
+  --visit-accent: #ad4207;
+  --visit-action: #c75009;
+  --visit-line: #ddd4d0;
+}
+:global(#locomotiva-admin) .navigation {
+  border-color: #ded1ca;
+  background: #faf4f0;
+  padding: 4px;
+}
+:global(#locomotiva-admin) .navigation [aria-current] {
+  background: #c75009;
+  color: #fff;
+  border-radius: 9px;
+}
+.toolbar,
+.viewSwitch,
+.legend,
+.drawerProfile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.toolbar {
+  justify-content: space-between;
+}
+.viewSwitch {
+  gap: 2px;
+  border: 1px solid var(--visit-line);
+  background: #faf5f2;
+  padding: 3px;
+  border-radius: 10px;
+}
+.agenda .viewSwitch button {
+  min-height: 34px;
+  background: transparent;
+  border-color: transparent;
+}
+.agenda .viewSwitch [aria-pressed="true"],
+.agenda button.primary {
+  background: var(--visit-action);
+  border-color: var(--visit-action);
+  color: #fff;
+}
+.monthGrid {
+  background: #fbf8f6;
+  border-color: var(--visit-line);
+}
+.monthGrid > strong {
+  padding-block: 14px;
+  background: #f8f2ee;
+}
+.monthGrid > strong abbr {
+  display: none;
+}
+.monthGrid article {
+  min-height: 94px;
+  padding: 7px;
+}
+.monthGrid article[data-offered="true"] > :is(time, button) {
+  color: var(--visit-accent);
+}
+.monthGrid article > p {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.monthGrid article > p svg {
+  flex-shrink: 0;
+}
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f0e3db;
+  color: #75351a;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.agenda button.reservationChip,
+.statusBadge {
+  background: #eeeae7;
+  border: 1px solid #d9ceca;
+  color: #433331;
+  border-radius: 10px;
+}
+.agenda button.reservationChip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+  gap: 6px;
+  padding: 5px;
+  font-size: 0.8rem;
+}
+.agenda button.reservationChip[data-status="CONFIRMED"],
+.statusBadge[data-status="CONFIRMED"] {
+  color: #742d08;
+  background: #ffead7;
+  border-color: #efbd91;
+}
+.agenda button.reservationChip[data-status="PENDING"],
+.statusBadge[data-status="PENDING"] {
+  color: #1e4368;
+  background: #e3effb;
+  border-color: #b9d1eb;
+}
+.reservationLabel {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  line-height: 1.25;
+}
+.reservationLabel strong {
+  overflow-wrap: anywhere;
+}
+.reservationLabel time,
+.reservationLabel > span {
+  font-size: 0.88em;
+}
+.agenda button.reservedDate {
+  width: auto;
+  min-height: 26px;
+  padding: 0 4px;
+  background: transparent;
+  border-color: transparent;
+}
+.legend {
+  padding: 12px 14px;
+  border: 1px solid var(--visit-line);
+  border-radius: 12px;
+  background: var(--nb-surface);
+  font-size: 0.85rem;
+}
+.legend span::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef7d15;
+  margin-inline-end: 5px;
+}
+.legend span[data-tone="pending"]::before {
+  background: #548bc6;
+}
+.legend span[data-tone="blocked"]::before {
+  background: #c7474d;
+}
+.legend span[data-tone="offered"]::before {
+  background: #f4d4b7;
+  border-radius: 3px;
+}
+.agenda .reservationDrawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: min(425px, 100%);
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 16px 0 0 16px;
+  padding: 22px;
+  box-shadow: -8px 0 32px #2a170d30;
+  animation: showReservationDrawer 180ms ease-out;
+}
+@keyframes showReservationDrawer {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawerProfile strong {
+  font-size: 1.25rem;
+}
+.drawerProfile p {
+  margin: 0;
+  color: #66514a;
+  overflow-wrap: anywhere;
+}
+.drawerFacts {
+  margin: 18px 0;
+}
+.drawerFacts > div {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid var(--visit-line);
+  padding: 11px 0;
+}
+.drawerFacts dt {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #664b40;
+  font-size: 0.9rem;
+}
+.drawerFacts dd {
+  margin: 0;
+}
+.drawerActions,
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.agenda .quickActions .quickAction {
+  position: relative;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  color: var(--visit-accent);
+}
+.quickAction svg {
+  width: 19px;
+  height: 19px;
+}
+.agenda .quickActions .quickAction[data-action="approve"] {
+  color: #266635;
+}
+.agenda
+  .quickActions
+  .quickAction:is([data-action="reject"], [data-action="delete"]) {
+  color: #a02d32;
+}
+.quickAction::after {
+  content: attr(data-tooltip);
+  display: none;
+  position: absolute;
+  z-index: 2;
+  inset-inline-start: 0;
+  bottom: calc(100% + 6px);
+  pointer-events: none;
+  white-space: nowrap;
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: #fff;
+  background: #38221b;
+  font-size: 0.75rem;
+}
+.quickAction:is(:hover, :focus-visible)::after {
+  display: block;
+}
+.quickAction:last-child::after {
+  inset-inline: auto 0;
+}
+.blockDates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.blockDates input {
+  min-width: 0;
+}
+.blockNotice {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: #75351a;
+  background: #fff0e3;
+}
+.blockActions {
+  display: flex;
+  justify-content: end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.statusBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-weight: 650;
+}
+@media (max-width: 900px) {
+  .monthGrid > strong span {
+    display: none;
+  }
+  .monthGrid > strong abbr {
+    display: inline;
+    text-decoration: none;
+  }
+}
+@media (max-width: 650px) {
+  .monthGrid article {
+    padding: 3px;
+    min-height: 72px;
+  }
+  .monthGrid .reservationChip {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 3px 1px;
+  }
+  .monthGrid .reservationLabel {
+    width: 100%;
+    font-size: 0.7rem;
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agenda .reservationDrawer {
+    animation: none;
+  }
+}
