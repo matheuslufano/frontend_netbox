@@ -215,6 +215,154 @@
   align-items: center;
   gap: 0.4rem;
 }
+.periodTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border: 1px solid var(--settings-border);
+  border-radius: 12px;
+  background: #f5eeea;
+}
+.workspace .periodTabs button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  justify-content: start;
+  text-align: left;
+  gap: 0.15rem 0.65rem;
+  min-height: 60px;
+  border-color: transparent;
+  background: transparent;
+}
+.periodTabs button svg {
+  grid-row: span 2;
+  align-self: center;
+  color: #8e4b2d;
+}
+.periodTabs button small {
+  color: #75645d;
+}
+.workspace .periodTabs button[aria-pressed="true"] {
+  color: #fff;
+  background: #a84114;
+  border-color: #a84114;
+  box-shadow: 0 3px 10px #71320f2b;
+}
+.periodTabs button[aria-pressed="true"] svg,
+.periodTabs button[aria-pressed="true"] small {
+  color: #fff;
+}
+.timeFieldset {
+  display: grid;
+  gap: 0.85rem;
+}
+.timeFieldset legend {
+  font-weight: 750;
+}
+.scheduleHint {
+  margin: 0;
+  color: #65544c;
+}
+.timeRange {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+  background: #faf5f1;
+}
+.timeRange label {
+  display: grid;
+  gap: 0.35rem;
+}
+.customTime {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.65rem;
+  max-width: 34rem;
+}
+.customTime label {
+  display: grid;
+  gap: 0.35rem;
+}
+.workspace .customTime button {
+  min-height: 44px;
+}
+.workspace .timeRange .rangeAction {
+  background: #a84114;
+  border-color: #a84114;
+  color: #fff;
+}
+.timeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.workspace .timeActions button {
+  min-height: 36px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.88rem;
+}
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 0.5rem;
+}
+.workspace .timeGrid button {
+  min-height: 44px;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.workspace .timeGrid button[aria-pressed="true"] {
+  color: #fff;
+  background: #a84114;
+  border-color: #a84114;
+  box-shadow: 0 2px 7px #71320f2b;
+}
+.timeGrid button svg {
+  width: 14px;
+  height: 14px;
+}
+.scheduleError {
+  margin: 0;
+  color: #a12624;
+}
+.templateNote {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid #e6c7a4;
+  border-radius: 9px;
+  background: #fff5e9;
+  color: #684020;
+}
+.settingsSummary {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: #f8f2ee;
+}
+.settingsSummary[data-ready="true"] {
+  background: #edf7ed;
+  color: #245b2c;
+}
+.settingsSummary summary {
+  width: fit-content;
+}
+.templateButton {
+  border-style: dashed;
+}
+.documentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+.documentActions button {
+  flex: 1 1 145px;
+}
 .calendar,
 .shortFields {
   display: grid;
@@ -264,7 +412,9 @@
 }
 @media (max-width: 760px) {
   .layout[data-agenda="true"],
-  .shortFields {
+  .shortFields,
+  .timeRange,
+  .customTime {
     grid-template-columns: minmax(0, 1fr);
   }
   .workspace .navigation,

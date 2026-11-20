@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   LuCalendarDays,
   LuEye,
+  LuFileText,
   LuLayers,
   LuMail,
   LuSave,
@@ -19,8 +20,10 @@ import workspace from "./CampaignWorkspace.module.css";
 import CampaignMessageEditor from "./CampaignMessageEditor";
 import api, { getApiErrorMessage } from "@/lib/api";
 import CampaignSchedule from "./CampaignSchedule";
+import { starterConfiguration } from "./campaignStarterConfig";
 import CampaignRuleFields from "./CampaignRuleFields";
 import {
+  activationOptionalDocumentFields,
   configLabels,
   requiredDocumentApprovals,
   type CampaignConfig,
@@ -34,7 +37,7 @@ const sections = [
     id: "restaurant",
     title: "Geral",
     icon: LuSettings,
-    fields: ["address", "contact", "approvedBy"],
+    fields: ["address", "contact"],
   },
   {
     id: "schedule",
@@ -72,7 +75,10 @@ const sections = [
   { id: "publication", title: "Mensagens", icon: LuMail, fields: ["mail"] },
 ];
 const documents = ["conditions", "imageTerm", "privacy"];
-const notes = /rascunho|\bminuta\b|\bpendente de\b|\ba confirmar\b/i;
+const notes = /rascunho|\bminuta\b|\bpendente de\b|\ba confirmar\b|modelo para revis[aã]o/i;
+const activationOptionalFields = new Set<string>(
+  activationOptionalDocumentFields,
+);
 export const campaignSettingsFieldLabels: Record<string, string> = {
   ...configLabels,
   address: "Endereço da visita",
@@ -107,6 +113,9 @@ const guidance: Record<string, string> = {
 };
 const fieldId = (key: string) =>
   `locomotiva-settings-${key === "arrivalTimes" ? "lunch" : key}`;
+const subscribeHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
 const sectionForField = (key: string) =>
   sections.find((item) => item.fields.includes(key));
 const focusField = (key: string) =>
@@ -142,9 +151,47 @@ export default function CampaignSettings({
   const { config, settings, mailConfigured, registrations, canReadCpf } =
     dashboard;
   const saved = settings?.draft ?? config;
-  const [edits, setEdits] = useState<{ base: number; draft: CampaignConfig }>();
   const version = settings?.version ?? 0;
-  const draft = edits?.base === version ? edits.draft : saved;
+  const needsStarterValues =
+    [
+      "address",
+      "contact",
+      "voucher",
+      "companions",
+      "excess",
+      "balance",
+      "cancellation",
+      "publication",
+      "tags",
+      "conditions",
+      "imageTerm",
+      "privacy",
+      "imageChannels",
+      "imagePurpose",
+      "imageDuration",
+      "imageEditing",
+      "imagePromotion",
+    ].some(
+      (key) => !String(saved[key] ?? "").trim(),
+    ) || (!saved.lunch.length && !saved.dinner.length) || !saved.dates.length;
+  const [edits, setEdits] = useState<
+    { base: number; draft: CampaignConfig } | undefined
+  >();
+  const [templateDismissed, setTemplateDismissed] = useState(false);
+  const hydrated = useSyncExternalStore(
+    subscribeHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+  const initialStarter = useMemo(
+    () =>
+      hydrated && needsStarterValues && !templateDismissed
+        ? starterConfiguration(saved, registrations)
+        : undefined,
+    [hydrated, needsStarterValues, registrations, saved, templateDismissed],
+  );
+  const draft =
+    edits?.base === version ? edits.draft : (initialStarter ?? saved);
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   useEffect(() => {
     onDirtyChange?.(dirty);
@@ -176,6 +223,7 @@ export default function CampaignSettings({
   const [mailCheck, setMailCheck] = useState<{ busy: boolean; result: string }>(
     { busy: false, result: "" },
   );
+  const [templateApplied, setTemplateApplied] = useState(false);
   async function verifyMail() {
     setMailCheck({ busy: true, result: "" });
     try {
@@ -206,8 +254,22 @@ export default function CampaignSettings({
   const [tag, setTag] = useState("");
   const [tagError, setTagError] = useState("");
   const section = sections.find((item) => item.id === selected) ?? sections[0];
-  const update = (key: string, value: string | string[] | number) =>
-    setEdits({ base: version, draft: { ...draft, [key]: value } });
+  const update = (key: string, value: string | string[] | number) => {
+    const next = { ...draft, [key]: value };
+    if (key === "dailyCapacity") {
+      const capacity = Math.max(1, Number(value) || 1);
+      next.conditions = String(draft.conditions ?? "").replace(
+        /Cada data comporta (?:um participante|at[e\u00e9] \d+ influenciador(?:es)?)\./,
+        `Cada data comporta at\u00e9 ${capacity} influenciador${capacity === 1 ? "" : "es"}.`,
+      );
+    }
+    setEdits({ base: version, draft: next });
+  };
+  function completeWithStarter() {
+    setTemplateDismissed(false);
+    setEdits({ base: version, draft: starterConfiguration(draft, registrations) });
+    setTemplateApplied(true);
+  }
   const conflictingVisits = registrations.filter((item) => {
     if (item.status !== "CONFIRMED") return false;
     const period = item.period === "lunch" ? "lunch" : "dinner";
@@ -260,6 +322,9 @@ export default function CampaignSettings({
   const pending = sections.flatMap((item) =>
     item.fields.filter((key) => missing(key) || needsReview(key)),
   );
+  const activationPending = pending.filter(
+    (key) => !activationOptionalFields.has(key),
+  );
   function jump(key: string) {
     const target = sectionForField(key);
     if (!target) return;
@@ -301,6 +366,15 @@ export default function CampaignSettings({
             <p>Defina a disponibilidade e as regras para influenciadores.</p>
           </div>
           <div className={styles.actions}>
+            <button
+              id="locomotiva-settings-apply-starter"
+              type="button"
+              className={styles.templateButton}
+              disabled={busy}
+              onClick={completeWithStarter}
+            >
+              <LuFileText aria-hidden="true" /> Completar com modelo base
+            </button>
             {dirty && (
               <span className={styles.pendingSettings}>
                 Alterações não salvas
@@ -323,6 +397,11 @@ export default function CampaignSettings({
             </button>
           </div>
         </div>
+        {(initialStarter || templateApplied) && (
+          <p role="status" className={styles.templateNote}>
+            Modelo preenchido como rascunho. Confira os textos, a agenda e os dados do restaurante antes de salvar. As aprovações não foram marcadas automaticamente; informe uma pessoa real para revisar os documentos.
+          </p>
+        )}
         <p role="status">
           {config.published
             ? "Inscrições abertas"
@@ -352,14 +431,17 @@ export default function CampaignSettings({
               : "Revisar e abrir inscrições"}
           </button>
         </div>
-        <details>
+        <details className={styles.settingsSummary} data-ready={activationPending.length === 0}>
           <summary>
-            {pending.length
-              ? `Faltam ${pending.length} configurações para abrir as inscrições.`
+            {activationPending.length
+              ? `Faltam ${activationPending.length} configurações para abrir as inscrições.`
               : "Configurações prontas para publicação."}
           </summary>
+          <p>
+            Os textos de termos e privacidade ficam salvos no rascunho para revisão. A campanha só abre quando a agenda, as regras operacionais e o envio de e-mail estiverem prontos.
+          </p>
           <ul>
-            {pending.map((key) => (
+            {activationPending.map((key) => (
               <li key={key}>
                 <button type="button" onClick={() => jump(key)}>
                   {labels[key]}
@@ -427,7 +509,17 @@ export default function CampaignSettings({
               {field("campaignDescription")}
               {field("restaurantName", true)}
               {field("address", true)}
-              {field("approvedBy", true)}
+              <label>
+                {labels.approvedBy} · necessário para aprovar documentos
+                <input
+                  id={fieldId("approvedBy")}
+                  value={String(draft.approvedBy ?? "")}
+                  onChange={(event) => update("approvedBy", event.target.value)}
+                />
+                <small>
+                  Informe uma pessoa real que fará a revisão. Este campo não é preenchido pelo modelo e não impede salvar o rascunho.
+                </small>
+              </label>
               <p>Fuso horário da operação · America/Araguaina</p>
               <label>
                 Canal de atendimento{" "}
@@ -631,6 +723,9 @@ export default function CampaignSettings({
           )}
           {section.id === "documents" && (
             <>
+              <p className={styles.templateNote}>
+                Os textos-base podem ser editados e revisados nesta seção. Aplicar o modelo não registra aprovação nem substitui a conferência do responsável.
+              </p>
               <CampaignRuleFields
                 field="imageChannels"
                 text={String(draft.imageChannels ?? "")}
@@ -724,6 +819,7 @@ export default function CampaignSettings({
                       </p>
                     )}
                     <strong>{labels[key]}</strong>
+                    <div className={styles.documentActions}>
                     <button
                       id={fieldId(key) + "-open"}
                       type="button"
@@ -756,6 +852,7 @@ export default function CampaignSettings({
                     >
                       Aprovar documento
                     </button>
+                    </div>
                   </article>
                 );
               })}
@@ -845,9 +942,9 @@ export default function CampaignSettings({
                   <p>
                     {confirmation === "close"
                       ? "Novos cadastros serão bloqueados. As solicitações existentes serão preservadas."
-                      : `A configuração salva será publicada com ${draft.dates.length} datas e ${draft.lunch.length + draft.dinner.length} horários. O regulamento salvo será exibido com o termo de imagem e o aviso de privacidade aprovados.`}
+                      : `A configuração salva será publicada com ${draft.dates.length} datas e ${draft.lunch.length + draft.dinner.length} horários. Os textos de termos e privacidade serão apresentados aos participantes para leitura e aceite.`}
                   </p>
-                  {confirmation === "publish" && pending.length > 0 && (
+                  {confirmation === "publish" && activationPending.length > 0 && (
                     <p role="status">
                       Resolva as pendências do resumo para continuar.
                     </p>
@@ -860,7 +957,7 @@ export default function CampaignSettings({
                     disabled={
                       busy ||
                       (confirmation === "publish" &&
-                        (dirty || pending.length > 0))
+                        (dirty || activationPending.length > 0))
                     }
                     onClick={async () => {
                       if (await execute(confirmation)) {
@@ -1017,6 +1114,8 @@ export default function CampaignSettings({
               onClick={async () => {
                 if (draftConfirmation === "discard") {
                   setEdits(undefined);
+                  setTemplateDismissed(true);
+                  setTemplateApplied(false);
                   setDraftConfirmation(null);
                 } else if (await execute("save")) setDraftConfirmation(null);
               }}

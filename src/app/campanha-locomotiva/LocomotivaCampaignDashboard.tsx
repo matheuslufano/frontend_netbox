@@ -284,9 +284,7 @@ export default function LocomotivaCampaignDashboard() {
                   }
                   onClick={() => selectSection(key)}
                 >
-                  {tab !== "overview" &&
-                    tab !== "activation" &&
-                    tab !== "calendar" && <Icon aria-hidden="true" />}
+                  <Icon aria-hidden="true" />
                   {label}
                 </button>
               ))}

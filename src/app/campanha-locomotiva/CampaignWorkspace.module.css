@@ -11,8 +11,11 @@
 }
 .workspace .navigation {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-wrap: nowrap;
+  gap: 5px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
   background: var(--nb-surface);
   padding: 5px;
   border: 1px solid var(--nb-border);
@@ -20,14 +23,33 @@
   margin-block: 18px 24px;
 }
 .workspace .navigation button {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-height: 46px;
+  white-space: nowrap;
   border-color: transparent;
   background: transparent;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+.workspace .navigation button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 .workspace .navigation [aria-current] {
   background: var(--campaign-highlight);
   color: var(--campaign-accent);
   font-weight: 700;
   border-bottom-color: var(--campaign-accent);
+  box-shadow: inset 0 -2px var(--campaign-accent);
+}
+.workspace .navigation button:hover:not([aria-current]) {
+  background: #f8f1ed;
+  transform: translateY(-1px);
 }
 .workspace button.primary {
   background: var(--campaign-accent);
@@ -337,6 +359,10 @@
   }
 }
 @media (max-width: 650px) {
+  .workspace .navigation {
+    margin-inline: -4px;
+    border-radius: 10px;
+  }
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -5,7 +5,9 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuClock,
+  LuMoon,
   LuPlus,
+  LuSun,
   LuX,
 } from "react-icons/lu";
 import type { CampaignConfig, Registration } from "./types";
@@ -20,6 +22,15 @@ const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const occupying = new Set(["PENDING", "CONFIRMED", "ATTENDED", "ABSENT"]);
 type Period = "lunch" | "dinner";
 
+function periodTimes(period: Period) {
+  const start = period === "lunch" ? 11 * 60 : 18 * 60;
+  const end = period === "lunch" ? 15 * 60 : 23 * 60;
+  return Array.from({ length: (end - start) / 30 }, (_, index) => {
+    const minutes = start + index * 30;
+    return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  });
+}
+
 function ArrivalTimes({
   period,
   times,
@@ -29,76 +40,139 @@ function ArrivalTimes({
   times: string[];
   onChange: (times: string[]) => void;
 }) {
-  const [enabled, setEnabled] = useState(times.length > 0);
-  const [time, setTime] = useState("");
-  const [error, setError] = useState("");
   const lunch = period === "lunch";
-  const min = lunch ? "11:00" : "18:00";
-  const max = lunch ? "15:00" : "23:00";
+  const options = [...new Set([...periodTimes(period), ...times])].sort();
   const id = `locomotiva-settings-${period}`;
-  function addTime() {
-    if (!time || time < min || time >= max) {
-      setError(`Escolha um horário a partir de ${min} e antes de ${max}.`);
+  const [rangeStart, setRangeStart] = useState(options[0]);
+  const [rangeEnd, setRangeEnd] = useState(options.at(-1)!);
+  const [customTime, setCustomTime] = useState("");
+  const [error, setError] = useState("");
+  const minimumTime = lunch ? "11:00" : "18:00";
+  const maximumTime = lunch ? "15:00" : "23:00";
+
+  function addRange() {
+    const first = options.indexOf(rangeStart);
+    const last = options.indexOf(rangeEnd);
+    if (first < 0 || last < first) {
+      setError("Escolha um intervalo v\u00e1lido para este per\u00edodo.");
       return;
     }
-    if (times.includes(time)) {
-      setError("Esse horário já foi adicionado.");
-      return;
-    }
-    onChange([...times, time].sort());
-    setTime("");
+    onChange([...new Set([...times, ...options.slice(first, last + 1)])].sort());
     setError("");
   }
+
+  function toggleTime(value: string) {
+    onChange(
+      times.includes(value)
+        ? times.filter((time) => time !== value)
+        : [...times, value].sort(),
+    );
+    setError("");
+  }
+
+  function addCustomTime() {
+    if (!customTime || customTime < minimumTime || customTime >= maximumTime) {
+      setError(`Escolha um hor\u00e1rio entre ${minimumTime} e antes de ${maximumTime}.`);
+      return;
+    }
+    if (times.includes(customTime)) {
+      setError("Esse hor\u00e1rio j\u00e1 est\u00e1 selecionado.");
+      return;
+    }
+    onChange([...times, customTime].sort());
+    setCustomTime("");
+    setError("");
+  }
+
   return (
-    <fieldset id={id} tabIndex={-1}>
-      <legend>{lunch ? "Almoço" : "Jantar"}</legend>
-      <label>
-        <input
-          id={`${id}-enabled`}
-          type="checkbox"
-          role="switch"
-          checked={enabled}
-          onChange={(event) => {
-            setEnabled(event.target.checked);
-            setError("");
-            if (!event.target.checked) onChange([]);
-          }}
-        />{" "}
-        Ativar período
-      </label>
-      {enabled && (
-        <>
-          <label>
-            Horário de chegada{" "}
-            <input
-              id={`${id}-time`}
-              type="time"
-              min={min}
-              value={time}
-              onChange={(event) => {
-                setTime(event.target.value);
-                setError("");
-              }}
-            />
-          </label>
-          <button type="button" onClick={addTime}>
-            <LuPlus /> Adicionar horário
+    <fieldset id={id} className={styles.timeFieldset} tabIndex={-1}>
+      <legend>{lunch ? "Hor\u00e1rios de almo\u00e7o" : "Hor\u00e1rios de jantar"}</legend>
+      <p className={styles.scheduleHint}>
+        {times.length
+          ? `${times.length} hor\u00e1rio${times.length === 1 ? "" : "s"} selecionado${times.length === 1 ? "" : "s"}. Toque nos hor\u00e1rios para incluir ou remover.`
+          : "Nenhum hor\u00e1rio selecionado. Escolha uma faixa ou toque nos hor\u00e1rios abaixo."}
+      </p>
+      <div className={styles.timeRange}>
+        <label>
+          De
+          <select
+            id={`${id}-range-start`}
+            value={rangeStart}
+            onChange={(event) => setRangeStart(event.target.value)}
+          >
+            {options.map((value) => <option key={value}>{value}</option>)}
+          </select>
+        </label>
+        <label>
+          At&eacute;
+          <select
+            id={`${id}-range-end`}
+            value={rangeEnd}
+            onChange={(event) => setRangeEnd(event.target.value)}
+          >
+            {options.map((value) => <option key={value}>{value}</option>)}
+          </select>
+        </label>
+        <button
+          id={`${id}-add-range`}
+          type="button"
+          className={styles.rangeAction}
+          onClick={addRange}
+        >
+          <LuPlus aria-hidden="true" /> Adicionar faixa
+        </button>
+      </div>
+      <div className={styles.customTime}>
+        <label>
+          Adicionar um hor\u00e1rio espec\u00edfico
+          <input
+            id={`${id}-custom-time`}
+            type="time"
+            min={minimumTime}
+            max={lunch ? "14:59" : "22:59"}
+            value={customTime}
+            onChange={(event) => {
+              setCustomTime(event.target.value);
+              setError("");
+            }}
+          />
+        </label>
+        <button
+          id={`${id}-add-custom-time`}
+          type="button"
+          onClick={addCustomTime}
+        >
+          <LuPlus aria-hidden="true" /> Adicionar hor\u00e1rio
+        </button>
+      </div>
+      {error && <p role="alert" className={styles.scheduleError}>{error}</p>}
+      <div className={styles.timeActions}>
+        <button type="button" onClick={() => onChange(options)}>
+          Selecionar todos
+        </button>
+        <button type="button" onClick={() => onChange([])} disabled={!times.length}>
+          Limpar per&iacute;odo
+        </button>
+      </div>
+      <div
+        className={styles.timeGrid}
+        role="group"
+        aria-label={lunch ? "Hor\u00e1rios de almo\u00e7o" : "Hor\u00e1rios de jantar"}
+      >
+        {options.map((value) => (
+          <button
+            key={value}
+            id={`${id}-time-${value.replace(":", "-")}`}
+            type="button"
+            aria-label={`${times.includes(value) ? "Remover" : "Selecionar"} hor\u00e1rio ${value}`}
+            aria-pressed={times.includes(value)}
+            onClick={() => toggleTime(value)}
+          >
+            {value}
+            {times.includes(value) && <LuX aria-hidden="true" />}
           </button>
-          {error && <p role="alert">{error}</p>}
-          <div className={styles.actions}>
-            {times.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-label={`Remover ${value}`}
-                onClick={() => onChange(times.filter((item) => item !== value))}
-              >
-                {value} <LuX />
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+        ))}
+      </div>
     </fieldset>
   );
 }
@@ -106,12 +180,14 @@ function ArrivalTimes({
 export function CampaignDateCalendar({
   selectedDates,
   registrations,
+  dailyCapacity = 1,
   onChange,
   id,
   disabled,
 }: {
   selectedDates: string[];
   registrations: Registration[];
+  dailyCapacity?: number;
   onChange: (dates: string[]) => void;
   id: string;
   disabled?: boolean;
@@ -224,7 +300,7 @@ export function CampaignDateCalendar({
         ))}
       </div>
       <p aria-live="polite">
-        {selectedDates.length} datas selecionadas • Até 1 influenciador por dia.
+        {selectedDates.length} datas selecionadas • Capacidade de {dailyCapacity} influenciador{dailyCapacity === 1 ? "" : "es"} por dia.
       </p>
       {pendingDates && (
         <div role="alert">
@@ -319,21 +395,17 @@ export default function CampaignSchedule({
               onChange={(event) => setRange({ start, end: event.target.value })}
             />
           </label>
-          <p>
-            Capacidade diária
-            <br />
-            <strong>1 influenciador por dia</strong>
-          </p>
           <label>
-            Antecedência mínima (horas)
+            Capacidade diária (influenciadores por dia)
             <input
-              id="locomotiva-settings-minimumHours"
+              id="locomotiva-settings-dailyCapacity"
               type="number"
-              min={0}
-              max={720}
-              value={draft.minimumHours}
+              min={1}
+              max={100}
+              step={1}
+              value={draft.dailyCapacity || 1}
               onChange={(event) =>
-                update("minimumHours", Number(event.target.value))
+                update("dailyCapacity", Number(event.target.value))
               }
             />
           </label>
@@ -346,26 +418,18 @@ export default function CampaignSchedule({
           Selecionar dias do período
         </button>
         {error && <p role="alert">{error}</p>}
-        <p>O formulário exige horário e bloqueia datas sem vaga.</p>
+        <p>Solicitações em análise, reservas e visitas realizadas ocupam a capacidade do dia.</p>
       </div>
       <div className={styles.agendaCard}>
         <h3>
           <LuClock aria-hidden="true" /> Horários disponíveis
         </h3>
-        <div className={styles.actions} aria-label="Período da visita">
-          <button
-            type="button"
-            aria-pressed={period === "lunch"}
-            onClick={() => setPeriod("lunch")}
-          >
-            Almoço
+        <div className={styles.periodTabs} role="group" aria-label="Per\u00edodo da visita">
+          <button id="locomotiva-settings-period-lunch" type="button" aria-pressed={period === "lunch"} onClick={() => setPeriod("lunch")}>
+            <LuSun aria-hidden="true" /><span>Almo&#231;o</span><small>{draft.lunch.length} hor\u00e1rios</small>
           </button>
-          <button
-            type="button"
-            aria-pressed={period === "dinner"}
-            onClick={() => setPeriod("dinner")}
-          >
-            Jantar
+          <button id="locomotiva-settings-period-dinner" type="button" aria-pressed={period === "dinner"} onClick={() => setPeriod("dinner")}>
+            <LuMoon aria-hidden="true" /><span>Jantar</span><small>{draft.dinner.length} hor\u00e1rios</small>
           </button>
         </div>
         {(["lunch", "dinner"] as const).map((item) => (
@@ -387,6 +451,7 @@ export default function CampaignSchedule({
           id="locomotiva-settings-dates"
           selectedDates={draft.dates}
           registrations={registrations}
+          dailyCapacity={draft.dailyCapacity || 1}
           onChange={(selected) => {
             setRange(undefined);
             update("dates", selected);

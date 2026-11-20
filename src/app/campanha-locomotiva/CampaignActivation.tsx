@@ -21,7 +21,7 @@ import workspace from "./CampaignWorkspace.module.css";
 import { CampaignDateCalendar } from "./CampaignSchedule";
 import { campaignSettingsFieldLabels } from "./CampaignSettings";
 import {
-  requiredDocumentApprovals,
+  activationOptionalDocumentFields,
   type CampaignConfig,
   type Dashboard,
 } from "./types";
@@ -41,6 +41,9 @@ export type CampaignActivationAction =
 
 const settingsFieldLink = (field: string) =>
   `?secao=settings&campo=${encodeURIComponent(field)}`;
+const optionalActivationDocuments = new Set<string>(
+  activationOptionalDocumentFields,
+);
 
 const campaignStates = [
   { id: "draft", label: "Rascunho", icon: LuFileText },
@@ -127,8 +130,8 @@ export default function CampaignActivation({
   const changed =
     dates.length !== savedDates.length ||
     dates.some((date) => !savedDates.includes(date));
-  const hasApprovedDocuments = requiredDocumentApprovals.every(
-    (key) => settings?.reviews[key]?.status === "approved",
+  const activationMissing = missing.filter(
+    (key) => !optionalActivationDocuments.has(key),
   );
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
@@ -137,17 +140,18 @@ export default function CampaignActivation({
   }, []);
   const hours = [...draft.lunch, ...draft.dinner];
   const availableHours = localTestEnabled && !hours.length ? ["11:30"] : hours;
+  const dailyCapacity = Math.max(1, Number(draft.dailyCapacity) || 1);
   const futureSlot = dates.some((date) =>
     availableHours.some(
       (time) =>
         Date.parse(`${date}T${time}:00-03:00`) >=
-        now + (localTestEnabled ? 0 : draft.minimumHours) * 3600000,
+        now,
     ),
   );
   const canPublish =
     futureSlot &&
     (localTestEnabled ||
-      (!changed && !missing.length && hasApprovedDocuments && mailConfigured));
+      (!changed && !activationMissing.length && mailConfigured));
 
   const [reviewed, setReviewed] = useState(false);
   const [copyResult, setCopyResult] = useState("");
@@ -156,15 +160,15 @@ export default function CampaignActivation({
     [
       "Dados do restaurante",
       "address",
-      !missing.some((key) =>
-        ["address", "contact", "approvedBy"].includes(key),
+      !activationMissing.some((key) =>
+        ["address", "contact"].includes(key),
       ),
     ],
     ["Agenda e capacidade", "dates", futureSlot && !changed],
     [
       "Voucher e regras",
       "voucher",
-      !missing.some((key) =>
+      !activationMissing.some((key) =>
         ["voucher", "companions", "excess", "balance", "cancellation"].includes(
           key,
         ),
@@ -173,24 +177,7 @@ export default function CampaignActivation({
     [
       "Conteúdo e entregas",
       "publication",
-      !missing.some((key) => ["publication", "tags"].includes(key)),
-    ],
-    [
-      "Documentos obrigatórios",
-      "imageTerm",
-      hasApprovedDocuments &&
-        !missing.some((key) =>
-          [
-            "conditions",
-            "imageTerm",
-            "privacy",
-            "imageChannels",
-            "imagePurpose",
-            "imageDuration",
-            "imageEditing",
-            "imagePromotion",
-          ].includes(key),
-        ),
+      !activationMissing.some((key) => ["publication", "tags"].includes(key)),
     ],
     ["Canal de comunicação", "mail", mailConfigured],
   ] as const;
@@ -246,6 +233,11 @@ export default function CampaignActivation({
           max={checklist.length}
           aria-label="Prontidão da campanha"
         />
+        <p>
+          Documentos e aprovações podem ser configurados depois, em{" "}
+          <a href={settingsFieldLink("imageTerm")}>Termos e privacidade</a>; não
+          são necessários para ativar a campanha.
+        </p>
         <ul className={styles.checklist}>
           {checklist.map(([label, field, completed]) => (
             <li key={field}>
@@ -279,18 +271,18 @@ export default function CampaignActivation({
             </li>
           ))}
         </ul>
-        {!localTestEnabled && missing.length > 0 && (
+        {!localTestEnabled && activationMissing.length > 0 && (
           <details
             id="locomotiva-activation-pending"
             className={styles.disclosure}
           >
             <summary>
-              {missing.length === 1
+              {activationMissing.length === 1
                 ? "Há 1 configuração pendente"
-                : `Há ${missing.length} configurações pendentes`}
+                : `Há ${activationMissing.length} configurações pendentes`}
             </summary>
             <ul>
-              {missing.map((field) => (
+              {activationMissing.map((field) => (
                 <li key={field}>
                   <a
                     id={`locomotiva-activation-pending-${field}`}
@@ -405,6 +397,7 @@ export default function CampaignActivation({
             id="locomotiva-activation-calendar"
             selectedDates={dates}
             registrations={registrations}
+            dailyCapacity={dailyCapacity}
             disabled={busy}
             onChange={(selection) => {
               setEditedDates({ version, dates: selection });
@@ -483,7 +476,7 @@ export default function CampaignActivation({
                     <LuCalendarDays aria-hidden="true" /> {periodLabel}
                   </li>
                   <li>
-                    <LuUsers aria-hidden="true" /> 1 influenciador por dia
+                    <LuUsers aria-hidden="true" /> {dailyCapacity} influenciador{dailyCapacity === 1 ? "" : "es"} por dia
                   </li>
                   <li>
                     <LuGift aria-hidden="true" /> Voucher {voucher}
@@ -501,7 +494,7 @@ export default function CampaignActivation({
                     checked={reviewed}
                     onChange={(event) => setReviewed(event.target.checked)}
                   />{" "}
-                  Revisei as regras e os documentos
+                  Revisei as regras da campanha
                 </label>
               </>
             ) : (

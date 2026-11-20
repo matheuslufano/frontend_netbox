@@ -37,20 +37,18 @@ export default function CampaignBookingPreview({
   const days = new Date(
     Date.UTC(firstDay.getUTCFullYear(), firstDay.getUTCMonth() + 1, 0),
   ).getUTCDate();
-  const occupied = new Set(
-    registrations
-      .filter(({ status }) =>
-        ["PENDING", "CONFIRMED", "ATTENDED", "ABSENT"].includes(status),
-      )
-      .map((item) => item.date),
-  );
-  const cutoff = previewTime + draft.minimumHours * 3600000;
+  const bookedByDate = new Map<string, number>();
+  for (const registration of registrations) {
+    if (["PENDING", "CONFIRMED", "ATTENDED", "ABSENT"].includes(registration.status))
+      bookedByDate.set(registration.date, (bookedByDate.get(registration.date) ?? 0) + 1);
+  }
+  const dailyCapacity = Math.max(1, Number(draft.dailyCapacity) || 1);
   const times = [...draft.lunch, ...draft.dinner];
   const availableTimes = (day: string) =>
-    times.filter((slot) => Date.parse(`${day}T${slot}:00-03:00`) >= cutoff);
+    times.filter((slot) => Date.parse(`${day}T${slot}:00-03:00`) >= previewTime);
   const selectedDate =
     draft.dates.includes(date) &&
-    !occupied.has(date) &&
+    (bookedByDate.get(date) ?? 0) < dailyCapacity &&
     availableTimes(date).length
       ? date
       : "";
@@ -102,7 +100,7 @@ export default function CampaignBookingPreview({
           ))}
           {Array.from({ length: days }, (_, index) => {
             const day = `${visibleMonth}-${String(index + 1).padStart(2, "0")}`;
-            const status = occupied.has(day)
+            const status = (bookedByDate.get(day) ?? 0) >= dailyCapacity
               ? "Ocupado"
               : draft.dates.includes(day) && availableTimes(day).length
                 ? "Disponível"

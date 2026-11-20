@@ -4,12 +4,25 @@ export type CampaignConfig = {
   dates: string[];
   lunch: string[];
   dinner: string[];
-  minimumHours: number;
+  dailyCapacity: number;
 } & Record<string, string | number | boolean | string[]>;
+export const activationOptionalDocumentFields = [
+  "conditions",
+  "imageTerm",
+  "privacy",
+  "approvedBy",
+  "imageChannels",
+  "imagePurpose",
+  "imageDuration",
+  "imageEditing",
+  "imagePromotion",
+] as const;
 export const requiredDocumentApprovals = ["imageTerm", "privacy"];
 export type Availability = {
   date: string;
   state: string;
+  bookedCount: number;
+  dailyCapacity: number;
   times: { lunch: string[]; dinner: string[] };
 };
 export type ReservationQuickAction = "approve" | "reject" | "reschedule" | "delete";
